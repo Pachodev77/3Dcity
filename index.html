@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D City Plan with Avatars</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #avatar-selector-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+        #joystick-container-move {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            width: 100px;
+            height: 100px;
+        }
+        #joystick-container-camera {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="avatar-selector-container">
+        <label for="avatar-selector">Choose an avatar:</label>
+        <select id="avatar-selector"></select>
+    </div>
+
+    <div id="joystick-container-move"></div>
+    <div id="joystick-container-camera"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.138.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

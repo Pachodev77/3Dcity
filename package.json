@@ -1,0 +1,18 @@
+{
+  "name": "threejs-app",
+  "version": "1.0.0",
+  "description": "A Three.js application",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "three": "^0.158.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
