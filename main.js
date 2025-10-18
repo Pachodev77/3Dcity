@@ -360,13 +360,13 @@ function animate() {
         cameraAngleVOffset -= cameraData.y * cameraRotationSpeed * delta;
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
-        const minAngleV = 0.3;
-        const maxAngleV = Math.PI / 2 - 0.5;
+        const minAngleV = 0.1; // Look more forward
+        const maxAngleV = 0.5; // Less top-down
         const t = (cameraDistance - minCameraDistance) / (maxCameraDistance - minCameraDistance);
         const baseAngleV = minAngleV + t * (maxAngleV - minAngleV);
         const cameraAngleV = baseAngleV + cameraAngleVOffset;
         
-        followPosition.copy(targetToFollow.position).add({x: 0, y: 1, z: 0});
+        followPosition.copy(targetToFollow.position).add({x: 0, y: 1.6, z: 0}); // Raise camera pivot
         cameraOffset.set(0, 0, cameraDistance);
         cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV);
         cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
