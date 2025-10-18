@@ -81,6 +81,7 @@ const avatarList = ['Ch02_nonPBR', 'Ch08_nonPBR', 'Ch15_nonPBR'];
 // UI
 const avatarSelector = document.getElementById('avatar-selector');
 const enterExitButton = document.getElementById('enter-exit-button');
+const zoomSlider = document.getElementById('zoom-slider');
 
 avatarList.forEach(avatarName => {
     const option = document.createElement('option');
@@ -224,37 +225,11 @@ let cameraDistance = 8;
 const minCameraDistance = 3;
 const maxCameraDistance = 15;
 
-// Mouse wheel zoom
-window.addEventListener('wheel', (event) => {
-    cameraDistance += event.deltaY * 0.01;
-    cameraDistance = Math.max(minCameraDistance, Math.min(maxCameraDistance, cameraDistance));
+// Zoom Slider Control
+zoomSlider.addEventListener('input', (e) => {
+    cameraDistance = parseFloat(e.target.value);
 });
 
-// Pinch zoom
-let initialPinchDistance = 0;
-let initialCameraDistance = 0;
-
-window.addEventListener('touchstart', (event) => {
-    if (event.touches.length === 2) {
-        initialPinchDistance = getPinchDistance(event);
-        initialCameraDistance = cameraDistance;
-    }
-});
-
-window.addEventListener('touchmove', (event) => {
-    if (event.touches.length === 2) {
-        const currentPinchDistance = getPinchDistance(event);
-        const pinchDelta = currentPinchDistance - initialPinchDistance;
-        cameraDistance = initialCameraDistance - pinchDelta * 0.05;
-        cameraDistance = Math.max(minCameraDistance, Math.min(maxCameraDistance, cameraDistance));
-    }
-});
-
-function getPinchDistance(event) {
-    const dx = event.touches[0].clientX - event.touches[1].clientX;
-    const dy = event.touches[0].clientY - event.touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-}
 
 // Raycasters
 const cameraRaycaster = new THREE.Raycaster();

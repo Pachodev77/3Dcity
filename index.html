@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D City Plan with Avatars</title>
     <style>
-        body { margin: 0; }
+        body { margin: 0; overflow: hidden; }
         canvas { display: block; }
         #avatar-selector-container {
             position: absolute;
@@ -46,6 +46,37 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
+        #zoom-slider {
+            position: absolute;
+            left: -50px;
+            top: 50%;
+            width: 150px;
+            height: 20px;
+            transform-origin: left center;
+            transform: rotate(-90deg) translateX(-50%);
+            z-index: 101;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.5);
+            outline: none;
+            border-radius: 10px;
+        }
+        #zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: rgba(76, 175, 80, 0.8);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        #zoom-slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: rgba(76, 175, 80, 0.8);
+            cursor: pointer;
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +88,7 @@
     <div id="joystick-container-move"></div>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button"></div>
+    <input type="range" min="3" max="15" value="8" id="zoom-slider">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script type="importmap">
