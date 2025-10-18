@@ -75,6 +75,8 @@ const avatarList = ['Ch02_nonPBR', 'Ch08_nonPBR', 'Ch15_nonPBR'];
 
 // UI
 const avatarSelector = document.getElementById('avatar-selector');
+const enterExitButton = document.getElementById('enter-exit-button');
+
 avatarList.forEach(avatarName => {
     const option = document.createElement('option');
     option.value = avatarName;
@@ -181,29 +183,35 @@ cameraJoystick.on('end', () => {
 });
 
 // Enter/Exit Vehicle Logic
-window.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'e') {
-        if (isInVehicle) {
-            // Exit vehicle
-            isInVehicle = false;
-            if (currentAvatar && currentVehicle) {
-                currentAvatar.visible = true;
-                const exitOffset = new THREE.Vector3(2, 0, 0);
-                currentAvatar.position.copy(currentVehicle.position).add(exitOffset);
-                currentVehicle.isOccupied = false;
-                currentVehicle = null;
-            }
-        } else if (nearbyVehicle) {
-            // Enter vehicle
-            isInVehicle = true;
-            currentVehicle = nearbyVehicle;
-            currentVehicle.isOccupied = true;
-            if (currentAvatar) {
-                currentAvatar.visible = false;
-            }
+function toggleVehicle() {
+    if (isInVehicle) {
+        // Exit vehicle
+        isInVehicle = false;
+        if (currentAvatar && currentVehicle) {
+            currentAvatar.visible = true;
+            const exitOffset = new THREE.Vector3(2, 0, 0);
+            currentAvatar.position.copy(currentVehicle.position).add(exitOffset);
+            currentVehicle.isOccupied = false;
+            currentVehicle = null;
+        }
+    } else if (nearbyVehicle) {
+        // Enter vehicle
+        isInVehicle = true;
+        currentVehicle = nearbyVehicle;
+        currentVehicle.isOccupied = true;
+        if (currentAvatar) {
+            currentAvatar.visible = false;
         }
     }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') {
+        toggleVehicle();
+    }
 });
+
+enterExitButton.addEventListener('click', toggleVehicle);
 
 
 // Camera zoom variables
@@ -355,6 +363,17 @@ function animate() {
 
         camera.position.lerp(finalCameraPosition, 0.2);
         camera.lookAt(followPosition);
+    }
+
+    // Update UI
+    if (isInVehicle) {
+        enterExitButton.style.display = 'flex';
+        enterExitButton.innerText = 'Exit';
+    } else if (nearbyVehicle) {
+        enterExitButton.style.display = 'flex';
+        enterExitButton.innerText = 'Enter';
+    } else {
+        enterExitButton.style.display = 'none';
     }
 
     renderer.render(scene, camera);
