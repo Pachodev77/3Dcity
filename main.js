@@ -37,7 +37,7 @@ const collidableObjects = [ground];
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('assets/maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -79,7 +79,7 @@ function loadAvatar(avatarName) {
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`assets/avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
         currentAvatar.scale.set(0.005, 0.005, 0.005);
         currentAvatar.position.set(0, 0, 5);
@@ -95,9 +95,9 @@ function loadAvatar(avatarName) {
         animationMixer = new THREE.AnimationMixer(currentAvatar);
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': 'assets/avatars/animations/Idle.fbx',
-            'walking': 'assets/avatars/animations/Walking.fbx',
-            'running': 'assets/avatars/animations/Running.fbx'
+            'idle': 'avatars/animations/Idle.fbx',
+            'walking': 'avatars/animations/Walking.fbx',
+            'running': 'avatars/animations/Running.fbx'
         };
         
         let animationsLoaded = 0;
