@@ -9,7 +9,7 @@
     "dev": "vite"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "three": "^0.158.0"
   },
   "devDependencies": {

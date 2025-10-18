@@ -50,8 +50,10 @@ const vehicleSteeringSpeed = 1.5;
 // City Model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
+    console.log("--- Searching for vehicle names in the 3D model ---");
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
+            console.log('Found mesh object:', child.name);
             child.castShadow = true;
             child.receiveShadow = true;
 
@@ -62,6 +64,7 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
             }
         }
     });
+    console.log("--- Vehicle search complete. Total vehicles identified:", vehicles.length, "---");
     scene.add(gltf.scene);
     collidableObjects.push(gltf.scene);
 });
