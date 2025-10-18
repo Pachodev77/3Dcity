@@ -11,10 +11,14 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.set(0, 5, 10);
 
 // Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: 'high-performance'
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
 document.body.appendChild(renderer.domElement);
 
 // Lighting
@@ -24,6 +28,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 10, 7.5);
 directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.set(1024, 1024); // Lower shadow map size for performance
 scene.add(directionalLight);
 
 // Ground
@@ -50,10 +55,8 @@ const vehicleSteeringSpeed = 1.5;
 // City Model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
-    console.log("--- Searching for vehicle names in the 3D model ---");
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
-            console.log('Found mesh object:', child.name);
             child.castShadow = true;
             child.receiveShadow = true;
 
@@ -64,7 +67,6 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
             }
         }
     });
-    console.log("--- Vehicle search complete. Total vehicles identified:", vehicles.length, "---");
     scene.add(gltf.scene);
     collidableObjects.push(gltf.scene);
 });
@@ -254,13 +256,25 @@ function getPinchDistance(event) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Raycaster for camera collision
-const raycaster = new THREE.Raycaster();
+// Raycasters
+const cameraRaycaster = new THREE.Raycaster();
+const avatarRaycaster = new THREE.Raycaster();
 
 // Animation loop
 const clock = new THREE.Clock();
 let cameraAngleH = 0;
 let cameraAngleVOffset = 0;
+
+// Reusable vectors for performance
+const viewDirection = new THREE.Vector3();
+const right = new THREE.Vector3();
+const moveDirection = new THREE.Vector3();
+const followPosition = new THREE.Vector3();
+const cameraOffset = new THREE.Vector3();
+const desiredCameraPosition = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const rayOrigin = new THREE.Vector3();
+const down = new THREE.Vector3(0, -1, 0);
 
 function animate() {
     requestAnimationFrame(animate);
@@ -312,13 +326,12 @@ function animate() {
     } else if (currentAvatar) {
         // Avatar Controls
         const moveSpeed = 3;
-        const viewDirection = new THREE.Vector3();
         camera.getWorldDirection(viewDirection);
         viewDirection.y = 0;
         viewDirection.normalize();
 
-        const right = new THREE.Vector3().crossVectors(camera.up, viewDirection).normalize();
-        const moveDirection = right.multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
+        right.crossVectors(camera.up, viewDirection).normalize();
+        moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
 
         if (moveData.distance > 0) {
             const speed = moveData.distance / 50 * moveSpeed;
@@ -327,6 +340,16 @@ function animate() {
             playAnimation('running');
         } else {
             playAnimation('idle');
+        }
+
+        // Avatar ground collision
+        rayOrigin.copy(currentAvatar.position);
+        rayOrigin.y += 1;
+        avatarRaycaster.set(rayOrigin, down);
+        const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+        if (intersections.length > 0) {
+            currentAvatar.position.y = intersections[0].point.y;
         }
     }
     
@@ -343,20 +366,20 @@ function animate() {
         const baseAngleV = minAngleV + t * (maxAngleV - minAngleV);
         const cameraAngleV = baseAngleV + cameraAngleVOffset;
         
-        const followPosition = targetToFollow.position.clone().add(new THREE.Vector3(0, 1, 0));
-        const cameraOffset = new THREE.Vector3(0, 0, cameraDistance);
+        followPosition.copy(targetToFollow.position).add({x: 0, y: 1, z: 0});
+        cameraOffset.set(0, 0, cameraDistance);
         cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV);
         cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
-        const desiredCameraPosition = followPosition.clone().add(cameraOffset);
+        desiredCameraPosition.copy(followPosition).add(cameraOffset);
 
-        const direction = desiredCameraPosition.clone().sub(followPosition).normalize();
-        raycaster.set(followPosition, direction);
-        const intersections = raycaster.intersectObjects(collidableObjects, true);
+        direction.copy(desiredCameraPosition).sub(followPosition).normalize();
+        cameraRaycaster.set(followPosition, direction);
+        const cameraIntersections = cameraRaycaster.intersectObjects(collidableObjects, true);
 
         let finalCameraPosition = desiredCameraPosition;
-        if (intersections.length > 0) {
-            if (intersections[0].distance < cameraDistance) {
-                finalCameraPosition = followPosition.clone().add(direction.multiplyScalar(intersections[0].distance - 0.2));
+        if (cameraIntersections.length > 0) {
+            if (cameraIntersections[0].distance < cameraDistance) {
+                finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.2));
             }
         }
 
