@@ -332,7 +332,7 @@ function animate() {
         // Camera Rotation
         const cameraRotationSpeed = 2;
         cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
-        cameraAngleVOffset -= cameraData.y * cameraRotationSpeed * delta;
+        cameraAngleVOffset += cameraData.y * cameraRotationSpeed * delta; // Inverted vertical rotation
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
         const minAngleV = 0.1; // Look more forward
