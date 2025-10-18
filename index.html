@@ -27,6 +27,25 @@
             width: 100px;
             height: 100px;
         }
+        #enter-exit-button {
+            position: absolute;
+            bottom: 160px;
+            right: 40px;
+            width: 80px;
+            height: 80px;
+            background-color: rgba(76, 175, 80, 0.7);
+            border-radius: 50%;
+            display: none; /* Initially hidden */
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-family: sans-serif;
+            font-weight: bold;
+            z-index: 101;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -37,6 +56,7 @@
 
     <div id="joystick-container-move"></div>
     <div id="joystick-container-camera"></div>
+    <div id="enter-exit-button"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script type="importmap">

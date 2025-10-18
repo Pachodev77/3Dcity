@@ -35,6 +35,18 @@ scene.add(ground);
 // Collidable objects
 const collidableObjects = [ground];
 
+// Vehicle variables
+const vehicles = [];
+const vehicleKeywords = ['car', 'bus', 'truck', 'van'];
+let isInVehicle = false;
+let currentVehicle = null;
+let nearbyVehicle = null;
+let vehicleSpeed = 0;
+const vehicleMaxSpeed = 10;
+const vehicleAcceleration = 5;
+const vehicleFriction = 2;
+const vehicleSteeringSpeed = 1.5;
+
 // City Model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
@@ -42,6 +54,12 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
         if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+
+            const childName = child.name.toLowerCase();
+            if (vehicleKeywords.some(keyword => childName.includes(keyword))) {
+                vehicles.push(child);
+                child.isOccupied = false;
+            }
         }
     });
     scene.add(gltf.scene);
@@ -162,6 +180,32 @@ cameraJoystick.on('end', () => {
     cameraData = { x: 0, y: 0 };
 });
 
+// Enter/Exit Vehicle Logic
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') {
+        if (isInVehicle) {
+            // Exit vehicle
+            isInVehicle = false;
+            if (currentAvatar && currentVehicle) {
+                currentAvatar.visible = true;
+                const exitOffset = new THREE.Vector3(2, 0, 0);
+                currentAvatar.position.copy(currentVehicle.position).add(exitOffset);
+                currentVehicle.isOccupied = false;
+                currentVehicle = null;
+            }
+        } else if (nearbyVehicle) {
+            // Enter vehicle
+            isInVehicle = true;
+            currentVehicle = nearbyVehicle;
+            currentVehicle.isOccupied = true;
+            if (currentAvatar) {
+                currentAvatar.visible = false;
+            }
+        }
+    }
+});
+
+
 // Camera zoom variables
 let cameraDistance = 8;
 const minCameraDistance = 3;
@@ -215,64 +259,93 @@ function animate() {
         animationMixer.update(delta);
     }
 
-    if (currentAvatar) {
-        const moveSpeed = 3;
+    // Proximity check
+    if (!isInVehicle && currentAvatar) {
+        nearbyVehicle = null;
+        const proximityThreshold = 3;
+        for (const vehicle of vehicles) {
+            if (!vehicle.isOccupied) {
+                const distance = currentAvatar.position.distanceTo(vehicle.position);
+                if (distance < proximityThreshold) {
+                    nearbyVehicle = vehicle;
+                    break;
+                }
+            }
+        }
+    }
 
-        // Get camera direction for movement
+    const targetToFollow = isInVehicle ? currentVehicle : currentAvatar;
+
+    if (isInVehicle && currentVehicle) {
+        // Vehicle Controls
+        const forward = moveData.vector.y;
+        const turn = -moveData.vector.x;
+
+        if (forward > 0) {
+            vehicleSpeed += vehicleAcceleration * delta;
+        } else {
+            vehicleSpeed -= vehicleFriction * delta;
+        }
+        vehicleSpeed = Math.max(0, Math.min(vehicleSpeed, vehicleMaxSpeed));
+
+        if (vehicleSpeed > 0.1) {
+            const steering = turn * vehicleSteeringSpeed * delta;
+            currentVehicle.rotation.y += steering;
+        }
+
+        currentVehicle.position.x -= vehicleSpeed * Math.sin(currentVehicle.rotation.y) * delta;
+        currentVehicle.position.z -= vehicleSpeed * Math.cos(currentVehicle.rotation.y) * delta;
+        
+        playAnimation('idle');
+
+    } else if (currentAvatar) {
+        // Avatar Controls
+        const moveSpeed = 3;
         const viewDirection = new THREE.Vector3();
         camera.getWorldDirection(viewDirection);
         viewDirection.y = 0;
         viewDirection.normalize();
 
         const right = new THREE.Vector3().crossVectors(camera.up, viewDirection).normalize();
-
         const moveDirection = right.multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
 
         if (moveData.distance > 0) {
-            // Move avatar
             const speed = moveData.distance / 50 * moveSpeed;
             currentAvatar.position.add(moveDirection.clone().multiplyScalar(speed * delta));
-
-            // Rotate avatar to face movement direction
             currentAvatar.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
-
-            // Animation
             playAnimation('running');
         } else {
             playAnimation('idle');
         }
-        
+    }
+    
+    if (targetToFollow) {
         // Camera Rotation
         const cameraRotationSpeed = 2;
         cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
         cameraAngleVOffset -= cameraData.y * cameraRotationSpeed * delta;
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
-        // Calculate base vertical angle from zoom
         const minAngleV = 0.3;
         const maxAngleV = Math.PI / 2 - 0.5;
         const t = (cameraDistance - minCameraDistance) / (maxCameraDistance - minCameraDistance);
         const baseAngleV = minAngleV + t * (maxAngleV - minAngleV);
-
         const cameraAngleV = baseAngleV + cameraAngleVOffset;
         
-        // Camera follow with collision
-        const avatarPosition = currentAvatar.position.clone().add(new THREE.Vector3(0, 1, 0));
-
+        const followPosition = targetToFollow.position.clone().add(new THREE.Vector3(0, 1, 0));
         const cameraOffset = new THREE.Vector3(0, 0, cameraDistance);
         cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV);
         cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
+        const desiredCameraPosition = followPosition.clone().add(cameraOffset);
 
-        const desiredCameraPosition = avatarPosition.clone().add(cameraOffset);
-
-        const direction = desiredCameraPosition.clone().sub(avatarPosition).normalize();
-        raycaster.set(avatarPosition, direction);
+        const direction = desiredCameraPosition.clone().sub(followPosition).normalize();
+        raycaster.set(followPosition, direction);
         const intersections = raycaster.intersectObjects(collidableObjects, true);
 
         let finalCameraPosition = desiredCameraPosition;
         if (intersections.length > 0) {
             if (intersections[0].distance < cameraDistance) {
-                finalCameraPosition = avatarPosition.clone().add(direction.multiplyScalar(intersections[0].distance - 0.2));
+                finalCameraPosition = followPosition.clone().add(direction.multiplyScalar(intersections[0].distance - 0.2));
             }
         }
 
@@ -281,7 +354,7 @@ function animate() {
         }
 
         camera.position.lerp(finalCameraPosition, 0.2);
-        camera.lookAt(avatarPosition);
+        camera.lookAt(followPosition);
     }
 
     renderer.render(scene, camera);
