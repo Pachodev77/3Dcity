@@ -25,6 +25,10 @@ build/
 assets/maps/**
 !assets/maps/.gitkeep
 
+# FBX files
+assets/avatars/*.fbx
+assets/avatars/animations/*.fbx
+
 # Logs
 logs
 *.log
