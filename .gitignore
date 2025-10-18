@@ -22,7 +22,7 @@ build/
 *.sw?
 
 # Large assets
-assets/maps/**
+# assets/maps is now tracked
 !assets/maps/.gitkeep
 
 # FBX files
