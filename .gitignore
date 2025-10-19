@@ -25,9 +25,6 @@ build/
 # assets/maps is now tracked
 !assets/maps/.gitkeep
 
-# FBX files
-assets/avatars/*.fbx
-assets/avatars/animations/*.fbx
 
 # Logs
 logs

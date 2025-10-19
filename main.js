@@ -391,7 +391,7 @@ function animate() {
 
         // Chase camera logic
         if (Math.abs(cameraData.x) > 0.1) { // User is actively rotating camera
-            cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
+            cameraAngleH += cameraData.x * cameraRotationSpeed * delta;
         } else { // Auto-follow behind the car
             const targetCameraAngleH = currentVehicle.rotation.y + Math.PI;
             let diff = targetCameraAngleH - cameraAngleH;
