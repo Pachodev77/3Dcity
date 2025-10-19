@@ -73,20 +73,22 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    mazdaLoader.load('1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    
+    // Load first Mazda model (1999 Mazdaspeed RX-7)
+    mazdaLoader.load('assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
-            { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
-            { position: new THREE.Vector3(-10, 0.1, 30), rotation: Math.PI },
-            { position: new THREE.Vector3(-25, 0.1, 10), rotation: Math.PI / 4 },
-            { position: new THREE.Vector3(5, 0.1, 5), rotation: 0 },
+            // Posiciones en las calles principales
+            { position: new THREE.Vector3(25, 0.1, 0), rotation: Math.PI / 2 },  // Calle horizontal superior
+            { position: new THREE.Vector3(-25, 0.1, 0), rotation: -Math.PI / 2 }, // Calle horizontal inferior
         ];
 
         spawnPoints.forEach(sp => {
             const car = mazdaModel.clone();
-            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
+            car.scale.set(0.5, 0.5, 0.5);
             car.position.copy(sp.position);
             car.rotation.y = sp.rotation;
+            car.userData.modelType = 'mazda1999';
             car.traverse(function (child) {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -94,8 +96,35 @@ function spawnMazdas() {
                 }
             });
             scene.add(car);
-            vehicles.push(car); // Add to drivable vehicles
-            collidableObjects.push(car); // Add to collidable objects
+            vehicles.push(car);
+            collidableObjects.push(car);
+        });
+    });
+
+    // Load second Mazda model (2018 Mazda RX-7 Fatal Stinger)
+    mazdaLoader.load('assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+        const mazdaModel = gltf.scene;
+        const spawnPoints = [
+            // Posiciones en las calles principales
+            { position: new THREE.Vector3(0, 0.1, 20), rotation: Math.PI },      // Calle vertical derecha
+            { position: new THREE.Vector3(0, 0.1, -20), rotation: 0 },           // Calle vertical izquierda
+        ];
+
+        spawnPoints.forEach(sp => {
+            const car = mazdaModel.clone();
+            car.scale.set(0.5, 0.5, 0.5);
+            car.position.copy(sp.position);
+            car.rotation.y = sp.rotation;
+            car.userData.modelType = 'mazda2018';
+            car.traverse(function (child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            scene.add(car);
+            vehicles.push(car);
+            collidableObjects.push(car);
         });
     });
 }
