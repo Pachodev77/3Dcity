@@ -313,25 +313,44 @@ const direction = new THREE.Vector3();
 const rayOrigin = new THREE.Vector3();
 const down = new THREE.Vector3(0, -1, 0);
 
+let frameCount = 0;
+const checkInterval = 4; // Run expensive checks every 4 frames
+
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
+    frameCount++;
 
     if (animationMixer) {
         animationMixer.update(delta);
     }
 
-    // Proximity check
-    if (!isInVehicle && currentAvatar) {
-        nearbyVehicle = null;
-        const proximityThreshold = 3;
-        for (const vehicle of vehicles) {
-            if (!vehicle.isOccupied) {
-                const distance = currentAvatar.position.distanceTo(vehicle.position);
-                if (distance < proximityThreshold) {
-                    nearbyVehicle = vehicle;
-                    break;
+    // --- Throttled Operations ---
+    if (frameCount % checkInterval === 0) {
+        // Proximity check
+        if (!isInVehicle && currentAvatar) {
+            nearbyVehicle = null;
+            const proximityThreshold = 3;
+            for (const vehicle of vehicles) {
+                if (!vehicle.isOccupied) {
+                    const distance = currentAvatar.position.distanceTo(vehicle.position);
+                    if (distance < proximityThreshold) {
+                        nearbyVehicle = vehicle;
+                        break;
+                    }
                 }
+            }
+        }
+
+        // Avatar ground collision
+        if (currentAvatar && !isInVehicle) {
+            rayOrigin.copy(currentAvatar.position);
+            rayOrigin.y += 1;
+            avatarRaycaster.set(rayOrigin, down);
+            const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+            if (intersections.length > 0) {
+                currentAvatar.position.y = intersections[0].point.y;
             }
         }
     }
@@ -374,7 +393,7 @@ function animate() {
         let diff = targetCameraAngleH - cameraAngleH;
         if (diff > Math.PI) diff -= 2 * Math.PI;
         if (diff < -Math.PI) diff += 2 * Math.PI;
-        cameraAngleH += diff * 0.05; // Smoothly follow the car
+        cameraAngleH += diff * 0.15; // Smoothly follow the car
 
     } else if (currentAvatar) {
         // Avatar Controls
@@ -394,16 +413,7 @@ function animate() {
         } else {
             playAnimation('idle');
         }
-
-        // Avatar ground collision
-        rayOrigin.copy(currentAvatar.position);
-        rayOrigin.y += 1;
-        avatarRaycaster.set(rayOrigin, down);
-        const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
-
-        if (intersections.length > 0) {
-            currentAvatar.position.y = intersections[0].point.y;
-        }
+        // Avatar ground collision is now throttled
     }
     
     if (targetToFollow) {
@@ -428,15 +438,26 @@ function animate() {
         cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
         desiredCameraPosition.copy(followPosition).add(cameraOffset);
 
-        direction.copy(desiredCameraPosition).sub(followPosition).normalize();
-        cameraRaycaster.set(followPosition, direction);
-        const cameraIntersections = cameraRaycaster.intersectObjects(collidableObjects, true);
-
         let finalCameraPosition = desiredCameraPosition;
-        if (cameraIntersections.length > 0) {
-            if (cameraIntersections[0].distance < cameraDistance) {
-                finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.2));
+
+        // --- Throttled Camera Collision ---
+        if (frameCount % checkInterval === 0) {
+            direction.copy(desiredCameraPosition).sub(followPosition).normalize();
+            cameraRaycaster.set(followPosition, direction);
+            const cameraIntersections = cameraRaycaster.intersectObjects(collidableObjects, true);
+
+            if (cameraIntersections.length > 0) {
+                if (cameraIntersections[0].distance < cameraDistance) {
+                    finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.2));
+                }
             }
+            // Store the calculated position to be used by the lerp
+            camera.userData.finalCameraPosition = finalCameraPosition;
+        }
+
+        // Use the stored position for smooth interpolation
+        if (camera.userData.finalCameraPosition) {
+            finalCameraPosition = camera.userData.finalCameraPosition;
         }
 
         if (finalCameraPosition.y < 0.5) {
