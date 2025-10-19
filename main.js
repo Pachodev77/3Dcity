@@ -471,7 +471,7 @@ function animate() {
             finalCameraPosition.y = 1.0;
         }
 
-        camera.position.lerp(finalCameraPosition, 0.1); // Smoother camera movement to reduce bouncing
+        camera.position.lerp(finalCameraPosition, 0.25); // Increased responsiveness to stick closer to vehicle
         camera.lookAt(followPosition);
     }
 
