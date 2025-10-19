@@ -71,6 +71,36 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
     collidableObjects.push(gltf.scene);
 });
 
+function spawnMazdas() {
+    const mazdaLoader = new GLTFLoader();
+    mazdaLoader.load('1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+        const mazdaModel = gltf.scene;
+        const spawnPoints = [
+            { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
+            { position: new THREE.Vector3(-10, 0.1, 30), rotation: Math.PI },
+            { position: new THREE.Vector3(-25, 0.1, 10), rotation: Math.PI / 4 },
+            { position: new THREE.Vector3(5, 0.1, 5), rotation: 0 },
+        ];
+
+        spawnPoints.forEach(sp => {
+            const car = mazdaModel.clone();
+            car.position.copy(sp.position);
+            car.rotation.y = sp.rotation;
+            car.traverse(function (child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            scene.add(car);
+            vehicles.push(car); // Add to drivable vehicles
+            collidableObjects.push(car); // Add to collidable objects
+        });
+    });
+}
+
+spawnMazdas();
+
 // Avatar variables
 let currentAvatar = null;
 let animationMixer = null;
