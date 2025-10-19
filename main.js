@@ -47,10 +47,10 @@ let isInVehicle = false;
 let currentVehicle = null;
 let nearbyVehicle = null;
 let vehicleSpeed = 0;
-const vehicleMaxSpeed = 10;
-const vehicleAcceleration = 5;
-const vehicleFriction = 2;
-const vehicleSteeringSpeed = 1.5;
+const vehicleMaxSpeed = 10;  // Velocidad máxima
+const vehicleAcceleration = 2;  // Más lento al acelerar
+const vehicleFriction = 4;     // Fricción aumentada para frenar más rápido
+const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
