@@ -269,9 +269,10 @@ function toggleVehicle() {
         if (currentAvatar) {
             currentAvatar.visible = false;
         }
-        // Reset camera angle to be behind the vehicle
+        // Reset camera angle and distance to be behind the vehicle
         cameraAngleH = currentVehicle.rotation.y + Math.PI;
         cameraAngleVOffset = 0;
+        cameraDistance = 8; // Reset camera distance for vehicle mode
     }
 }
 
@@ -452,11 +453,11 @@ function animate() {
             cameraRaycaster.set(followPosition, direction);
             const cameraIntersections = cameraRaycaster.intersectObjects(collidableObjects, true);
 
-            if (cameraIntersections.length > 0) {
-                if (cameraIntersections[0].distance < cameraDistance) {
-                    finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.2));
-                }
-            }
+            // if (cameraIntersections.length > 0) { // Temporarily disabled camera collision for debugging bouncing issue
+            //     if (cameraIntersections[0].distance < cameraDistance) {
+            //         finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.5)); // Increased buffer for camera collision
+            //     }
+            // }
             // Store the calculated position to be used by the lerp
             camera.userData.finalCameraPosition = finalCameraPosition;
         }
@@ -466,11 +467,11 @@ function animate() {
             finalCameraPosition = camera.userData.finalCameraPosition;
         }
 
-        if (finalCameraPosition.y < 0.5) {
-            finalCameraPosition.y = 0.5;
+        if (finalCameraPosition.y < 1.0) { // Ensure camera stays above ground
+            finalCameraPosition.y = 1.0;
         }
 
-        camera.position.lerp(finalCameraPosition, 0.2);
+        camera.position.lerp(finalCameraPosition, 0.1); // Smoother camera movement to reduce bouncing
         camera.lookAt(followPosition);
     }
 
