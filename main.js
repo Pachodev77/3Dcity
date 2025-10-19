@@ -54,7 +54,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -73,7 +73,7 @@ gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    mazdaLoader.load('1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    mazdaLoader.load('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
@@ -102,7 +102,7 @@ function spawnMazdas() {
 
 function spawnFatalStinger() {
     const stingerLoader = new GLTFLoader();
-    stingerLoader.load('2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+    stingerLoader.load('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
         const stingerModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
@@ -164,7 +164,7 @@ function loadAvatar(avatarName) {
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`/avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
         currentAvatar.scale.set(0.005, 0.005, 0.005);
         currentAvatar.position.set(0, 0, 5);
@@ -180,9 +180,9 @@ function loadAvatar(avatarName) {
         animationMixer = new THREE.AnimationMixer(currentAvatar);
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': 'avatars/animations/Idle.fbx',
-            'walking': 'avatars/animations/Walking.fbx',
-            'running': 'avatars/animations/Running.fbx'
+            'idle': '/avatars/animations/Idle.fbx',
+            'walking': '/avatars/animations/Walking.fbx',
+            'running': '/avatars/animations/Running.fbx'
         };
         
         let animationsLoaded = 0;
@@ -356,6 +356,7 @@ function animate() {
     }
 
     const targetToFollow = isInVehicle ? currentVehicle : currentAvatar;
+    const cameraRotationSpeed = 2; // Define once
 
     if (isInVehicle && currentVehicle) {
         // Vehicle Controls
@@ -389,11 +390,15 @@ function animate() {
         playAnimation('idle');
 
         // Chase camera logic
-        const targetCameraAngleH = currentVehicle.rotation.y + Math.PI;
-        let diff = targetCameraAngleH - cameraAngleH;
-        if (diff > Math.PI) diff -= 2 * Math.PI;
-        if (diff < -Math.PI) diff += 2 * Math.PI;
-        cameraAngleH += diff * 0.15; // Smoothly follow the car
+        if (Math.abs(cameraData.x) > 0.1) { // User is actively rotating camera
+            cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
+        } else { // Auto-follow behind the car
+            const targetCameraAngleH = currentVehicle.rotation.y + Math.PI;
+            let diff = targetCameraAngleH - cameraAngleH;
+            if (diff > Math.PI) diff -= 2 * Math.PI;
+            if (diff < -Math.PI) diff += 2 * Math.PI;
+            cameraAngleH += diff * 0.15; // Smoothly follow the car
+        }
 
     } else if (currentAvatar) {
         // Avatar Controls
@@ -413,16 +418,12 @@ function animate() {
         } else {
             playAnimation('idle');
         }
-        // Avatar ground collision is now throttled
+        // Avatar Camera Control
+        cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
     }
     
     if (targetToFollow) {
-        // Camera Rotation
-        const cameraRotationSpeed = 2;
-        // Only allow manual camera rotation if not in a vehicle
-        if (!isInVehicle) {
-            cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
-        }
+        // Camera Rotation (Vertical is universal)
         cameraAngleVOffset += cameraData.y * cameraRotationSpeed * delta; // Inverted vertical rotation
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
