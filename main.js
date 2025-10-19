@@ -220,14 +220,16 @@ const moveJoystick = nipplejs.create({
     zone: document.getElementById('joystick-container-move'),
     mode: 'static',
     position: { left: '50%', top: '50%' },
-    color: 'blue'
+    color: 'orange', // Naranja
+    restOpacity: 1 // Sin transparencia
 });
 
 const cameraJoystick = nipplejs.create({
     zone: document.getElementById('joystick-container-camera'),
     mode: 'static',
     position: { left: '50%', top: '50%' },
-    color: 'red'
+    color: 'orange', // Naranja
+    restOpacity: 1 // Sin transparencia
 });
 
 let moveData = { vector: { x: 0, y: 0 }, distance: 0 };
@@ -284,8 +286,8 @@ enterExitButton.addEventListener('click', toggleVehicle);
 
 // Camera zoom variables
 let cameraDistance = 8;
-const minCameraDistance = 3;
-const maxCameraDistance = 15;
+const minCameraDistance = 1; // Reduced min zoom-in distance
+const maxCameraDistance = 7; // Further reduced max zoom-out distance
 
 // Zoom Slider Control
 zoomSlider.addEventListener('input', (e) => {
@@ -428,12 +430,15 @@ function animate() {
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
         const minAngleV = 0.1; // Look more forward
-        const maxAngleV = 0.5; // Less top-down
+        const maxAngleV = 0.9; // Even more top-down at min distance (lower floor)
         const t = (cameraDistance - minCameraDistance) / (maxCameraDistance - minCameraDistance);
-        const baseAngleV = minAngleV + t * (maxAngleV - minAngleV);
+        // Invert the vertical camera angle behavior:
+        // When camera is near (t=0), baseAngleV should be maxAngleV (high angle, low floor).
+        // When camera is far (t=1), baseAngleV should be minAngleV (low angle, high floor).
+        const baseAngleV = maxAngleV - t * (maxAngleV - minAngleV);
         const cameraAngleV = baseAngleV + cameraAngleVOffset;
         
-        followPosition.copy(targetToFollow.position).add({x: 0, y: 1.6, z: 0}); // Raise camera pivot
+        followPosition.copy(targetToFollow.position).add({x: 0, y: 0.5, z: 0}); // Further lower camera pivot for closer view
         cameraOffset.set(0, 0, cameraDistance);
         cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV);
         cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
