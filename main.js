@@ -57,7 +57,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('./assets/maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -78,7 +78,7 @@ function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
     
     // Load first Mazda model (1999 Mazdaspeed RX-7)
-    mazdaLoader.load('assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    mazdaLoader.load('./assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             // Posiciones en las calles principales
@@ -105,7 +105,7 @@ function spawnMazdas() {
     });
 
     // Load second Mazda model (2018 Mazda RX-7 Fatal Stinger)
-    mazdaLoader.load('assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+    mazdaLoader.load('./assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             // Posiciones en las calles principales
@@ -175,7 +175,7 @@ function loadAvatar(avatarName) {
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`./assets/avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
         currentAvatar.scale.set(0.005, 0.005, 0.005);
         currentAvatar.position.set(0, 0, 5);
@@ -197,9 +197,9 @@ function loadAvatar(avatarName) {
         // Cargar animaciones
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': 'avatars/animations/Idle.fbx',
-            'walking': 'avatars/animations/Walking.fbx',
-            'running': 'avatars/animations/Running.fbx'
+            'idle': './assets/avatars/animations/Idle.fbx',
+            'walking': './assets/avatars/animations/Walking.fbx',
+            'running': './assets/avatars/animations/Running.fbx'
         };
         
         // Contador para asegurar que todas las animaciones se carguen

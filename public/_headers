@@ -1,0 +1,13 @@
+/*
+  Access-Control-Allow-Origin: *
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin
+  
+/*.glb
+  Content-Type: model/gltf-binary
+  Access-Control-Allow-Origin: *
+  
+/*.fbx
+  Content-Type: application/octet-stream
+  Access-Control-Allow-Origin: *
