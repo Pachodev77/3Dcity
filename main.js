@@ -8,7 +8,10 @@ scene.background = new THREE.Color(0x87ceeb);
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 10);
+// Posición inicial de la cámara (detrás y ligeramente arriba del avatar)
+camera.position.set(0, 2, -5);
+// Rotación para que mire hacia adelante (hacia donde mira el avatar)
+camera.rotation.y = Math.PI; // 180 grados para que mire hacia adelante
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -135,6 +138,10 @@ spawnMazdas();
 let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
+
+// Inicializar la cámara para que mire hacia adelante
+let cameraAngleH = Math.PI; // 180 grados para que mire hacia adelante
+let cameraAngleVOffset = 0;
 let currentAction = 'idle';
 const avatarList = ['Ch02_nonPBR', 'Ch08_nonPBR', 'Ch15_nonPBR'];
 
@@ -162,6 +169,9 @@ loadAvatar(avatarList[0]);
 function loadAvatar(avatarName) {
     if (currentAvatar) {
         scene.remove(currentAvatar);
+        if (animationMixer) {
+            animationMixer.stopAllAction();
+        }
     }
 
     const fbxLoader = new FBXLoader();
@@ -169,16 +179,22 @@ function loadAvatar(avatarName) {
         currentAvatar = fbx;
         currentAvatar.scale.set(0.005, 0.005, 0.005);
         currentAvatar.position.set(0, 0, 5);
+        currentAvatar.rotation.y = Math.PI; // Hacer que el avatar mire hacia adelante
+        
+        // Asegurar que todas las mallas tengan sombras
         currentAvatar.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
             }
         });
+        
         scene.add(currentAvatar);
 
-        // Animations
+        // Inicializar el mixer de animaciones
         animationMixer = new THREE.AnimationMixer(currentAvatar);
+        
+        // Cargar animaciones
         const animLoader = new FBXLoader();
         const animationsToLoad = {
             'idle': 'avatars/animations/Idle.fbx',
@@ -186,34 +202,73 @@ function loadAvatar(avatarName) {
             'running': 'avatars/animations/Running.fbx'
         };
         
+        // Contador para asegurar que todas las animaciones se carguen
         let animationsLoaded = 0;
         const totalAnimations = Object.keys(animationsToLoad).length;
 
-        for (const animName in animationsToLoad) {
-            animLoader.load(animationsToLoad[animName], (anim) => {
-                animationClips[animName] = anim.animations[0];
-                animationsLoaded++;
-                if (animationsLoaded === totalAnimations) {
-                    playAnimation('idle');
+        // Función para cargar cada animación
+        const loadAnimation = (name, url) => {
+            animLoader.load(url, (anim) => {
+                if (anim.animations && anim.animations.length > 0) {
+                    animationClips[name] = anim.animations[0];
+                    animationsLoaded++;
+                    
+                    // Si es la animación idle, reproducirla inmediatamente
+                    if (name === 'idle') {
+                        const idleAction = animationMixer.clipAction(animationClips['idle']);
+                        idleAction.setLoop(THREE.LoopRepeat);
+                        idleAction.play();
+                    }
+                    
+                    // Si todas las animaciones están cargadas, asegurarse de que esté en idle
+                    if (animationsLoaded === totalAnimations) {
+                        playAnimation('idle');
+                    }
+                } else {
+                    console.warn(`No se encontraron animaciones en ${url}`);
                 }
             });
+        };
+        
+        // Cargar cada animación
+        for (const animName in animationsToLoad) {
+            loadAnimation(animName, animationsToLoad[animName]);
         }
     });
 }
 
 function playAnimation(name) {
+    if (!animationMixer) return;
     if (currentAction === name) return;
-    if (animationClips[name]) {
-        const action = animationMixer.clipAction(animationClips[name]);
-        if (animationClips[currentAction]){
-            const previousAction = animationMixer.clipAction(animationClips[currentAction]);
-            if (previousAction) {
-                previousAction.fadeOut(0.5);
-            }
-        }
-        action.reset().fadeIn(0.5).play();
-        currentAction = name;
+    
+    const clip = animationClips[name];
+    if (!clip) {
+        console.warn(`Animación no encontrada: ${name}`);
+        return;
     }
+    
+    const action = animationMixer.clipAction(clip);
+    action.setLoop(THREE.LoopRepeat);
+    
+    // Si hay una animación actual, hacer fade out
+    if (currentAction && animationClips[currentAction]) {
+        const previousAction = animationMixer.clipAction(animationClips[currentAction]);
+        if (previousAction) {
+            previousAction.fadeOut(0.3);
+            // Detener la animación anterior después del fade out
+            setTimeout(() => {
+                previousAction.stop();
+            }, 300);
+        }
+    }
+    
+    // Configurar y reproducir la nueva animación
+    action.reset();
+    action.setEffectiveTimeScale(1.0);
+    action.fadeIn(0.3);
+    action.play();
+    
+    currentAction = name;
 }
 
 // Joysticks
@@ -300,8 +355,7 @@ const avatarRaycaster = new THREE.Raycaster();
 
 // Animation loop
 const clock = new THREE.Clock();
-let cameraAngleH = 0;
-let cameraAngleVOffset = 0;
+// Variables de ángulo de cámara movidas al inicio del archivo
 
 // Reusable vectors for performance
 const viewDirection = new THREE.Vector3();
@@ -380,11 +434,14 @@ function animate() {
     } else if (currentAvatar) {
         // Avatar Controls
         const moveSpeed = 3;
+        
+        // Usar la dirección de la cámara para el movimiento
         camera.getWorldDirection(viewDirection);
         viewDirection.y = 0;
         viewDirection.normalize();
 
-        right.crossVectors(camera.up, viewDirection).normalize();
+        // Calcular dirección de movimiento basada en el joystick (invertir el eje X para movimiento lateral)
+        right.set(viewDirection.z, 0, -viewDirection.x).normalize();
         moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
 
         if (moveData.distance > 0) {
