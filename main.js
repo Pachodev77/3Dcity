@@ -8,10 +8,7 @@ scene.background = new THREE.Color(0x87ceeb);
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// Posición inicial de la cámara (detrás y ligeramente arriba del avatar)
-camera.position.set(0, 2, -5);
-// Rotación para que mire hacia adelante (hacia donde mira el avatar)
-camera.rotation.y = Math.PI; // 180 grados para que mire hacia adelante
+camera.position.set(0, 5, 10);
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -57,7 +54,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('./assets/maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -76,22 +73,20 @@ gltfLoader.load('./assets/maps/city 3/source/town4new.glb', (gltf) => {
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    
-    // Load first Mazda model (1999 Mazdaspeed RX-7)
-    mazdaLoader.load('./assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    mazdaLoader.load('1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
-            // Posiciones en las calles principales
-            { position: new THREE.Vector3(25, 0.1, 0), rotation: Math.PI / 2 },  // Calle horizontal superior
-            { position: new THREE.Vector3(-25, 0.1, 0), rotation: -Math.PI / 2 }, // Calle horizontal inferior
+            { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
+            { position: new THREE.Vector3(-10, 0.1, 30), rotation: Math.PI },
+            { position: new THREE.Vector3(-25, 0.1, 10), rotation: Math.PI / 4 },
+            { position: new THREE.Vector3(5, 0.1, 5), rotation: 0 },
         ];
 
         spawnPoints.forEach(sp => {
             const car = mazdaModel.clone();
-            car.scale.set(0.5, 0.5, 0.5);
+            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
             car.position.copy(sp.position);
             car.rotation.y = sp.rotation;
-            car.userData.modelType = 'mazda1999';
             car.traverse(function (child) {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -99,26 +94,26 @@ function spawnMazdas() {
                 }
             });
             scene.add(car);
-            vehicles.push(car);
-            collidableObjects.push(car);
+            vehicles.push(car); // Add to drivable vehicles
+            collidableObjects.push(car); // Add to collidable objects
         });
     });
+}
 
-    // Load second Mazda model (2018 Mazda RX-7 Fatal Stinger)
-    mazdaLoader.load('./assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
-        const mazdaModel = gltf.scene;
+function spawnFatalStinger() {
+    const stingerLoader = new GLTFLoader();
+    stingerLoader.load('2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+        const stingerModel = gltf.scene;
         const spawnPoints = [
-            // Posiciones en las calles principales
-            { position: new THREE.Vector3(0, 0.1, 20), rotation: Math.PI },      // Calle vertical derecha
-            { position: new THREE.Vector3(0, 0.1, -20), rotation: 0 },           // Calle vertical izquierda
+            { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
+            { position: new THREE.Vector3(-5, 0.1, 10), rotation: -Math.PI / 3 },
         ];
 
         spawnPoints.forEach(sp => {
-            const car = mazdaModel.clone();
-            car.scale.set(0.5, 0.5, 0.5);
+            const car = stingerModel.clone();
+            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
             car.position.copy(sp.position);
             car.rotation.y = sp.rotation;
-            car.userData.modelType = 'mazda2018';
             car.traverse(function (child) {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -126,22 +121,19 @@ function spawnMazdas() {
                 }
             });
             scene.add(car);
-            vehicles.push(car);
-            collidableObjects.push(car);
+            vehicles.push(car); // Add to drivable vehicles
+            collidableObjects.push(car); // Add to collidable objects
         });
     });
 }
 
 spawnMazdas();
+spawnFatalStinger();
 
 // Avatar variables
 let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
-
-// Inicializar la cámara para que mire hacia adelante
-let cameraAngleH = Math.PI; // 180 grados para que mire hacia adelante
-let cameraAngleVOffset = 0;
 let currentAction = 'idle';
 const avatarList = ['Ch02_nonPBR', 'Ch08_nonPBR', 'Ch15_nonPBR'];
 
@@ -169,106 +161,58 @@ loadAvatar(avatarList[0]);
 function loadAvatar(avatarName) {
     if (currentAvatar) {
         scene.remove(currentAvatar);
-        if (animationMixer) {
-            animationMixer.stopAllAction();
-        }
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`./assets/avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
         currentAvatar.scale.set(0.005, 0.005, 0.005);
         currentAvatar.position.set(0, 0, 5);
-        currentAvatar.rotation.y = Math.PI; // Hacer que el avatar mire hacia adelante
-        
-        // Asegurar que todas las mallas tengan sombras
         currentAvatar.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
             }
         });
-        
         scene.add(currentAvatar);
 
-        // Inicializar el mixer de animaciones
+        // Animations
         animationMixer = new THREE.AnimationMixer(currentAvatar);
-        
-        // Cargar animaciones
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': './assets/avatars/animations/Idle.fbx',
-            'walking': './assets/avatars/animations/Walking.fbx',
-            'running': './assets/avatars/animations/Running.fbx'
+            'idle': 'avatars/animations/Idle.fbx',
+            'walking': 'avatars/animations/Walking.fbx',
+            'running': 'avatars/animations/Running.fbx'
         };
         
-        // Contador para asegurar que todas las animaciones se carguen
         let animationsLoaded = 0;
         const totalAnimations = Object.keys(animationsToLoad).length;
 
-        // Función para cargar cada animación
-        const loadAnimation = (name, url) => {
-            animLoader.load(url, (anim) => {
-                if (anim.animations && anim.animations.length > 0) {
-                    animationClips[name] = anim.animations[0];
-                    animationsLoaded++;
-                    
-                    // Si es la animación idle, reproducirla inmediatamente
-                    if (name === 'idle') {
-                        const idleAction = animationMixer.clipAction(animationClips['idle']);
-                        idleAction.setLoop(THREE.LoopRepeat);
-                        idleAction.play();
-                    }
-                    
-                    // Si todas las animaciones están cargadas, asegurarse de que esté en idle
-                    if (animationsLoaded === totalAnimations) {
-                        playAnimation('idle');
-                    }
-                } else {
-                    console.warn(`No se encontraron animaciones en ${url}`);
+        for (const animName in animationsToLoad) {
+            animLoader.load(animationsToLoad[animName], (anim) => {
+                animationClips[animName] = anim.animations[0];
+                animationsLoaded++;
+                if (animationsLoaded === totalAnimations) {
+                    playAnimation('idle');
                 }
             });
-        };
-        
-        // Cargar cada animación
-        for (const animName in animationsToLoad) {
-            loadAnimation(animName, animationsToLoad[animName]);
         }
     });
 }
 
 function playAnimation(name) {
-    if (!animationMixer) return;
     if (currentAction === name) return;
-    
-    const clip = animationClips[name];
-    if (!clip) {
-        console.warn(`Animación no encontrada: ${name}`);
-        return;
-    }
-    
-    const action = animationMixer.clipAction(clip);
-    action.setLoop(THREE.LoopRepeat);
-    
-    // Si hay una animación actual, hacer fade out
-    if (currentAction && animationClips[currentAction]) {
-        const previousAction = animationMixer.clipAction(animationClips[currentAction]);
-        if (previousAction) {
-            previousAction.fadeOut(0.3);
-            // Detener la animación anterior después del fade out
-            setTimeout(() => {
-                previousAction.stop();
-            }, 300);
+    if (animationClips[name]) {
+        const action = animationMixer.clipAction(animationClips[name]);
+        if (animationClips[currentAction]){
+            const previousAction = animationMixer.clipAction(animationClips[currentAction]);
+            if (previousAction) {
+                previousAction.fadeOut(0.5);
+            }
         }
+        action.reset().fadeIn(0.5).play();
+        currentAction = name;
     }
-    
-    // Configurar y reproducir la nueva animación
-    action.reset();
-    action.setEffectiveTimeScale(1.0);
-    action.fadeIn(0.3);
-    action.play();
-    
-    currentAction = name;
 }
 
 // Joysticks
@@ -355,7 +299,8 @@ const avatarRaycaster = new THREE.Raycaster();
 
 // Animation loop
 const clock = new THREE.Clock();
-// Variables de ángulo de cámara movidas al inicio del archivo
+let cameraAngleH = 0;
+let cameraAngleVOffset = 0;
 
 // Reusable vectors for performance
 const viewDirection = new THREE.Vector3();
@@ -434,14 +379,11 @@ function animate() {
     } else if (currentAvatar) {
         // Avatar Controls
         const moveSpeed = 3;
-        
-        // Usar la dirección de la cámara para el movimiento
         camera.getWorldDirection(viewDirection);
         viewDirection.y = 0;
         viewDirection.normalize();
 
-        // Calcular dirección de movimiento basada en el joystick (invertir el eje X para movimiento lateral)
-        right.set(viewDirection.z, 0, -viewDirection.x).normalize();
+        right.crossVectors(camera.up, viewDirection).normalize();
         moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
 
         if (moveData.distance > 0) {
