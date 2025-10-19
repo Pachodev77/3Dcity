@@ -314,21 +314,30 @@ function animate() {
         // Vehicle Controls
         const forward = moveData.vector.y;
         const turn = -moveData.vector.x;
+        const maxReverseSpeed = -vehicleMaxSpeed * 0.5;
 
-        if (forward > 0) {
+        // Acceleration/deceleration
+        if (forward > 0) { // Accelerating forward
             vehicleSpeed += vehicleAcceleration * delta;
-        } else {
-            vehicleSpeed -= vehicleFriction * delta;
+        } else if (forward < 0) { // Accelerating backward (reversing)
+            vehicleSpeed += vehicleAcceleration * forward * delta; // `forward` is negative
+        } else { // No joystick input, apply friction
+            if (vehicleSpeed > 0) vehicleSpeed -= vehicleFriction * delta;
+            if (vehicleSpeed < 0) vehicleSpeed += vehicleFriction * delta;
+            if (Math.abs(vehicleSpeed) < 0.1) vehicleSpeed = 0; // Stop friction from flipping direction
         }
-        vehicleSpeed = Math.max(0, Math.min(vehicleSpeed, vehicleMaxSpeed));
+        vehicleSpeed = Math.max(maxReverseSpeed, Math.min(vehicleSpeed, vehicleMaxSpeed));
 
-        if (vehicleSpeed > 0.1) {
-            const steering = turn * vehicleSteeringSpeed * delta;
+        // Steering
+        if (Math.abs(vehicleSpeed) > 0.1) {
+            const steeringDirection = vehicleSpeed > 0 ? 1 : -1; // Invert steering in reverse
+            const steering = turn * vehicleSteeringSpeed * delta * steeringDirection;
             currentVehicle.rotation.y += steering;
         }
 
-        currentVehicle.position.x -= vehicleSpeed * Math.sin(currentVehicle.rotation.y) * delta;
-        currentVehicle.position.z -= vehicleSpeed * Math.cos(currentVehicle.rotation.y) * delta;
+        // Position update (assuming model faces +Z, so we use +=)
+        currentVehicle.position.x += vehicleSpeed * Math.sin(currentVehicle.rotation.y) * delta;
+        currentVehicle.position.z += vehicleSpeed * Math.cos(currentVehicle.rotation.y) * delta;
         
         playAnimation('idle');
 
