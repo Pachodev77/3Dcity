@@ -36,3 +36,7 @@ yarn-error.log*
 # Local development
 .cache
 .temp
+
+# Large FBX files
+assets/avatars/Ch08_nonPBR.fbx
+assets/avatars/Ch15_nonPBR.fbx
