@@ -424,7 +424,7 @@ function animate() {
     
     if (targetToFollow) {
         // Camera Rotation (Vertical is universal)
-        cameraAngleVOffset += cameraData.y * cameraRotationSpeed * delta; // Inverted vertical rotation
+        cameraAngleVOffset -= cameraData.y * cameraRotationSpeed * delta; // Standard vertical rotation
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
         const minAngleV = 0.1; // Look more forward
