@@ -84,6 +84,7 @@ function spawnMazdas() {
 
         spawnPoints.forEach(sp => {
             const car = mazdaModel.clone();
+            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
             car.position.copy(sp.position);
             car.rotation.y = sp.rotation;
             car.traverse(function (child) {
@@ -238,6 +239,9 @@ function toggleVehicle() {
         if (currentAvatar) {
             currentAvatar.visible = false;
         }
+        // Reset camera angle to be behind the vehicle
+        cameraAngleH = currentVehicle.rotation.y;
+        cameraAngleVOffset = 0;
     }
 }
 
