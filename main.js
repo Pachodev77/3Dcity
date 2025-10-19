@@ -240,7 +240,7 @@ function toggleVehicle() {
             currentAvatar.visible = false;
         }
         // Reset camera angle to be behind the vehicle
-        cameraAngleH = currentVehicle.rotation.y;
+        cameraAngleH = currentVehicle.rotation.y + Math.PI;
         cameraAngleVOffset = 0;
     }
 }
@@ -332,6 +332,13 @@ function animate() {
         
         playAnimation('idle');
 
+        // Chase camera logic
+        const targetCameraAngleH = currentVehicle.rotation.y + Math.PI;
+        let diff = targetCameraAngleH - cameraAngleH;
+        if (diff > Math.PI) diff -= 2 * Math.PI;
+        if (diff < -Math.PI) diff += 2 * Math.PI;
+        cameraAngleH += diff * 0.05; // Smoothly follow the car
+
     } else if (currentAvatar) {
         // Avatar Controls
         const moveSpeed = 3;
@@ -365,7 +372,10 @@ function animate() {
     if (targetToFollow) {
         // Camera Rotation
         const cameraRotationSpeed = 2;
-        cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
+        // Only allow manual camera rotation if not in a vehicle
+        if (!isInVehicle) {
+            cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
+        }
         cameraAngleVOffset += cameraData.y * cameraRotationSpeed * delta; // Inverted vertical rotation
         cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
 
