@@ -54,7 +54,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('/assets/maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -73,7 +73,7 @@ gltfLoader.load('/assets/maps/city 3/source/town4new.glb', (gltf) => {
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    mazdaLoader.load('/assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    mazdaLoader.load('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
@@ -104,7 +104,7 @@ function spawnMazdas() {
 
 function spawnFatalStinger() {
     const stingerLoader = new GLTFLoader();
-    stingerLoader.load('/assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+    stingerLoader.load('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
         const stingerModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
@@ -133,7 +133,7 @@ function spawnFatalStinger() {
 
 function spawnSpiritRTypeA() {
     const loader = new GLTFLoader();
-    loader.load('/assets/2002_mazda_rx-7_spirit_r_type_a_fd.glb', (gltf) => {
+    loader.load('/2002_mazda_rx-7_spirit_r_type_a_fd.glb', (gltf) => {
         const model = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(20, 0.1, 15), rotation: Math.PI / 2 },
@@ -162,7 +162,7 @@ function spawnSpiritRTypeA() {
 
 function spawnSpiritR() {
     const loader = new GLTFLoader();
-    loader.load('/assets/2002_mazda_rx-7_spirit-r.glb', (gltf) => {
+    loader.load('/2002_mazda_rx-7_spirit-r.glb', (gltf) => {
         const model = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(25, 0.1, 5), rotation: Math.PI / 4 },
@@ -191,7 +191,7 @@ function spawnSpiritR() {
 
 function spawnReAmemiya() {
     const loader = new GLTFLoader();
-    loader.load('/assets/2002_mazda_re-amemiya_super_greddy_3.glb', (gltf) => {
+    loader.load('/2002_mazda_re-amemiya_super_greddy_3.glb', (gltf) => {
         const model = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 20), rotation: -Math.PI / 2 },
@@ -258,7 +258,7 @@ function loadAvatar(avatarName) {
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`/assets/avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`/avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
         currentAvatar.userData.avatarName = avatarName; // Store avatar name
         if (avatarName === 'Remy@T-Pose') {
@@ -278,9 +278,9 @@ function loadAvatar(avatarName) {
         animationMixer = new THREE.AnimationMixer(currentAvatar);
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': '/assets/avatars/animations/Idle.fbx',
-            'walking': '/assets/avatars/animations/Walking.fbx',
-            'running': '/assets/avatars/animations/Running.fbx'
+            'idle': '/avatars/animations/Idle.fbx',
+            'walking': '/avatars/animations/Walking.fbx',
+            'running': '/avatars/animations/Running.fbx'
         };
         
         let animationsLoaded = 0;
