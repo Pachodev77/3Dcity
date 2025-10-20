@@ -54,7 +54,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
+gltfLoader.load('/assets/maps/city 3/source/town4new.glb', (gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -73,7 +73,7 @@ gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    mazdaLoader.load('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    mazdaLoader.load('/assets/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
@@ -97,12 +97,14 @@ function spawnMazdas() {
             vehicles.push(car); // Add to drivable vehicles
             collidableObjects.push(car); // Add to collidable objects
         });
+    }, undefined, (error) => {
+        console.error('Error loading 1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb:', error);
     });
 }
 
 function spawnFatalStinger() {
     const stingerLoader = new GLTFLoader();
-    stingerLoader.load('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+    stingerLoader.load('/assets/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
         const stingerModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
@@ -124,18 +126,110 @@ function spawnFatalStinger() {
             vehicles.push(car); // Add to drivable vehicles
             collidableObjects.push(car); // Add to collidable objects
         });
+    }, undefined, (error) => {
+        console.error('Error loading 2018_mazda_rx-7_fd3s_fatal_stinger.glb:', error);
+    });
+}
+
+function spawnSpiritRTypeA() {
+    const loader = new GLTFLoader();
+    loader.load('/assets/2002_mazda_rx-7_spirit_r_type_a_fd.glb', (gltf) => {
+        const model = gltf.scene;
+        const spawnPoints = [
+            { position: new THREE.Vector3(20, 0.1, 15), rotation: Math.PI / 2 },
+            { position: new THREE.Vector3(-15, 0.1, 20), rotation: -Math.PI / 3 },
+        ];
+
+        spawnPoints.forEach(sp => {
+            const car = model.clone();
+            car.scale.set(0.5, 0.5, 0.5);
+            car.position.copy(sp.position);
+            car.rotation.y = sp.rotation;
+            car.traverse(function (child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            scene.add(car);
+            vehicles.push(car);
+            collidableObjects.push(car);
+        });
+    }, undefined, (error) => {
+        console.error('Error loading 2002_mazda_rx-7_spirit_r_type_a_fd.glb:', error);
+    });
+}
+
+function spawnSpiritR() {
+    const loader = new GLTFLoader();
+    loader.load('/assets/2002_mazda_rx-7_spirit-r.glb', (gltf) => {
+        const model = gltf.scene;
+        const spawnPoints = [
+            { position: new THREE.Vector3(25, 0.1, 5), rotation: Math.PI / 4 },
+            { position: new THREE.Vector3(-20, 0.1, 10), rotation: Math.PI },
+        ];
+
+        spawnPoints.forEach(sp => {
+            const car = model.clone();
+            car.scale.set(0.5, 0.5, 0.5);
+            car.position.copy(sp.position);
+            car.rotation.y = sp.rotation;
+            car.traverse(function (child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            scene.add(car);
+            vehicles.push(car);
+            collidableObjects.push(car);
+        });
+    }, undefined, (error) => {
+        console.error('Error loading 2002_mazda_rx-7_spirit-r.glb:', error);
+    });
+}
+
+function spawnReAmemiya() {
+    const loader = new GLTFLoader();
+    loader.load('/assets/2002_mazda_re-amemiya_super_greddy_3.glb', (gltf) => {
+        const model = gltf.scene;
+        const spawnPoints = [
+            { position: new THREE.Vector3(10, 0.1, 20), rotation: -Math.PI / 2 },
+            { position: new THREE.Vector3(-5, 0.1, 25), rotation: 0 },
+        ];
+
+        spawnPoints.forEach(sp => {
+            const car = model.clone();
+            car.scale.set(0.5, 0.5, 0.5);
+            car.position.copy(sp.position);
+            car.rotation.y = sp.rotation;
+            car.traverse(function (child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+                });
+            scene.add(car);
+            vehicles.push(car);
+            collidableObjects.push(car);
+        });
+    }, undefined, (error) => {
+        console.error('Error loading 2002_mazda_re-amemiya_super_greddy_3.glb:', error);
     });
 }
 
 spawnMazdas();
 spawnFatalStinger();
+spawnSpiritRTypeA();
+spawnSpiritR();
+spawnReAmemiya();
 
 // Avatar variables
 let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
 let currentAction = 'idle';
-const avatarList = ['Ch02_nonPBR', 'Ch08_nonPBR', 'Ch15_nonPBR'];
+const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
 
 // UI
 const avatarSelector = document.getElementById('avatar-selector');
@@ -164,10 +258,14 @@ function loadAvatar(avatarName) {
     }
 
     const fbxLoader = new FBXLoader();
-    fbxLoader.load(`/avatars/${avatarName}.fbx`, (fbx) => {
+    fbxLoader.load(`/assets/avatars/${avatarName}.fbx`, (fbx) => {
         currentAvatar = fbx;
-        currentAvatar.scale.set(0.005, 0.005, 0.005);
-        currentAvatar.position.set(0, 0, 5);
+        currentAvatar.userData.avatarName = avatarName; // Store avatar name
+        if (avatarName === 'Remy@T-Pose') {
+            currentAvatar.scale.set(0.002, 0.002, 0.002); // Further adjusted scale for Remy
+        } else {
+            currentAvatar.scale.set(0.005, 0.005, 0.005);
+        }        currentAvatar.position.set(0, 0, 5);
         currentAvatar.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
@@ -180,9 +278,9 @@ function loadAvatar(avatarName) {
         animationMixer = new THREE.AnimationMixer(currentAvatar);
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': '/avatars/animations/Idle.fbx',
-            'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
+            'idle': '/assets/avatars/animations/Idle.fbx',
+            'walking': '/assets/avatars/animations/Walking.fbx',
+            'running': '/assets/avatars/animations/Running.fbx'
         };
         
         let animationsLoaded = 0;
@@ -193,7 +291,12 @@ function loadAvatar(avatarName) {
                 animationClips[animName] = anim.animations[0];
                 animationsLoaded++;
                 if (animationsLoaded === totalAnimations) {
+                    // Ensure mixer is reset and idle animation is played
+                    animationMixer.stopAllAction(); // Stop any previous actions
+                    const tempCurrentAction = currentAction; // Store currentAction
+                    currentAction = ''; // Temporarily set to empty to force play
                     playAnimation('idle');
+                    currentAction = tempCurrentAction; // Restore currentAction
                 }
             });
         }
@@ -354,7 +457,9 @@ function animate() {
 
             if (intersections.length > 0) {
                 currentAvatar.position.y = intersections[0].point.y;
-            }
+                if (currentAvatar.userData.avatarName === 'Remy@T-Pose') { // Check if it's Remy
+                    currentAvatar.position.y += 0.3; // Further increased upward adjustment for Remy
+                }            }
         }
     }
 
@@ -413,7 +518,8 @@ function animate() {
         right.crossVectors(camera.up, viewDirection).normalize();
         moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
 
-        if (moveData.distance > 0) {
+        const moveThreshold = 0.1; // Define a small threshold for movement
+        if (moveData.distance > moveThreshold) {
             const speed = moveData.distance / 50 * moveSpeed;
             currentAvatar.position.add(moveDirection.clone().multiplyScalar(speed * delta));
             currentAvatar.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
