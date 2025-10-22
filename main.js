@@ -369,6 +369,8 @@ function toggleVehicle() {
         // Update slider for avatar
         zoomSlider.min = avatarMinCameraDistance;
         zoomSlider.max = maxCameraDistance;
+        cameraDistance = avatarCameraDistance; // Restore avatar camera distance
+        zoomSlider.value = cameraDistance; // Update slider position
     } else if (nearbyVehicle) {
         // Enter vehicle
         isInVehicle = true;
@@ -384,6 +386,8 @@ function toggleVehicle() {
         // Update slider for vehicle
         zoomSlider.min = vehicleMinCameraDistance;
         zoomSlider.max = maxCameraDistance;
+        cameraDistance = vehicleMinCameraDistance; // Set camera distance to vehicle default
+        zoomSlider.value = cameraDistance; // Update slider position
     }
 }
 
@@ -398,6 +402,7 @@ enterExitButton.addEventListener('click', toggleVehicle);
 
 // Camera zoom variables
 let cameraDistance = 1;
+let avatarCameraDistance = 1; // To store avatar's camera distance
 const avatarMinCameraDistance = 1;
 const vehicleMinCameraDistance = 3;
 const maxCameraDistance = 5;
@@ -407,8 +412,14 @@ const avatarLerp = 0.25;
 const vehicleLerp = 0.1;
 
 // Zoom Slider Control
+zoomSlider.min = avatarMinCameraDistance;
+zoomSlider.max = maxCameraDistance;
+zoomSlider.value = cameraDistance;
 zoomSlider.addEventListener('input', (e) => {
     cameraDistance = parseFloat(e.target.value);
+    if (!isInVehicle) {
+        avatarCameraDistance = cameraDistance;
+    }
 });
 
 
