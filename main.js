@@ -354,6 +354,8 @@ cameraJoystick.on('end', () => {
 
 // Enter/Exit Vehicle Logic
 function toggleVehicle() {
+    const zoomSlider = document.getElementById('zoom-slider');
+
     if (isInVehicle) {
         // Exit vehicle
         isInVehicle = false;
@@ -364,6 +366,9 @@ function toggleVehicle() {
             currentVehicle.isOccupied = false;
             currentVehicle = null;
         }
+        // Update slider for avatar
+        zoomSlider.min = avatarMinCameraDistance;
+        zoomSlider.max = maxCameraDistance;
     } else if (nearbyVehicle) {
         // Enter vehicle
         isInVehicle = true;
@@ -372,10 +377,13 @@ function toggleVehicle() {
         if (currentAvatar) {
             currentAvatar.visible = false;
         }
-        // Reset camera angle and distance to be behind the vehicle
+        // Reset camera angle to be behind the vehicle
         cameraAngleH = currentVehicle.rotation.y + Math.PI;
         cameraAngleVOffset = 0;
-        cameraDistance = 8; // Reset camera distance for vehicle mode
+        
+        // Update slider for vehicle
+        zoomSlider.min = vehicleMinCameraDistance;
+        zoomSlider.max = maxCameraDistance;
     }
 }
 
@@ -389,9 +397,14 @@ enterExitButton.addEventListener('click', toggleVehicle);
 
 
 // Camera zoom variables
-let cameraDistance = 8;
-const minCameraDistance = 1; // Reduced min zoom-in distance
-const maxCameraDistance = 7; // Further reduced max zoom-out distance
+let cameraDistance = 1;
+const avatarMinCameraDistance = 1;
+const vehicleMinCameraDistance = 5;
+const maxCameraDistance = 7;
+
+// Camera smoothing variables
+const avatarLerp = 0.25;
+const vehicleLerp = 0.1;
 
 // Zoom Slider Control
 zoomSlider.addEventListener('input', (e) => {
@@ -538,7 +551,8 @@ function animate() {
 
         const minAngleV = 0.1; // Look more forward
         const maxAngleV = 0.9; // Even more top-down at min distance (lower floor)
-        const t = (cameraDistance - minCameraDistance) / (maxCameraDistance - minCameraDistance);
+        const currentMinCameraDistance = isInVehicle ? vehicleMinCameraDistance : avatarMinCameraDistance;
+        const t = (cameraDistance - currentMinCameraDistance) / (maxCameraDistance - currentMinCameraDistance);
         // Invert the vertical camera angle behavior:
         // When camera is near (t=0), baseAngleV should be maxAngleV (high angle, low floor).
         // When camera is far (t=1), baseAngleV should be minAngleV (low angle, high floor).
@@ -577,7 +591,8 @@ function animate() {
             finalCameraPosition.y = 1.0;
         }
 
-        camera.position.lerp(finalCameraPosition, 0.25); // Increased responsiveness to stick closer to vehicle
+        const currentLerp = isInVehicle ? vehicleLerp : avatarLerp;
+        camera.position.lerp(finalCameraPosition, currentLerp);
         camera.lookAt(followPosition);
     }
 
