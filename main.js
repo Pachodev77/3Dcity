@@ -332,25 +332,13 @@ class Zombie {
             this.setState('zombie running');
             const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position).normalize();
 
+            const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
             const chaseRaycaster = new THREE.Raycaster(this.model.position, direction);
-            const chaseIntersections = chaseRaycaster.intersectObjects(this.collidableObjects, true);
+            const chaseIntersections = chaseRaycaster.intersectObjects(otherCollidables, true);
 
-            let collision = false;
-            for (const intersection of chaseIntersections) {
-                let isPlayer = false;
-                intersection.object.traverseAncestors((ancestor) => {
-                    if (ancestor === playerAvatar) {
-                        isPlayer = true;
-                    }
-                });
-
-                if (!isPlayer && intersection.distance < 0.5) {
-                    collision = true;
-                    break;
-                }
-            }
-
-            if (!collision) {
+            if (chaseIntersections.length > 0 && chaseIntersections[0].distance < 0.5) {
+                // collision with something other than the zombie or the player
+            } else {
                 this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
             }
 
