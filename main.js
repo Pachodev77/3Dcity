@@ -515,7 +515,57 @@ function animate() {
             currentVehicle.rotation.y += steering;
         }
 
-        // Position update (assuming model faces +Z, so we use +=)
+        // --- Vehicle Ground Collision ---
+        const vehicleRayOrigin = currentVehicle.position.clone().add({ x: 0, y: 1, z: 0 });
+        avatarRaycaster.set(vehicleRayOrigin, down); // Re-using avatarRaycaster
+        const groundIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+        let groundY = null;
+        for (const intersection of groundIntersections) {
+            let isSelf = false;
+            intersection.object.traverseAncestors((ancestor) => {
+                if (ancestor === currentVehicle) {
+                    isSelf = true;
+                }
+            });
+            if (!isSelf) {
+                groundY = intersection.point.y;
+                break; // Found the ground
+            }
+        }
+
+        if (groundY !== null) {
+            currentVehicle.position.y = groundY + 0.2; // 0.2 is offset for wheels
+        }
+
+        // --- Vehicle Wall Collision ---
+        const forwardDirection = new THREE.Vector3(Math.sin(currentVehicle.rotation.y), 0, Math.cos(currentVehicle.rotation.y));
+        const vehicleFront = currentVehicle.position.clone().add({x:0, y:0.5, z:0});
+        avatarRaycaster.set(vehicleFront, forwardDirection);
+        const wallIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+        let hitWall = false;
+        for (const intersection of wallIntersections) {
+            let isSelf = false;
+            intersection.object.traverseAncestors((ancestor) => {
+                if (ancestor === currentVehicle) {
+                    isSelf = true;
+                }
+            });
+            if (!isSelf) {
+                const collisionDistance = 1.5; // Vehicle's half-length
+                if (intersection.distance < collisionDistance && vehicleSpeed > 0) {
+                    hitWall = true;
+                }
+                break; // Check only the first non-self object
+            }
+        }
+
+        if (hitWall) {
+            vehicleSpeed = 0; // Stop the car on forward collision
+        }
+
+        // Position update
         currentVehicle.position.x += vehicleSpeed * Math.sin(currentVehicle.rotation.y) * delta;
         currentVehicle.position.z += vehicleSpeed * Math.cos(currentVehicle.rotation.y) * delta;
         
@@ -545,9 +595,23 @@ function animate() {
         const moveThreshold = 0.1; // Define a small threshold for movement
         if (moveData.distance > moveThreshold) {
             const speed = moveData.distance / 50 * moveSpeed;
-            currentAvatar.position.add(moveDirection.clone().multiplyScalar(speed * delta));
-            currentAvatar.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
-            playAnimation('running');
+            const moveVector = moveDirection.clone().multiplyScalar(speed * delta);
+
+            // --- Avatar Collision Detection ---
+            const avatarCenter = currentAvatar.position.clone().add({ x: 0, y: 0.5, z: 0 }); // Raycast from near avatar's center
+            avatarRaycaster.set(avatarCenter, moveDirection);
+            const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+            const collisionThreshold = 0.5; // How close to an object to stop
+            if (intersections.length > 0 && intersections[0].distance < collisionThreshold) {
+                // Collision detected, do not move.
+                playAnimation('idle');
+            } else {
+                // No collision, move the avatar.
+                currentAvatar.position.add(moveVector);
+                currentAvatar.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
+                playAnimation('running');
+            }
         } else {
             playAnimation('idle');
         }
