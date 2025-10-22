@@ -222,7 +222,7 @@ function spawnReAmemiya() {
 
 function spawnZombie() {
     const fbxLoader = new FBXLoader();
-    loadWithCache('/assets/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
+    loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
         zombieModel = zombie;
         zombieModel.scale.set(0.005, 0.005, 0.005); // Match avatar scale
         zombieModel.position.set(0, 0, 10);
@@ -250,7 +250,7 @@ function spawnZombie() {
 
         const animationsToLoad = {};
         animFiles.forEach(name => {
-            animationsToLoad[name] = `/assets/avatars/zombi/animations/${name}.fbx`;
+            animationsToLoad[name] = `/avatars/zombi/animations/${name}.fbx`;
         });
 
         let loadedCount = 0;
