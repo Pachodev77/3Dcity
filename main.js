@@ -221,16 +221,17 @@ function spawnReAmemiya() {
 }
 
 class Zombie {
-    constructor(scene, collidableObjects) {
+    constructor(scene, collidableObjects, groundCollidableObjects) {
         this.scene = scene;
         this.collidableObjects = collidableObjects;
+        this.groundCollidableObjects = groundCollidableObjects;
         this.model = null;
         this.mixer = null;
         this.animations = {};
         this.currentState = 'idle';
         this.speed = 0.5; // Slower speed
         this.detectionRadius = 10;
-        this.attackRadius = 2;
+        this.attackRadius = 1; // Reduced attack radius
         this.patrolPath = [
             new THREE.Vector3(0, 0, 15),
             new THREE.Vector3(15, 0, 0),
@@ -307,10 +308,21 @@ class Zombie {
         this.currentState = name;
     }
 
-    update(delta, playerPosition) {
-        if (!this.model || !this.mixer || !playerPosition) return;
+    update(delta, playerPosition, playerAvatar) {
+        if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
 
         this.mixer.update(delta);
+
+        // --- Ground Collision ---
+        const rayOrigin = this.model.position.clone().add({ x: 0, y: 1, z: 0 });
+        const down = new THREE.Vector3(0, -1, 0);
+        const raycaster = new THREE.Raycaster(rayOrigin, down);
+        const intersections = raycaster.intersectObjects(this.groundCollidableObjects, true);
+
+        if (intersections.length > 0) {
+            this.model.position.y = intersections[0].point.y;
+        }
+
 
         const distanceToPlayer = this.model.position.distanceTo(playerPosition);
 
@@ -319,7 +331,29 @@ class Zombie {
         } else if (distanceToPlayer < this.detectionRadius) {
             this.setState('zombie running');
             const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position).normalize();
-            this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
+
+            const chaseRaycaster = new THREE.Raycaster(this.model.position, direction);
+            const chaseIntersections = chaseRaycaster.intersectObjects(this.collidableObjects, true);
+
+            let collision = false;
+            for (const intersection of chaseIntersections) {
+                let isPlayer = false;
+                intersection.object.traverseAncestors((ancestor) => {
+                    if (ancestor === playerAvatar) {
+                        isPlayer = true;
+                    }
+                });
+
+                if (!isPlayer && intersection.distance < 0.5) {
+                    collision = true;
+                    break;
+                }
+            }
+
+            if (!collision) {
+                this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
+            }
+
             this.model.lookAt(playerPosition);
         } else {
             this.setState('walking');
@@ -342,7 +376,7 @@ spawnFatalStinger();
 spawnSpiritRTypeA();
 spawnSpiritR();
 spawnReAmemiya();
-const zombie = new Zombie(scene, collidableObjects);
+const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
 
 // Avatar variables
 
@@ -576,7 +610,7 @@ function animate() {
         animationMixer.update(delta);
     }
     if (currentAvatar) {
-        zombie.update(delta, currentAvatar.position);
+        zombie.update(delta, currentAvatar.position, currentAvatar);
     }
 
     // --- Throttled Operations ---
