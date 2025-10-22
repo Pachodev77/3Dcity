@@ -308,10 +308,14 @@ class Zombie {
         this.currentState = name;
     }
 
-    update(delta, playerPosition, playerAvatar) {
-        if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
+    updateAnimation(delta) {
+        if (this.mixer) {
+            this.mixer.update(delta);
+        }
+    }
 
-        this.mixer.update(delta);
+    updateAI(delta, playerPosition, playerAvatar) {
+        if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
 
         // --- Ground Collision ---
         const rayOrigin = this.model.position.clone().add({ x: 0, y: 1, z: 0 });
@@ -330,7 +334,9 @@ class Zombie {
             this.setState('zombie attack');
         } else if (distanceToPlayer < this.detectionRadius) {
             this.setState('zombie running');
-            const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position).normalize();
+            const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position);
+            direction.y = 0;
+            direction.normalize();
 
             const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
             const chaseRaycaster = new THREE.Raycaster(this.model.position, direction);
@@ -351,7 +357,9 @@ class Zombie {
             if (distanceToTarget < 1) {
                 this.currentPatrolIndex = (this.currentPatrolIndex + 1) % this.patrolPath.length;
             } else {
-                const direction = new THREE.Vector3().subVectors(target, this.model.position).normalize();
+                const direction = new THREE.Vector3().subVectors(target, this.model.position);
+                direction.y = 0;
+                direction.normalize();
                 this.model.position.add(direction.multiplyScalar(this.speed * delta));
                 this.model.lookAt(target);
             }
@@ -597,12 +605,14 @@ function animate() {
     if (animationMixer) {
         animationMixer.update(delta);
     }
-    if (currentAvatar) {
-        zombie.update(delta, currentAvatar.position, currentAvatar);
-    }
+    zombie.updateAnimation(delta);
+
 
     // --- Throttled Operations ---
     if (frameCount % checkInterval === 0) {
+        if (currentAvatar) {
+            zombie.updateAI(delta, currentAvatar.position, currentAvatar);
+        }
         // Proximity check
         if (!isInVehicle && currentAvatar) {
             nearbyVehicle = null;
