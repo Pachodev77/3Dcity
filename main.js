@@ -193,7 +193,7 @@ function spawnSpiritR() {
 
 function spawnReAmemiya() {
     const loader = new GLTFLoader();
-    loader.load('/2002_mazda_re-amemiya_super_greddy_3.glb', (gltf) => {
+    loadWithCache('/2002_mazda_re-amemiya_super_greddy_3.glb', loader).then((gltf) => {
         const model = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 20), rotation: -Math.PI / 2 },
@@ -220,13 +220,97 @@ function spawnReAmemiya() {
     });
 }
 
+function spawnZombie() {
+    const fbxLoader = new FBXLoader();
+    loadWithCache('/assets/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
+        zombieModel = zombie;
+        zombieModel.scale.set(0.005, 0.005, 0.005); // Match avatar scale
+        zombieModel.position.set(0, 0, 10);
+        zombieModel.traverse(function (child) {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+        scene.add(zombieModel);
+        collidableObjects.push(zombieModel);
+
+        zombieMixer = new THREE.AnimationMixer(zombieModel);
+
+        const animLoader = new FBXLoader();
+        const animFiles = [
+            'walking (2)', 'walking', 'zombie agonizing', 'zombie attack', 
+            'zombie headbutt', 'zombie idle (2)', 'zombie idle (3)', 'zombie idle (4)', 
+            'zombie idle', 'zombie kicking (2)', 'zombie kicking', 'zombie punching (2)', 
+            'zombie punching', 'zombie reaction hit (2)', 'zombie reaction hit', 
+            'zombie running', 'zombie scratch idle', 'zombie stand up (2)', 
+            'zombie stand up (3)', 'zombie stand up', 'zombie stumbling', 
+            'zombie transition (2)', 'zombie transition', 'zombie turn'
+        ];
+
+        const animationsToLoad = {};
+        animFiles.forEach(name => {
+            animationsToLoad[name] = `/assets/avatars/zombi/animations/${name}.fbx`;
+        });
+
+        let loadedCount = 0;
+        const totalAnims = Object.keys(animationsToLoad).length;
+
+        for (const animName in animationsToLoad) {
+            loadWithCache(animationsToLoad[animName], animLoader)
+                .then((anim) => {
+                    if (anim.animations && anim.animations.length > 0) {
+                        zombieAnimations[animName] = anim.animations[0];
+                    }
+                })
+                .catch((error) => {
+                    console.warn(`Could not load animation "${animName}":`, error);
+                })
+                .finally(() => {
+                    loadedCount++;
+                    if (loadedCount === totalAnims) {
+                        const animationNames = Object.keys(zombieAnimations);
+                        let currentAnimationIndex = 0;
+
+                        const playNextAnimation = () => {
+                            if (animationNames.length === 0) {
+                                console.warn("No valid zombie animations were loaded.");
+                                return;
+                            }
+
+                            // Stop all previous actions to ensure a clean transition
+                            zombieMixer.stopAllAction();
+
+                            const animName = animationNames[currentAnimationIndex];
+                            const action = zombieMixer.clipAction(zombieAnimations[animName]);
+                            
+                            action.setLoop(THREE.LoopOnce).reset().play();
+                            action.clampWhenFinished = true;
+
+                            currentAnimationIndex = (currentAnimationIndex + 1) % animationNames.length;
+                        };
+
+                        if (Object.keys(zombieAnimations).length > 0) {
+                            zombieMixer.addEventListener('finished', playNextAnimation);
+                            playNextAnimation(); // Start the sequence
+                        } else {
+                            console.error("Failed to load any zombie animations. Zombie will be static.");
+                        }
+                    }
+                });
+        }
+    });
+}
+
 spawnMazdas();
 spawnFatalStinger();
 spawnSpiritRTypeA();
 spawnSpiritR();
 spawnReAmemiya();
+spawnZombie();
 
 // Avatar variables
+let zombieModel, zombieMixer, zombieAnimations = {};
 let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
@@ -456,6 +540,9 @@ function animate() {
     if (animationMixer) {
         animationMixer.update(delta);
     }
+    if (zombieMixer) {
+        zombieMixer.update(delta);
+    }
 
     // --- Throttled Operations ---
     if (frameCount % checkInterval === 0) {
@@ -486,6 +573,17 @@ function animate() {
                 if (currentAvatar.userData.avatarName === 'Remy@T-Pose') { // Check if it's Remy
                     currentAvatar.position.y += 0.3; // Further increased upward adjustment for Remy
                 }            }
+        }
+
+        // Zombie Ground Collision
+        if (zombieModel) {
+            const rayOrigin = zombieModel.position.clone().add({ x: 0, y: 1, z: 0 });
+            avatarRaycaster.set(rayOrigin, down);
+            const intersections = avatarRaycaster.intersectObjects(groundCollidableObjects, true);
+
+            if (intersections.length > 0) {
+                zombieModel.position.y = intersections[0].point.y;
+            }
         }
     }
 
