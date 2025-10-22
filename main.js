@@ -220,34 +220,51 @@ function spawnReAmemiya() {
     });
 }
 
-function spawnZombie() {
-    const fbxLoader = new FBXLoader();
-    loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
-        zombieModel = zombie;
-        zombieModel.scale.set(0.005, 0.005, 0.005); // Match avatar scale
-        zombieModel.position.set(0, 0, 10);
-        zombieModel.traverse(function (child) {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
+class Zombie {
+    constructor(scene, collidableObjects) {
+        this.scene = scene;
+        this.collidableObjects = collidableObjects;
+        this.model = null;
+        this.mixer = null;
+        this.animations = {};
+        this.currentState = 'idle';
+        this.speed = 0.5; // Slower speed
+        this.detectionRadius = 10;
+        this.attackRadius = 2;
+        this.patrolPath = [
+            new THREE.Vector3(0, 0, 15),
+            new THREE.Vector3(15, 0, 0),
+            new THREE.Vector3(0, 0, -15),
+            new THREE.Vector3(-15, 0, 0),
+        ];
+        this.currentPatrolIndex = 0;
+        this.loadModel();
+    }
+
+    loadModel() {
+        const fbxLoader = new FBXLoader();
+        loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
+            this.model = zombie;
+            this.model.scale.set(0.005, 0.005, 0.005);
+            this.model.position.set(0, 0, 10);
+            this.model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            this.scene.add(this.model);
+            this.collidableObjects.push(this.model);
+            this.mixer = new THREE.AnimationMixer(this.model);
+            this.loadAnimations();
         });
-        scene.add(zombieModel);
-        collidableObjects.push(zombieModel);
+    }
 
-        zombieMixer = new THREE.AnimationMixer(zombieModel);
-
+    loadAnimations() {
         const animLoader = new FBXLoader();
         const animFiles = [
-            'walking (2)', 'walking', 'zombie agonizing', 'zombie attack', 
-            'zombie headbutt', 'zombie idle (2)', 'zombie idle (3)', 'zombie idle (4)', 
-            'zombie idle', 'zombie kicking (2)', 'zombie kicking', 'zombie punching (2)', 
-            'zombie punching', 'zombie reaction hit (2)', 'zombie reaction hit', 
-            'zombie running', 'zombie scratch idle', 'zombie stand up (2)', 
-            'zombie stand up (3)', 'zombie stand up', 'zombie stumbling', 
-            'zombie transition (2)', 'zombie transition', 'zombie turn'
+            'walking', 'zombie attack', 'zombie running'
         ];
-
         const animationsToLoad = {};
         animFiles.forEach(name => {
             animationsToLoad[name] = `/avatars/zombi/animations/${name}.fbx`;
@@ -260,7 +277,7 @@ function spawnZombie() {
             loadWithCache(animationsToLoad[animName], animLoader)
                 .then((anim) => {
                     if (anim.animations && anim.animations.length > 0) {
-                        zombieAnimations[animName] = anim.animations[0];
+                        this.animations[animName] = anim.animations[0];
                     }
                 })
                 .catch((error) => {
@@ -269,37 +286,55 @@ function spawnZombie() {
                 .finally(() => {
                     loadedCount++;
                     if (loadedCount === totalAnims) {
-                        const animationNames = Object.keys(zombieAnimations);
-                        let currentAnimationIndex = 0;
-
-                        const playNextAnimation = () => {
-                            if (animationNames.length === 0) {
-                                console.warn("No valid zombie animations were loaded.");
-                                return;
-                            }
-
-                            // Stop all previous actions to ensure a clean transition
-                            zombieMixer.stopAllAction();
-
-                            const animName = animationNames[currentAnimationIndex];
-                            const action = zombieMixer.clipAction(zombieAnimations[animName]);
-                            
-                            action.setLoop(THREE.LoopOnce).reset().play();
-                            action.clampWhenFinished = true;
-
-                            currentAnimationIndex = (currentAnimationIndex + 1) % animationNames.length;
-                        };
-
-                        if (Object.keys(zombieAnimations).length > 0) {
-                            zombieMixer.addEventListener('finished', playNextAnimation);
-                            playNextAnimation(); // Start the sequence
-                        } else {
-                            console.error("Failed to load any zombie animations. Zombie will be static.");
-                        }
+                        this.setState('walking');
                     }
                 });
         }
-    });
+    }
+
+    setState(name) {
+        if (this.currentState === name || !this.animations[name]) return;
+
+        const previousAction = this.animations[this.currentState] ? this.mixer.clipAction(this.animations[this.currentState]) : null;
+        const newAction = this.mixer.clipAction(this.animations[name]);
+
+        if (previousAction) {
+            previousAction.fadeOut(0.5);
+        }
+        
+        newAction.reset().fadeIn(0.5).play();
+
+        this.currentState = name;
+    }
+
+    update(delta, playerPosition) {
+        if (!this.model || !this.mixer || !playerPosition) return;
+
+        this.mixer.update(delta);
+
+        const distanceToPlayer = this.model.position.distanceTo(playerPosition);
+
+        if (distanceToPlayer < this.attackRadius) {
+            this.setState('zombie attack');
+        } else if (distanceToPlayer < this.detectionRadius) {
+            this.setState('zombie running');
+            const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position).normalize();
+            this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
+            this.model.lookAt(playerPosition);
+        } else {
+            this.setState('walking');
+            const target = this.patrolPath[this.currentPatrolIndex];
+            const distanceToTarget = this.model.position.distanceTo(target);
+
+            if (distanceToTarget < 1) {
+                this.currentPatrolIndex = (this.currentPatrolIndex + 1) % this.patrolPath.length;
+            } else {
+                const direction = new THREE.Vector3().subVectors(target, this.model.position).normalize();
+                this.model.position.add(direction.multiplyScalar(this.speed * delta));
+                this.model.lookAt(target);
+            }
+        }
+    }
 }
 
 spawnMazdas();
@@ -307,10 +342,10 @@ spawnFatalStinger();
 spawnSpiritRTypeA();
 spawnSpiritR();
 spawnReAmemiya();
-spawnZombie();
+const zombie = new Zombie(scene, collidableObjects);
 
 // Avatar variables
-let zombieModel, zombieMixer, zombieAnimations = {};
+
 let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
@@ -540,8 +575,8 @@ function animate() {
     if (animationMixer) {
         animationMixer.update(delta);
     }
-    if (zombieMixer) {
-        zombieMixer.update(delta);
+    if (currentAvatar) {
+        zombie.update(delta, currentAvatar.position);
     }
 
     // --- Throttled Operations ---
@@ -573,17 +608,6 @@ function animate() {
                 if (currentAvatar.userData.avatarName === 'Remy@T-Pose') { // Check if it's Remy
                     currentAvatar.position.y += 0.3; // Further increased upward adjustment for Remy
                 }            }
-        }
-
-        // Zombie Ground Collision
-        if (zombieModel) {
-            const rayOrigin = zombieModel.position.clone().add({ x: 0, y: 1, z: 0 });
-            avatarRaycaster.set(rayOrigin, down);
-            const intersections = avatarRaycaster.intersectObjects(groundCollidableObjects, true);
-
-            if (intersections.length > 0) {
-                zombieModel.position.y = intersections[0].point.y;
-            }
         }
     }
 
