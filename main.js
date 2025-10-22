@@ -399,8 +399,8 @@ enterExitButton.addEventListener('click', toggleVehicle);
 // Camera zoom variables
 let cameraDistance = 1;
 const avatarMinCameraDistance = 1;
-const vehicleMinCameraDistance = 5;
-const maxCameraDistance = 7;
+const vehicleMinCameraDistance = 3;
+const maxCameraDistance = 5;
 
 // Camera smoothing variables
 const avatarLerp = 0.25;
@@ -518,7 +518,7 @@ function animate() {
             let diff = targetCameraAngleH - cameraAngleH;
             if (diff > Math.PI) diff -= 2 * Math.PI;
             if (diff < -Math.PI) diff += 2 * Math.PI;
-            cameraAngleH += diff * 0.15; // Smoothly follow the car
+            cameraAngleH += diff * 0.5; // Smoothly follow the car
         }
 
     } else if (currentAvatar) {
@@ -591,8 +591,11 @@ function animate() {
             finalCameraPosition.y = 1.0;
         }
 
-        const currentLerp = isInVehicle ? vehicleLerp : avatarLerp;
-        camera.position.lerp(finalCameraPosition, currentLerp);
+        if (isInVehicle) {
+            camera.position.copy(finalCameraPosition);
+        } else {
+            camera.position.lerp(finalCameraPosition, avatarLerp);
+        }
         camera.lookAt(followPosition);
     }
 
