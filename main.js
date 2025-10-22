@@ -39,6 +39,7 @@ scene.add(ground);
 
 // Collidable objects
 const collidableObjects = [ground];
+const groundCollidableObjects = [ground];
 
 // Vehicle variables
 const vehicles = [];
@@ -54,7 +55,7 @@ const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
 // City Model
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
+loadWithCache('/maps/city 3/source/town4new.glb', gltfLoader).then((gltf) => {
     gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
@@ -69,11 +70,12 @@ gltfLoader.load('/maps/city 3/source/town4new.glb', (gltf) => {
     });
     scene.add(gltf.scene);
     collidableObjects.push(gltf.scene);
+    groundCollidableObjects.push(gltf.scene);
 });
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
-    mazdaLoader.load('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', (gltf) => {
+    loadWithCache('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', mazdaLoader).then((gltf) => {
         const mazdaModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
@@ -104,7 +106,7 @@ function spawnMazdas() {
 
 function spawnFatalStinger() {
     const stingerLoader = new GLTFLoader();
-    stingerLoader.load('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', (gltf) => {
+    loadWithCache('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', stingerLoader).then((gltf) => {
         const stingerModel = gltf.scene;
         const spawnPoints = [
             { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
@@ -518,7 +520,7 @@ function animate() {
         // --- Vehicle Ground Collision ---
         const vehicleRayOrigin = currentVehicle.position.clone().add({ x: 0, y: 1, z: 0 });
         avatarRaycaster.set(vehicleRayOrigin, down); // Re-using avatarRaycaster
-        const groundIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+        const groundIntersections = avatarRaycaster.intersectObjects(groundCollidableObjects, true);
 
         let groundY = null;
         for (const intersection of groundIntersections) {
@@ -538,36 +540,53 @@ function animate() {
             currentVehicle.position.y = groundY + 0.2; // 0.2 is offset for wheels
         }
 
-        // --- Vehicle Wall Collision ---
+        // --- Vehicle Wall Collision & Position Update ---
+        const moveDistance = vehicleSpeed * delta;
         const forwardDirection = new THREE.Vector3(Math.sin(currentVehicle.rotation.y), 0, Math.cos(currentVehicle.rotation.y));
-        const vehicleFront = currentVehicle.position.clone().add({x:0, y:0.5, z:0});
-        avatarRaycaster.set(vehicleFront, forwardDirection);
-        const wallIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+        
+        const collisionPoints = [ // Points on the front of the car to cast rays from
+            {x: 0, y: 0.2, z: 0}, // Lower point
+            {x: 0, y: 0.7, z: 0}  // Upper point
+        ];
+        
+        let firstValidIntersection = null;
 
-        let hitWall = false;
-        for (const intersection of wallIntersections) {
-            let isSelf = false;
-            intersection.object.traverseAncestors((ancestor) => {
-                if (ancestor === currentVehicle) {
-                    isSelf = true;
+        for (const point of collisionPoints) {
+            const rayOrigin = currentVehicle.position.clone().add(point);
+            avatarRaycaster.set(rayOrigin, forwardDirection);
+            const wallIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
+
+            for (const intersection of wallIntersections) {
+                let isSelf = false;
+                intersection.object.traverseAncestors((ancestor) => {
+                    if (ancestor === currentVehicle) { isSelf = true; }
+                });
+
+                if (!isSelf) {
+                    // Found the first valid intersection for this ray
+                    if (!firstValidIntersection || intersection.distance < firstValidIntersection.distance) {
+                        firstValidIntersection = intersection;
+                    }
+                    break; 
                 }
-            });
-            if (!isSelf) {
-                const collisionDistance = 1.5; // Vehicle's half-length
-                if (intersection.distance < collisionDistance && vehicleSpeed > 0) {
-                    hitWall = true;
-                }
-                break; // Check only the first non-self object
             }
         }
 
-        if (hitWall) {
-            vehicleSpeed = 0; // Stop the car on forward collision
+        const collisionDistance = 1.5; // Bumper distance from center
+        if (firstValidIntersection && firstValidIntersection.distance < collisionDistance + moveDistance && vehicleSpeed > 0) {
+            // Imminent collision: Move car exactly to the wall.
+            const distanceToWall = firstValidIntersection.distance;
+            const allowedMove = Math.max(0, distanceToWall - collisionDistance);
+            
+            currentVehicle.position.x += allowedMove * Math.sin(currentVehicle.rotation.y);
+            currentVehicle.position.z += allowedMove * Math.cos(currentVehicle.rotation.y);
+            
+            vehicleSpeed = 0; // Stop for the next frame.
+        } else {
+            // No collision: Move normally.
+            currentVehicle.position.x += moveDistance * Math.sin(currentVehicle.rotation.y);
+            currentVehicle.position.z += moveDistance * Math.cos(currentVehicle.rotation.y);
         }
-
-        // Position update
-        currentVehicle.position.x += vehicleSpeed * Math.sin(currentVehicle.rotation.y) * delta;
-        currentVehicle.position.z += vehicleSpeed * Math.cos(currentVehicle.rotation.y) * delta;
         
         playAnimation('idle');
 
