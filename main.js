@@ -409,7 +409,7 @@ let currentAvatar = null;
 let animationMixer = null;
 const animationClips = {};
 let currentAction = 'idle';
-const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
+const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose', 'realistic_male_character.glb'];
 
 // UI
 const avatarSelector = document.getElementById('avatar-selector');
@@ -452,15 +452,28 @@ function loadAvatar(avatarName) {
         scene.remove(currentAvatar);
     }
 
-    const fbxLoader = new FBXLoader();
-    fbxLoader.load(`/avatars/${avatarName}.fbx`, (fbx) => {
-        currentAvatar = fbx;
+    let loader;
+    let avatarFilePath;
+
+    if (avatarName.endsWith('.glb')) {
+        loader = new GLTFLoader();
+        avatarFilePath = `/assets/avatars/${avatarName}`;
+    } else {
+        loader = new FBXLoader();
+        avatarFilePath = `/assets/avatars/${avatarName}.fbx`;
+    }
+
+    loader.load(avatarFilePath, (loadedModel) => {
+        currentAvatar = loadedModel;
         currentAvatar.userData.avatarName = avatarName; // Store avatar name
         if (avatarName === 'Remy@T-Pose') {
             currentAvatar.scale.set(0.002, 0.002, 0.002); // Further adjusted scale for Remy
+        } else if (avatarName === 'realistic_male_character.glb') {
+            currentAvatar.scale.set(0.5, 0.5, 0.5); // Initial scale for GLB model, adjust as needed
         } else {
             currentAvatar.scale.set(0.005, 0.005, 0.005);
-        }        currentAvatar.position.set(0, 0, 5);
+        }
+        currentAvatar.position.set(0, 0, 5);
         currentAvatar.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
@@ -473,9 +486,9 @@ function loadAvatar(avatarName) {
         animationMixer = new THREE.AnimationMixer(currentAvatar);
         const animLoader = new FBXLoader();
         const animationsToLoad = {
-            'idle': '/avatars/animations/Idle.fbx',
-            'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
+            'idle': '/assets/avatars/animations/Idle.fbx',
+            'walking': '/assets/avatars/animations/Walking.fbx',
+            'running': '/assets/avatars/animations/Running.fbx'
         };
         
         let animationsLoaded = 0;
