@@ -435,6 +435,11 @@ cityButton.addEventListener('click', () => {
     loadMap('/maps/city 3/source/town4new.glb');
 });
 
+const circuitButton = document.getElementById('circuit-button');
+circuitButton.addEventListener('click', () => {
+    loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
+});
+
 // Load initial avatar
 loadAvatar(avatarList[0]);
 
