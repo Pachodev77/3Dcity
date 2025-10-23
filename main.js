@@ -53,25 +53,47 @@ const vehicleAcceleration = 2;  // Más lento al acelerar
 const vehicleFriction = 4;     // Fricción aumentada para frenar más rápido
 const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
 
-// City Model
-const gltfLoader = new GLTFLoader();
-loadWithCache('/maps/city 3/source/town4new.glb', gltfLoader).then((gltf) => {
-    gltf.scene.traverse(function (child) {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
+let currentMap = null;
 
-            const childName = child.name.toLowerCase();
-            if (vehicleKeywords.some(keyword => childName.includes(keyword))) {
-                vehicles.push(child);
-                child.isOccupied = false;
+function loadMap(mapUrl) {
+    if (currentMap) {
+        scene.remove(currentMap);
+        const index = collidableObjects.indexOf(currentMap);
+        if (index > -1) {
+            collidableObjects.splice(index, 1);
+        }
+        const groundIndex = groundCollidableObjects.indexOf(currentMap);
+        if (groundIndex > -1) {
+            groundCollidableObjects.splice(groundIndex, 1);
+        }
+    }
+
+    const gltfLoader = new GLTFLoader();
+    loadWithCache(mapUrl, gltfLoader).then((gltf) => {
+        currentMap = gltf.scene;
+        gltf.scene.traverse(function (child) {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                const childName = child.name.toLowerCase();
+                if (vehicleKeywords.some(keyword => childName.includes(keyword))) {
+                    vehicles.push(child);
+                    child.isOccupied = false;
+                }
             }
+        });
+        scene.add(gltf.scene);
+        collidableObjects.push(gltf.scene);
+        groundCollidableObjects.push(gltf.scene);
+
+        if (currentAvatar) {
+            currentAvatar.position.set(0, 0, 5);
         }
     });
-    scene.add(gltf.scene);
-    collidableObjects.push(gltf.scene);
-    groundCollidableObjects.push(gltf.scene);
-});
+}
+
+loadMap('/maps/city 3/source/town4new.glb');
 
 function spawnMazdas() {
     const mazdaLoader = new GLTFLoader();
@@ -339,7 +361,7 @@ class Zombie {
             direction.normalize();
 
             const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
-            const chaseRaycaster = new THREE.Raycaster(this.model.position, direction);
+            const chaseRaycaster = new THREE.Raycaster(this.model.position.clone().add({x: 0, y: 0.1, z: 0}), direction);
             const chaseIntersections = chaseRaycaster.intersectObjects(otherCollidables, true);
 
             if (chaseIntersections.length > 0 && chaseIntersections[0].distance < 0.5) {
@@ -396,6 +418,16 @@ avatarList.forEach(avatarName => {
 
 avatarSelector.addEventListener('change', (e) => {
     loadAvatar(e.target.value);
+});
+
+const homeButton = document.getElementById('home-button');
+homeButton.addEventListener('click', () => {
+    loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb');
+});
+
+const cityButton = document.getElementById('city-button');
+cityButton.addEventListener('click', () => {
+    loadMap('/maps/city 3/source/town4new.glb');
 });
 
 // Load initial avatar
