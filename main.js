@@ -71,6 +71,11 @@ function loadMap(mapUrl) {
     const gltfLoader = new GLTFLoader();
     loadWithCache(mapUrl, gltfLoader).then((gltf) => {
         currentMap = gltf.scene;
+
+        if (mapUrl.includes('mansion')) {
+            currentMap.scale.set(0.5, 0.5, 0.5);
+        }
+
         gltf.scene.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
@@ -360,15 +365,15 @@ class Zombie {
             direction.y = 0;
             direction.normalize();
 
-            const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
-            const chaseRaycaster = new THREE.Raycaster(this.model.position.clone().add({x: 0, y: 0.1, z: 0}), direction);
-            const chaseIntersections = chaseRaycaster.intersectObjects(otherCollidables, true);
+            // const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
+            // const chaseRaycaster = new THREE.Raycaster(this.model.position.clone().add({x: 0, y: 0.1, z: 0}), direction);
+            // const chaseIntersections = chaseRaycaster.intersectObjects(otherCollidables, true);
 
-            if (chaseIntersections.length > 0 && chaseIntersections[0].distance < 0.5) {
-                // collision with something other than the zombie or the player
-            } else {
-                this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
-            }
+            // if (chaseIntersections.length > 0 && chaseIntersections[0].distance < 0.5) {
+            //     // collision with something other than the zombie or the player
+            // } else {
+            this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
+            // }
 
             this.model.lookAt(playerPosition);
         } else {
