@@ -75,7 +75,7 @@ function loadMap(mapUrl) {
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
         } else if (mapUrl.includes('burnin_rubber')) {
-            currentMap.scale.set(4.0, 4.0, 4.0); // Make it four times as large
+            currentMap.scale.set(8.0, 8.0, 8.0); // Scale up to 8x
         }
 
         gltf.scene.traverse(function (child) {
