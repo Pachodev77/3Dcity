@@ -18,7 +18,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+renderer.shadowMap.type = THREE.PCFShadowMap; // Softer shadows
 document.body.appendChild(renderer.domElement);
 
 // Lighting
@@ -28,7 +28,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 10, 7.5);
 directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set(1024, 1024); // Lower shadow map size for performance
+directionalLight.shadow.mapSize.set(512, 512); // Lower shadow map size for performance
 scene.add(directionalLight);
 
 // Ground
@@ -74,6 +74,8 @@ function loadMap(mapUrl) {
 
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
+        } else if (mapUrl.includes('burnin_rubber')) {
+            currentMap.scale.set(4.0, 4.0, 4.0); // Make it four times as large
         }
 
         gltf.scene.traverse(function (child) {
