@@ -113,9 +113,18 @@ export class Zombie {
 
         const distanceToPlayer = this.model.position.distanceTo(playerPosition);
 
+        // Hysteresis: Keep chasing a bit longer than the initial detection radius
+        // to prevent flickering at the boundary.
+        const isChasing = this.currentState === 'zombie running';
+        const detectionThreshold = isChasing ? this.detectionRadius * 1.2 : this.detectionRadius;
+
         if (distanceToPlayer < this.attackRadius) {
             this.setState('zombie attack');
-        } else if (distanceToPlayer < this.detectionRadius) {
+            // Face the player even while attacking
+            const lookTarget = new THREE.Vector3(playerPosition.x, this.model.position.y, playerPosition.z);
+            this.model.lookAt(lookTarget);
+
+        } else if (distanceToPlayer < detectionThreshold) {
             this.setState('zombie running');
             const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position);
             direction.y = 0;
@@ -123,7 +132,9 @@ export class Zombie {
 
             this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
 
-            this.model.lookAt(playerPosition);
+            // Look at player but keep upright (ignore Y difference for rotation)
+            const lookTarget = new THREE.Vector3(playerPosition.x, this.model.position.y, playerPosition.z);
+            this.model.lookAt(lookTarget);
         } else {
             this.setState('walking');
             const target = this.patrolPath[this.currentPatrolIndex];
@@ -136,7 +147,10 @@ export class Zombie {
                 direction.y = 0;
                 direction.normalize();
                 this.model.position.add(direction.multiplyScalar(this.speed * delta));
-                this.model.lookAt(target);
+
+                // Look at patrol target but keep upright
+                const lookTarget = new THREE.Vector3(target.x, this.model.position.y, target.z);
+                this.model.lookAt(lookTarget);
             }
         }
     }
