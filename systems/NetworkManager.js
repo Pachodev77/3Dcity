@@ -4,7 +4,11 @@ import { RemoteAvatar } from '../entities/RemoteAvatar.js';
 export class NetworkManager {
     constructor(scene) {
         this.scene = scene;
-        this.socket = io(); // Connect to the server
+        // Connect to Vercel serverless Socket.IO endpoint
+        this.socket = io({
+            path: '/api/socket',
+            transports: ['polling', 'websocket']
+        });
         this.remotePlayers = {}; // Map of id -> RemoteAvatar
         this.lastUpdate = 0;
         this.updateRate = 50; // Send updates every 50ms (20 times/sec)
