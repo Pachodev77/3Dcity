@@ -121,9 +121,17 @@
 
         /* Specific button styles */
         #spawn-vehicle-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            /* Position is now set inline to be above the left joystick */
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             z-index: 100;
         }
 
@@ -203,9 +211,9 @@
         <button id="home-button" class="btn" title="Home">🏠</button>
         <button id="city-button" class="btn" title="City">🏙️</button>
         <button id="circuit-button" class="btn" title="Circuit">🏁</button>
-        <button id="spawn-vehicle-button" class="btn" style="background-color: rgba(155, 89, 182, 0.8); margin-top: 30px;" title="Spawn Vehicle">🚗</button>
     </div>
 
+    <button id="spawn-vehicle-button" class="btn" style="position: absolute; bottom: 140px; left: 20px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);" title="Spawn Vehicle">🚗</button>
     <div id="joystick-container-move"></div>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
