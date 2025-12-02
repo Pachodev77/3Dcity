@@ -91,20 +91,8 @@ function loadMap(mapUrl) {
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
         } else if (mapUrl.includes('burnin_rubber')) {
-            // Primero ajustamos la escala
-            currentMap.scale.set(25.0, 25.0, 25.0);
-            
-            // Calculamos el bounding box del mapa para encontrar el suelo
-            const box = new THREE.Box3().setFromObject(currentMap);
-            const center = box.getCenter(new THREE.Vector3());
-            
-            // Ajustamos la posición del mapa para que el suelo esté en y=0
-            currentMap.position.x = -center.x;
-            currentMap.position.y = -box.min.y;  // El punto más bajo del mapa en y=0
-            currentMap.position.z = -center.z;
-            
-            // Altura del jugador sobre el suelo del mapa (no del plano base)
-            const playerHeight = 1.5; // Ajusta esta altura según sea necesario
+            currentMap.scale.set(25.0, 25.0, 25.0); // Aumentado a 2.5x el tamaño anterior (10.0 * 2.5)
+            currentMap.position.set(-320, 0, 230); // Ajustado para centrar mejor en el eje X
         }
 
         gltf.scene.traverse(function (child) {
@@ -120,24 +108,9 @@ function loadMap(mapUrl) {
         scene.add(gltf.scene);
         collidableObjects.push(gltf.scene);
         groundCollidableObjects.push(gltf.scene);
-        
-        // Asegurarse de que el jugador esté por encima del suelo
-        if (avatar && avatar.model) {
-            // Colocar al jugador ligeramente por encima del suelo
-            avatar.model.position.y = 1.0; // Ajusta este valor según sea necesario
-        }
 
         if (avatar.model) {
-            // Posicionamos al jugador sobre el suelo del mapa
-            const playerY = currentMap.position.y + playerHeight;
-            avatar.model.position.set(0, playerY, 5);
-            
-            // Si es el mapa de Burnin Rubber, ajustamos la cámara
-            if (mapUrl.includes('burnin_rubber')) {
-                // Posición de la cámara relativa al jugador
-                camera.position.set(0, playerY + 1.5, 8);
-                camera.lookAt(0, playerY, 0);
-            }
+            avatar.model.position.set(0, 0, 5);
         }
     });
 }
@@ -156,12 +129,12 @@ let vehicleTemplates = [];
 // Load all vehicle models
 async function loadVehicleModels() {
     const loader = new GLTFLoader();
-    
+
     for (const model of VEHICLE_MODELS) {
         try {
             const gltf = await loadWithCache(model.path, loader);
             const template = gltf.scene;
-            
+
             // Set up the model template
             template.visible = false; // Hide the template
             template.traverse(child => {
@@ -170,14 +143,14 @@ async function loadVehicleModels() {
                     child.receiveShadow = true;
                 }
             });
-            
+
             // Store the template with its metadata
             vehicleTemplates.push({
                 template: template,
                 name: model.name,
                 path: model.path
             });
-            
+
             scene.add(template);
         } catch (error) {
             console.error(`Error loading vehicle model ${model.path}:`, error);
@@ -200,34 +173,34 @@ function spawnRandomVehicle() {
     // Get a random vehicle template
     const randomIndex = Math.floor(Math.random() * vehicleTemplates.length);
     const vehicleData = vehicleTemplates[randomIndex];
-    
+
     // Create a new instance of the vehicle
     const vehicleMesh = vehicleData.template.clone();
     vehicleMesh.visible = true;
-    
+
     // Calculate spawn position in front of the player
     const spawnDistance = 3; // Distance in front of the player
     const spawnAngle = avatar.model.rotation.y; // Same rotation as player
-    
+
     const spawnPosition = new THREE.Vector3(
         avatar.model.position.x + Math.sin(spawnAngle) * spawnDistance,
         avatar.model.position.y,
         avatar.model.position.z + Math.cos(spawnAngle) * spawnDistance
     );
-    
+
     // Position and rotate the vehicle
     vehicleMesh.position.copy(spawnPosition);
     vehicleMesh.rotation.y = spawnAngle + Math.PI; // Face the player
     vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
-    
+
     // Add to scene and track it
     scene.add(vehicleMesh);
     collidableObjects.push(vehicleMesh);
-    
+
     // Create and store the vehicle instance
     const vehicle = new Vehicle(vehicleMesh);
     vehicles.push(vehicle);
-    
+
     console.log(`Spawned ${vehicleData.name} near player`);
     return vehicle;
 }
