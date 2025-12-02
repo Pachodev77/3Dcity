@@ -21,7 +21,7 @@ export const CONFIG = {
         GROUND_OFFSET: 0.2
     },
     ZOMBIE: {
-        SPEED: 0.5,
+        SPEED: 1.5,
         DETECTION_RADIUS: 10,
         ATTACK_RADIUS: 1,
         SCALE: 0.005
