@@ -29,9 +29,10 @@ export const CONFIG = {
     CAMERA: {
         MAX_DISTANCE: 5,
         ROTATION_SPEED: 2,
-        MIN_ANGLE_V: 0.1,
-        MAX_ANGLE_V: 0.9,
-        MIN_HEIGHT: 1.0
+        MIN_ANGLE_V: 0.0,
+        MAX_ANGLE_V: 0.3, // Antes era 0.9
+        MIN_HEIGHT: 1.0,
+        GROUND_OFFSET: 0.5 // Añadido en un paso anterior
     },
     PERFORMANCE: {
         CHECK_INTERVAL: 4,

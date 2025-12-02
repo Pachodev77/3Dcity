@@ -334,7 +334,7 @@ function animate() {
 
     // Camera
     const target = isInVehicle ? currentVehicle.mesh : avatar.model;
-    cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, frameCount);
+    cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, groundCollidableObjects, frameCount);
 
     // UI Updates
     if (isInVehicle) {

@@ -17,9 +17,57 @@
 
         #avatar-selector-container {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 20px;
+            left: 20px;
             z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 42px;
+        }
+
+        #avatar-selector-container label {
+            font-size: 13px;
+            color: #555;
+            font-weight: 600;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        #avatar-selector {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 180px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 12px;
+            padding-right: 30px;
+        }
+
+        #avatar-selector:hover {
+            border-color: #aaa;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        #avatar-selector:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
         }
 
         #joystick-container-move {
@@ -38,23 +86,44 @@
             height: 100px;
         }
 
+        /* Base button styles */
+        .btn {
+            padding: 10px 20px;
+            background-color: rgba(52, 152, 219, 0.8);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            min-width: 120px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: rgba(41, 128, 185, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Specific button styles */
         #spawn-vehicle-button {
             position: absolute;
             top: 20px;
             right: 20px;
-            padding: 6px 12px;
-            background-color: rgba(52, 152, 219, 0.8);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
             z-index: 100;
-            transition: background-color 0.3s;
-        }
-
-        #spawn-vehicle-button:hover {
-            background-color: rgba(41, 128, 185, 0.9);
         }
 
         #enter-exit-button {
@@ -63,19 +132,32 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: rgba(76, 175, 80, 0.7);
+            background-color: rgba(76, 175, 80, 0.8);
+            border: none;
             border-radius: 50%;
-            display: none;
-            /* Initially hidden */
+            display: none; /* Initially hidden */
             justify-content: center;
             align-items: center;
-            text-align: center;
             color: white;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-weight: bold;
+            font-size: 14px;
             z-index: 101;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        #enter-exit-button:hover {
+            background-color: rgba(68, 157, 72, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #enter-exit-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         #zoom-slider {
@@ -120,11 +202,11 @@
         <select id="avatar-selector"></select>
     </div>
 
-    <div id="map-selector-container" style="position: absolute; top: 40px; left: 10px; z-index: 100;">
-        <button id="home-button">🏠</button>
-        <button id="city-button">🏙️</button>
-        <button id="spawn-vehicle-button">Spawn Vehicle</button>
-        <button id="circuit-button">🏁</button>
+    <div id="map-selector-container" style="position: absolute; top: 60px; left: 20px; z-index: 100; display: flex; gap: 10px; flex-wrap: wrap; max-width: 300px;">
+        <button id="home-button" class="btn" title="Home">🏠 Home</button>
+        <button id="city-button" class="btn" title="City">🏙️ City</button>
+        <button id="circuit-button" class="btn" title="Circuit">🏁 Circuit</button>
+        <button id="spawn-vehicle-button" class="btn" style="background-color: rgba(155, 89, 182, 0.8); margin-top: 29px;">🚗 Spawn Vehicle</button>
     </div>
 
     <div id="joystick-container-move"></div>
