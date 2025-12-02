@@ -386,4 +386,18 @@ window.addEventListener('player-hit', () => {
     }, 500);
 });
 
+// Fullscreen Toggle
+const fullscreenButton = document.getElementById('fullscreen-button');
+fullscreenButton.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+});
+
 animate();

@@ -216,11 +216,35 @@
             z-index: 1000;
             transition: opacity 0.5s ease-out;
         }
+
+        #fullscreen-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        #fullscreen-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
     </style>
 </head>
 
 <body>
     <div id="damage-overlay"></div>
+    <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
     <div id="avatar-selector-container">
         <label for="avatar-selector">Choose an avatar:</label>
         <select id="avatar-selector"></select>
