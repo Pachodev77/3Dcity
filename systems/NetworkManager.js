@@ -4,10 +4,9 @@ import { RemoteAvatar } from '../entities/RemoteAvatar.js';
 export class NetworkManager {
     constructor(scene) {
         this.scene = scene;
-        // Connect to Vercel serverless Socket.IO endpoint
-        this.socket = io({
-            path: '/api/socket',
-            transports: ['polling', 'websocket']
+        // Connect to dedicated Render server
+        this.socket = io('https://threedcity-multiplayer.onrender.com', {
+            transports: ['websocket', 'polling']
         });
         this.remotePlayers = {}; // Map of id -> RemoteAvatar
         this.lastUpdate = 0;
