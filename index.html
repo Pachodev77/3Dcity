@@ -17,17 +17,17 @@
 
         #avatar-selector-container {
             position: absolute;
-            top: 20px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             z-index: 100;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             font-family: Arial, sans-serif;
         }
 
@@ -40,23 +40,23 @@
         }
 
         #avatar-selector {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 6px;
+            border-radius: 3px;
             border: 1px solid #ddd;
             background-color: white;
-            font-size: 12px;
+            font-size: 11px;
             color: #333;
             cursor: pointer;
             transition: all 0.2s ease;
-            width: 160px;
+            width: 140px;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
-            background-position: right 6px center;
-            background-size: 10px;
-            padding-right: 25px;
+            background-position: right 4px center;
+            background-size: 8px;
+            padding-right: 20px;
         }
 
         #avatar-selector:hover {
@@ -88,23 +88,24 @@
 
         /* Base button styles */
         .btn {
-            padding: 10px 20px;
+            padding: 6px 12px;
             background-color: rgba(52, 152, 219, 0.8);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 12px;
             font-family: Arial, sans-serif;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             text-align: center;
-            min-width: 120px;
-            height: 40px;
+            min-width: 80px;
+            height: 30px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            margin: 2px;
         }
 
         .btn:hover {
@@ -121,18 +122,18 @@
         /* Specific button styles */
         #spawn-vehicle-button {
             /* Position is now set inline to be above the left joystick */
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: none;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             z-index: 100;
             padding: 0;
             margin: 0;
@@ -140,10 +141,10 @@
 
         #enter-exit-button {
             position: absolute;
-            bottom: 140px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
+            bottom: 120px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
             background-color: rgba(76, 175, 80, 0.8);
             border: none;
             border-radius: 50%;
@@ -153,11 +154,11 @@
             color: white;
             font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             z-index: 101;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
         }
 
@@ -174,21 +175,21 @@
 
         #camera-position-button {
             position: absolute;
-            bottom: 140px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
+            bottom: 120px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
             border-radius: 50%;
             color: white;
-            font-size: 20px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: none;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             transition: all 0.2s ease;
             padding: 0;
             margin: 0;
