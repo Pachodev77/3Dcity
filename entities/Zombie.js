@@ -134,7 +134,7 @@ export class Zombie {
 
             // Damage Logic
             const now = Date.now();
-            if (now - this.lastAttackTime > 4000) { // 4 seconds cooldown
+            if (now - this.lastAttackTime > 2000) { // 2 seconds cooldown
                 window.dispatchEvent(new CustomEvent('player-hit'));
                 this.lastAttackTime = now;
             }
