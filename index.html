@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D City Plan with Avatars</title>
     <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
         #avatar-selector-container {
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 100;
         }
+
         #joystick-container-move {
             position: absolute;
             bottom: 20px;
@@ -20,6 +29,7 @@
             width: 100px;
             height: 100px;
         }
+
         #joystick-container-camera {
             position: absolute;
             bottom: 20px;
@@ -27,6 +37,26 @@
             width: 100px;
             height: 100px;
         }
+
+        #spawn-vehicle-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: rgba(52, 152, 219, 0.8);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 100;
+            transition: background-color 0.3s;
+        }
+
+        #spawn-vehicle-button:hover {
+            background-color: rgba(41, 128, 185, 0.9);
+        }
+
         #enter-exit-button {
             position: absolute;
             bottom: 140px;
@@ -35,7 +65,8 @@
             height: 60px;
             background-color: rgba(76, 175, 80, 0.7);
             border-radius: 50%;
-            display: none; /* Initially hidden */
+            display: none;
+            /* Initially hidden */
             justify-content: center;
             align-items: center;
             text-align: center;
@@ -46,6 +77,7 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
+
         #zoom-slider {
             position: absolute;
             right: 10px;
@@ -61,6 +93,7 @@
             outline: none;
             border-radius: 10px;
         }
+
         #zoom-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -70,6 +103,7 @@
             cursor: pointer;
             border-radius: 50%;
         }
+
         #zoom-slider::-moz-range-thumb {
             width: 25px;
             height: 25px;
@@ -79,6 +113,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="avatar-selector-container">
         <label for="avatar-selector">Choose an avatar:</label>
@@ -88,12 +123,13 @@
     <div id="map-selector-container" style="position: absolute; top: 40px; left: 10px; z-index: 100;">
         <button id="home-button">🏠</button>
         <button id="city-button">🏙️</button>
+        <button id="spawn-vehicle-button">Spawn Vehicle</button>
         <button id="circuit-button">🏁</button>
     </div>
 
     <div id="joystick-container-move"></div>
     <div id="joystick-container-camera"></div>
-    <div id="enter-exit-button"></div>
+    <div id="enter-exit-button">E</div>
     <input type="range" min="1" max="7" value="4" id="zoom-slider">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
@@ -108,4 +144,5 @@
     <script src="/cache.js"></script>
     <script type="module" src="main.js"></script>
 </body>
+
 </html>

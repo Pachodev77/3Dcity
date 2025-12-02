@@ -1,24 +1,27 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { CONFIG } from './config.js';
+import { Avatar } from './entities/Avatar.js';
+import { Vehicle } from './entities/Vehicle.js';
+import { Zombie } from './entities/Zombie.js';
+import { CameraController } from './systems/CameraController.js';
+import { InputManager } from './systems/InputManager.js';
 
-// Scene
+// Scene Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
-// Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 5, 10);
 
-// Renderer
 const renderer = new THREE.WebGLRenderer({
     antialias: true,
     powerPreference: 'high-performance'
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.PERFORMANCE.MAX_PIXEL_RATIO));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap; // Softer shadows
+renderer.shadowMap.type = THREE.PCFShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // Lighting
@@ -28,7 +31,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 10, 7.5);
 directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set(512, 512); // Lower shadow map size for performance
+directionalLight.shadow.mapSize.set(CONFIG.PERFORMANCE.SHADOW_MAP_SIZE, CONFIG.PERFORMANCE.SHADOW_MAP_SIZE);
 scene.add(directionalLight);
 
 // Ground
@@ -37,35 +40,48 @@ ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Collidable objects
+// Collision Systems
 const collidableObjects = [ground];
 const groundCollidableObjects = [ground];
 
-// Vehicle variables
-const vehicles = [];
-const vehicleKeywords = ['car', 'bus', 'truck', 'van'];
-let isInVehicle = false;
-let currentVehicle = null;
-let nearbyVehicle = null;
-let vehicleSpeed = 0;
-const vehicleMaxSpeed = 10;  // Velocidad máxima
-const vehicleAcceleration = 2;  // Más lento al acelerar
-const vehicleFriction = 4;     // Fricción aumentada para frenar más rápido
-const vehicleSteeringSpeed = 1.5;  // Velocidad de giro
+// Systems
+const inputManager = new InputManager();
+const cameraController = new CameraController(camera);
 
+// Entities
+const avatar = new Avatar(scene);
+const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+const vehicles = []; // Array of Vehicle instances
+
+// Game State
 let currentMap = null;
+let isInVehicle = false;
+let currentVehicle = null; // Vehicle instance
+let nearbyVehicle = null; // Vehicle instance
 
+// Map Loading
 function loadMap(mapUrl) {
     if (currentMap) {
+        // Cleanup
+        currentMap.traverse((child) => {
+            if (child.isMesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (child.material.map) child.material.map.dispose();
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => mat.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+
         scene.remove(currentMap);
         const index = collidableObjects.indexOf(currentMap);
-        if (index > -1) {
-            collidableObjects.splice(index, 1);
-        }
+        if (index > -1) collidableObjects.splice(index, 1);
         const groundIndex = groundCollidableObjects.indexOf(currentMap);
-        if (groundIndex > -1) {
-            groundCollidableObjects.splice(groundIndex, 1);
-        }
+        if (groundIndex > -1) groundCollidableObjects.splice(groundIndex, 1);
     }
 
     const gltfLoader = new GLTFLoader();
@@ -75,7 +91,7 @@ function loadMap(mapUrl) {
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
         } else if (mapUrl.includes('burnin_rubber')) {
-            currentMap.scale.set(10.0, 10.0, 10.0); // Scale up to 8x
+            currentMap.scale.set(10.0, 10.0, 10.0);
         }
 
         gltf.scene.traverse(function (child) {
@@ -83,339 +99,123 @@ function loadMap(mapUrl) {
                 child.castShadow = true;
                 child.receiveShadow = true;
 
-                const childName = child.name.toLowerCase();
-                if (vehicleKeywords.some(keyword => childName.includes(keyword))) {
-                    vehicles.push(child);
-                    child.isOccupied = false;
-                }
+                // Check for pre-placed vehicles in map if any (optional logic from original)
+                // The original code checked for 'car', 'bus' etc in map children but added them as raw meshes
+                // For now we keep the spawn logic separate
             }
         });
         scene.add(gltf.scene);
         collidableObjects.push(gltf.scene);
         groundCollidableObjects.push(gltf.scene);
 
-        if (currentAvatar) {
-            currentAvatar.position.set(0, 0, 5);
+        if (avatar.model) {
+            avatar.model.position.set(0, 0, 5);
         }
     });
 }
 
-loadMap('/maps/city 3/source/town4new.glb');
+// Vehicle Management
+const VEHICLE_MODELS = [
+    { path: '/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', name: 'Mazda RX-7' },
+    { path: '/2018_mazda_rx-7_fd3s_fatal_stinger.glb', name: 'Fatal Stinger' },
+    { path: '/2002_mazda_rx-7_spirit_r_type_a_fd.glb', name: 'Spirit R Type A' },
+    { path: '/2002_mazda_rx-7_spirit-r.glb', name: 'Spirit R' },
+    { path: '/2002_mazda_re-amemiya_super_greddy_3.glb', name: 'Re Amemiya' }
+];
 
-function spawnMazdas() {
-    const mazdaLoader = new GLTFLoader();
-    loadWithCache('/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', mazdaLoader).then((gltf) => {
-        const mazdaModel = gltf.scene;
-        const spawnPoints = [
-            { position: new THREE.Vector3(15, 0.1, 25), rotation: -Math.PI / 2 },
-            { position: new THREE.Vector3(-10, 0.1, 30), rotation: Math.PI },
-            { position: new THREE.Vector3(-25, 0.1, 10), rotation: Math.PI / 4 },
-            { position: new THREE.Vector3(5, 0.1, 5), rotation: 0 },
-        ];
+let vehicleTemplates = [];
 
-        spawnPoints.forEach(sp => {
-            const car = mazdaModel.clone();
-            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
-            car.position.copy(sp.position);
-            car.rotation.y = sp.rotation;
-            car.traverse(function (child) {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-            scene.add(car);
-            vehicles.push(car); // Add to drivable vehicles
-            collidableObjects.push(car); // Add to collidable objects
-        });
-    }, undefined, (error) => {
-        console.error('Error loading 1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb:', error);
-    });
-}
-
-function spawnFatalStinger() {
-    const stingerLoader = new GLTFLoader();
-    loadWithCache('/2018_mazda_rx-7_fd3s_fatal_stinger.glb', stingerLoader).then((gltf) => {
-        const stingerModel = gltf.scene;
-        const spawnPoints = [
-            { position: new THREE.Vector3(10, 0.1, 5), rotation: Math.PI / 2 },
-            { position: new THREE.Vector3(-5, 0.1, 10), rotation: -Math.PI / 3 },
-        ];
-
-        spawnPoints.forEach(sp => {
-            const car = stingerModel.clone();
-            car.scale.set(0.5, 0.5, 0.5); // Set car to half size
-            car.position.copy(sp.position);
-            car.rotation.y = sp.rotation;
-            car.traverse(function (child) {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-            scene.add(car);
-            vehicles.push(car); // Add to drivable vehicles
-            collidableObjects.push(car); // Add to collidable objects
-        });
-    }, undefined, (error) => {
-        console.error('Error loading 2018_mazda_rx-7_fd3s_fatal_stinger.glb:', error);
-    });
-}
-
-function spawnSpiritRTypeA() {
+// Load all vehicle models
+async function loadVehicleModels() {
     const loader = new GLTFLoader();
-    loader.load('/2002_mazda_rx-7_spirit_r_type_a_fd.glb', (gltf) => {
-        const model = gltf.scene;
-        const spawnPoints = [
-            { position: new THREE.Vector3(20, 0.1, 15), rotation: Math.PI / 2 },
-            { position: new THREE.Vector3(-15, 0.1, 20), rotation: -Math.PI / 3 },
-        ];
-
-        spawnPoints.forEach(sp => {
-            const car = model.clone();
-            car.scale.set(0.5, 0.5, 0.5);
-            car.position.copy(sp.position);
-            car.rotation.y = sp.rotation;
-            car.traverse(function (child) {
+    
+    for (const model of VEHICLE_MODELS) {
+        try {
+            const gltf = await loadWithCache(model.path, loader);
+            const template = gltf.scene;
+            
+            // Set up the model template
+            template.visible = false; // Hide the template
+            template.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
             });
-            scene.add(car);
-            vehicles.push(car);
-            collidableObjects.push(car);
-        });
-    }, undefined, (error) => {
-        console.error('Error loading 2002_mazda_rx-7_spirit_r_type_a_fd.glb:', error);
-    });
-}
-
-function spawnSpiritR() {
-    const loader = new GLTFLoader();
-    loader.load('/2002_mazda_rx-7_spirit-r.glb', (gltf) => {
-        const model = gltf.scene;
-        const spawnPoints = [
-            { position: new THREE.Vector3(25, 0.1, 5), rotation: Math.PI / 4 },
-            { position: new THREE.Vector3(-20, 0.1, 10), rotation: Math.PI },
-        ];
-
-        spawnPoints.forEach(sp => {
-            const car = model.clone();
-            car.scale.set(0.5, 0.5, 0.5);
-            car.position.copy(sp.position);
-            car.rotation.y = sp.rotation;
-            car.traverse(function (child) {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
+            
+            // Store the template with its metadata
+            vehicleTemplates.push({
+                template: template,
+                name: model.name,
+                path: model.path
             });
-            scene.add(car);
-            vehicles.push(car);
-            collidableObjects.push(car);
-        });
-    }, undefined, (error) => {
-        console.error('Error loading 2002_mazda_rx-7_spirit-r.glb:', error);
-    });
-}
-
-function spawnReAmemiya() {
-    const loader = new GLTFLoader();
-    loadWithCache('/2002_mazda_re-amemiya_super_greddy_3.glb', loader).then((gltf) => {
-        const model = gltf.scene;
-        const spawnPoints = [
-            { position: new THREE.Vector3(10, 0.1, 20), rotation: -Math.PI / 2 },
-            { position: new THREE.Vector3(-5, 0.1, 25), rotation: 0 },
-        ];
-
-        spawnPoints.forEach(sp => {
-            const car = model.clone();
-            car.scale.set(0.5, 0.5, 0.5);
-            car.position.copy(sp.position);
-            car.rotation.y = sp.rotation;
-            car.traverse(function (child) {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-                });
-            scene.add(car);
-            vehicles.push(car);
-            collidableObjects.push(car);
-        });
-    }, undefined, (error) => {
-        console.error('Error loading 2002_mazda_re-amemiya_super_greddy_3.glb:', error);
-    });
-}
-
-class Zombie {
-    constructor(scene, collidableObjects, groundCollidableObjects) {
-        this.scene = scene;
-        this.collidableObjects = collidableObjects;
-        this.groundCollidableObjects = groundCollidableObjects;
-        this.model = null;
-        this.mixer = null;
-        this.animations = {};
-        this.currentState = 'idle';
-        this.speed = 0.5; // Slower speed
-        this.detectionRadius = 10;
-        this.attackRadius = 1; // Reduced attack radius
-        this.patrolPath = [
-            new THREE.Vector3(0, 0, 15),
-            new THREE.Vector3(15, 0, 0),
-            new THREE.Vector3(0, 0, -15),
-            new THREE.Vector3(-15, 0, 0),
-        ];
-        this.currentPatrolIndex = 0;
-        this.loadModel();
-    }
-
-    loadModel() {
-        const fbxLoader = new FBXLoader();
-        loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
-            this.model = zombie;
-            this.model.scale.set(0.005, 0.005, 0.005);
-            this.model.position.set(0, 0, 10);
-            this.model.traverse((child) => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-            this.scene.add(this.model);
-            this.collidableObjects.push(this.model);
-            this.mixer = new THREE.AnimationMixer(this.model);
-            this.loadAnimations();
-        });
-    }
-
-    loadAnimations() {
-        const animLoader = new FBXLoader();
-        const animFiles = [
-            'walking', 'zombie attack', 'zombie running'
-        ];
-        const animationsToLoad = {};
-        animFiles.forEach(name => {
-            animationsToLoad[name] = `/avatars/zombi/animations/${name}.fbx`;
-        });
-
-        let loadedCount = 0;
-        const totalAnims = Object.keys(animationsToLoad).length;
-
-        for (const animName in animationsToLoad) {
-            loadWithCache(animationsToLoad[animName], animLoader)
-                .then((anim) => {
-                    if (anim.animations && anim.animations.length > 0) {
-                        this.animations[animName] = anim.animations[0];
-                    }
-                })
-                .catch((error) => {
-                    console.warn(`Could not load animation "${animName}":`, error);
-                })
-                .finally(() => {
-                    loadedCount++;
-                    if (loadedCount === totalAnims) {
-                        this.setState('walking');
-                    }
-                });
-        }
-    }
-
-    setState(name) {
-        if (this.currentState === name || !this.animations[name]) return;
-
-        const previousAction = this.animations[this.currentState] ? this.mixer.clipAction(this.animations[this.currentState]) : null;
-        const newAction = this.mixer.clipAction(this.animations[name]);
-
-        if (previousAction) {
-            previousAction.fadeOut(0.5);
-        }
-        
-        newAction.reset().fadeIn(0.5).play();
-
-        this.currentState = name;
-    }
-
-    updateAnimation(delta) {
-        if (this.mixer) {
-            this.mixer.update(delta);
-        }
-    }
-
-    updateAI(delta, playerPosition, playerAvatar) {
-        if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
-
-        // --- Ground Collision ---
-        const rayOrigin = this.model.position.clone().add({ x: 0, y: 1, z: 0 });
-        const down = new THREE.Vector3(0, -1, 0);
-        const raycaster = new THREE.Raycaster(rayOrigin, down);
-        const intersections = raycaster.intersectObjects(this.groundCollidableObjects, true);
-
-        if (intersections.length > 0) {
-            this.model.position.y = intersections[0].point.y;
-        }
-
-
-        const distanceToPlayer = this.model.position.distanceTo(playerPosition);
-
-        if (distanceToPlayer < this.attackRadius) {
-            this.setState('zombie attack');
-        } else if (distanceToPlayer < this.detectionRadius) {
-            this.setState('zombie running');
-            const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position);
-            direction.y = 0;
-            direction.normalize();
-
-            // const otherCollidables = this.collidableObjects.filter(obj => obj !== this.model && obj !== playerAvatar);
-            // const chaseRaycaster = new THREE.Raycaster(this.model.position.clone().add({x: 0, y: 0.1, z: 0}), direction);
-            // const chaseIntersections = chaseRaycaster.intersectObjects(otherCollidables, true);
-
-            // if (chaseIntersections.length > 0 && chaseIntersections[0].distance < 0.5) {
-            //     // collision with something other than the zombie or the player
-            // } else {
-            this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
-            // }
-
-            this.model.lookAt(playerPosition);
-        } else {
-            this.setState('walking');
-            const target = this.patrolPath[this.currentPatrolIndex];
-            const distanceToTarget = this.model.position.distanceTo(target);
-
-            if (distanceToTarget < 1) {
-                this.currentPatrolIndex = (this.currentPatrolIndex + 1) % this.patrolPath.length;
-            } else {
-                const direction = new THREE.Vector3().subVectors(target, this.model.position);
-                direction.y = 0;
-                direction.normalize();
-                this.model.position.add(direction.multiplyScalar(this.speed * delta));
-                this.model.lookAt(target);
-            }
+            
+            scene.add(template);
+        } catch (error) {
+            console.error(`Error loading vehicle model ${model.path}:`, error);
         }
     }
 }
 
-spawnMazdas();
-spawnFatalStinger();
-spawnSpiritRTypeA();
-spawnSpiritR();
-spawnReAmemiya();
-const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+// Spawn a random vehicle near the player
+function spawnRandomVehicle() {
+    if (vehicleTemplates.length === 0) {
+        console.warn('No vehicle models loaded yet');
+        return;
+    }
 
-// Avatar variables
+    if (!avatar || !avatar.model) {
+        console.warn('Player avatar not found');
+        return;
+    }
 
-let currentAvatar = null;
-let animationMixer = null;
-const animationClips = {};
-let currentAction = 'idle';
-const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
+    // Get a random vehicle template
+    const randomIndex = Math.floor(Math.random() * vehicleTemplates.length);
+    const vehicleData = vehicleTemplates[randomIndex];
+    
+    // Create a new instance of the vehicle
+    const vehicleMesh = vehicleData.template.clone();
+    vehicleMesh.visible = true;
+    
+    // Calculate spawn position in front of the player
+    const spawnDistance = 3; // Distance in front of the player
+    const spawnAngle = avatar.model.rotation.y; // Same rotation as player
+    
+    const spawnPosition = new THREE.Vector3(
+        avatar.model.position.x + Math.sin(spawnAngle) * spawnDistance,
+        avatar.model.position.y,
+        avatar.model.position.z + Math.cos(spawnAngle) * spawnDistance
+    );
+    
+    // Position and rotate the vehicle
+    vehicleMesh.position.copy(spawnPosition);
+    vehicleMesh.rotation.y = spawnAngle + Math.PI; // Face the player
+    vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
+    
+    // Add to scene and track it
+    scene.add(vehicleMesh);
+    collidableObjects.push(vehicleMesh);
+    
+    // Create and store the vehicle instance
+    const vehicle = new Vehicle(vehicleMesh);
+    vehicles.push(vehicle);
+    
+    console.log(`Spawned ${vehicleData.name} near player`);
+    return vehicle;
+}
 
-// UI
+// UI & Interaction
 const avatarSelector = document.getElementById('avatar-selector');
 const enterExitButton = document.getElementById('enter-exit-button');
 const zoomSlider = document.getElementById('zoom-slider');
+const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
 
+// Setup spawn vehicle button
+spawnVehicleButton.addEventListener('click', () => {
+    spawnRandomVehicle();
+});
+
+const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
 avatarList.forEach(avatarName => {
     const option = document.createElement('option');
     option.value = avatarName;
@@ -424,474 +224,118 @@ avatarList.forEach(avatarName => {
 });
 
 avatarSelector.addEventListener('change', (e) => {
-    loadAvatar(e.target.value);
+    avatar.load(e.target.value);
 });
 
-const homeButton = document.getElementById('home-button');
-homeButton.addEventListener('click', () => {
-    loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb');
+document.getElementById('home-button').addEventListener('click', () => loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb'));
+document.getElementById('city-button').addEventListener('click', () => loadMap('/maps/city 3/source/town4new.glb'));
+document.getElementById('circuit-button').addEventListener('click', () => loadMap('/maps/burnin_rubber_crash_n_burn_city.glb'));
+
+zoomSlider.addEventListener('input', (e) => {
+    cameraController.setDistance(parseFloat(e.target.value));
 });
 
-const cityButton = document.getElementById('city-button');
-cityButton.addEventListener('click', () => {
-    loadMap('/maps/city 3/source/town4new.glb');
-});
-
-const circuitButton = document.getElementById('circuit-button');
-circuitButton.addEventListener('click', () => {
-    loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
-});
-
-// Load initial avatar
-loadAvatar(avatarList[0]);
-
-
-// Avatar Loading
-function loadAvatar(avatarName) {
-    if (currentAvatar) {
-        scene.remove(currentAvatar);
-    }
-
-    const fbxLoader = new FBXLoader();
-    fbxLoader.load(`/avatars/${avatarName}.fbx`, (fbx) => {
-        currentAvatar = fbx;
-        currentAvatar.userData.avatarName = avatarName; // Store avatar name
-        if (avatarName === 'Remy@T-Pose') {
-            currentAvatar.scale.set(0.002, 0.002, 0.002); // Further adjusted scale for Remy
-        } else {
-            currentAvatar.scale.set(0.005, 0.005, 0.005);
-        }        currentAvatar.position.set(0, 0, 5);
-        currentAvatar.traverse(function (child) {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
-        scene.add(currentAvatar);
-
-        // Animations
-        animationMixer = new THREE.AnimationMixer(currentAvatar);
-        const animLoader = new FBXLoader();
-        const animationsToLoad = {
-            'idle': '/avatars/animations/Idle.fbx',
-            'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
-        };
-        
-        let animationsLoaded = 0;
-        const totalAnimations = Object.keys(animationsToLoad).length;
-
-        for (const animName in animationsToLoad) {
-            animLoader.load(animationsToLoad[animName], (anim) => {
-                animationClips[animName] = anim.animations[0];
-                animationsLoaded++;
-                if (animationsLoaded === totalAnimations) {
-                    // Ensure mixer is reset and idle animation is played
-                    animationMixer.stopAllAction(); // Stop any previous actions
-                    const tempCurrentAction = currentAction; // Store currentAction
-                    currentAction = ''; // Temporarily set to empty to force play
-                    playAnimation('idle');
-                    currentAction = tempCurrentAction; // Restore currentAction
-                }
-            });
-        }
-    });
-}
-
-function playAnimation(name) {
-    if (currentAction === name) return;
-    if (animationClips[name]) {
-        const action = animationMixer.clipAction(animationClips[name]);
-        if (animationClips[currentAction]){
-            const previousAction = animationMixer.clipAction(animationClips[currentAction]);
-            if (previousAction) {
-                previousAction.fadeOut(0.5);
-            }
-        }
-        action.reset().fadeIn(0.5).play();
-        currentAction = name;
-    }
-}
-
-// Joysticks
-const moveJoystick = nipplejs.create({
-    zone: document.getElementById('joystick-container-move'),
-    mode: 'static',
-    position: { left: '50%', top: '50%' },
-    color: 'orange', // Naranja
-    restOpacity: 1 // Sin transparencia
-});
-
-const cameraJoystick = nipplejs.create({
-    zone: document.getElementById('joystick-container-camera'),
-    mode: 'static',
-    position: { left: '50%', top: '50%' },
-    color: 'orange', // Naranja
-    restOpacity: 1 // Sin transparencia
-});
-
-let moveData = { vector: { x: 0, y: 0 }, distance: 0 };
-let cameraData = { x: 0, y: 0 };
-
-moveJoystick.on('move', (evt, data) => {
-    moveData = data;
-});
-moveJoystick.on('end', () => {
-    moveData = { vector: { x: 0, y: 0 }, distance: 0 };
-});
-
-cameraJoystick.on('move', (evt, data) => {
-    cameraData = data.vector;
-});
-cameraJoystick.on('end', () => {
-    cameraData = { x: 0, y: 0 };
-});
-
-// Enter/Exit Vehicle Logic
 function toggleVehicle() {
-    const zoomSlider = document.getElementById('zoom-slider');
-
     if (isInVehicle) {
-        // Exit vehicle
+        // Exit
         isInVehicle = false;
-        if (currentAvatar && currentVehicle) {
-            currentAvatar.visible = true;
-            const exitOffset = new THREE.Vector3(2, 0, 0);
-            currentAvatar.position.copy(currentVehicle.position).add(exitOffset);
+        if (currentVehicle) {
             currentVehicle.isOccupied = false;
+            avatar.setVisible(true);
+            const exitOffset = new THREE.Vector3(2, 0, 0);
+            exitOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), currentVehicle.rotation.y);
+            avatar.model.position.copy(currentVehicle.position).add(exitOffset);
             currentVehicle = null;
+
+            // Update UI
+            zoomSlider.min = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
+            cameraController.setDistance(CONFIG.AVATAR.MIN_CAMERA_DISTANCE);
+            zoomSlider.value = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
         }
-        // Update slider for avatar
-        zoomSlider.min = avatarMinCameraDistance;
-        zoomSlider.max = maxCameraDistance;
-        cameraDistance = avatarCameraDistance; // Restore avatar camera distance
-        zoomSlider.value = cameraDistance; // Update slider position
     } else if (nearbyVehicle) {
-        // Enter vehicle
+        // Enter
         isInVehicle = true;
         currentVehicle = nearbyVehicle;
         currentVehicle.isOccupied = true;
-        if (currentAvatar) {
-            currentAvatar.visible = false;
-        }
-        // Reset camera angle to be behind the vehicle
-        cameraAngleH = currentVehicle.rotation.y + Math.PI;
-        cameraAngleVOffset = 0;
-        
-        // Update slider for vehicle
-        zoomSlider.min = vehicleMinCameraDistance;
-        zoomSlider.max = maxCameraDistance;
-        cameraDistance = vehicleMinCameraDistance; // Set camera distance to vehicle default
-        zoomSlider.value = cameraDistance; // Update slider position
+        avatar.setVisible(false);
+
+        // Update UI
+        zoomSlider.min = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
+        cameraController.setDistance(CONFIG.VEHICLE.MIN_CAMERA_DISTANCE);
+        zoomSlider.value = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
     }
 }
 
 window.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'e') {
-        toggleVehicle();
-    }
+    if (e.key.toLowerCase() === 'e') toggleVehicle();
 });
-
 enterExitButton.addEventListener('click', toggleVehicle);
 
+// Initial Setup
+loadMap('/maps/city 3/source/town4new.glb');
 
-// Camera zoom variables
-let cameraDistance = 1;
-let avatarCameraDistance = 1; // To store avatar's camera distance
-const avatarMinCameraDistance = 1;
-const vehicleMinCameraDistance = 3;
-const maxCameraDistance = 5;
-
-// Camera smoothing variables
-const avatarLerp = 0.25;
-const vehicleLerp = 0.1;
-
-// Zoom Slider Control
-zoomSlider.min = avatarMinCameraDistance;
-zoomSlider.max = maxCameraDistance;
-zoomSlider.value = cameraDistance;
-zoomSlider.addEventListener('input', (e) => {
-    cameraDistance = parseFloat(e.target.value);
-    if (!isInVehicle) {
-        avatarCameraDistance = cameraDistance;
-    }
+// Load vehicle models and then load the avatar
+loadVehicleModels().then(() => {
+    console.log('All vehicle models loaded');
+    spawnVehicleButton.disabled = false; // Enable the button once models are loaded
+}).catch(error => {
+    console.error('Error loading vehicle models:', error);
 });
 
+// Load the default avatar
+avatar.load(avatarList[0]);
 
-// Raycasters
-const cameraRaycaster = new THREE.Raycaster();
-const avatarRaycaster = new THREE.Raycaster();
-
-// Animation loop
+// Animation Loop
 const clock = new THREE.Clock();
-let cameraAngleH = 0;
-let cameraAngleVOffset = 0;
-
-// Reusable vectors for performance
-const viewDirection = new THREE.Vector3();
-const right = new THREE.Vector3();
-const moveDirection = new THREE.Vector3();
-const followPosition = new THREE.Vector3();
-const cameraOffset = new THREE.Vector3();
-const desiredCameraPosition = new THREE.Vector3();
-const direction = new THREE.Vector3();
-const rayOrigin = new THREE.Vector3();
-const down = new THREE.Vector3(0, -1, 0);
-
 let frameCount = 0;
-const checkInterval = 4; // Run expensive checks every 4 frames
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     frameCount++;
 
-    if (animationMixer) {
-        animationMixer.update(delta);
-    }
+    // Update Entities
+    avatar.update(delta);
     zombie.updateAnimation(delta);
 
-
-    // --- Throttled Operations ---
-    if (frameCount % checkInterval === 0) {
-        if (currentAvatar) {
-            zombie.updateAI(delta, currentAvatar.position, currentAvatar);
+    // Throttled AI & Checks
+    if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
+        if (avatar.model) {
+            zombie.updateAI(delta, avatar.position, avatar.model);
+            avatar.checkGroundCollision(collidableObjects);
         }
-        // Proximity check
-        if (!isInVehicle && currentAvatar) {
+
+        // Proximity Check
+        if (!isInVehicle && avatar.model) {
             nearbyVehicle = null;
-            const proximityThreshold = 3;
+            const threshold = CONFIG.AVATAR.PROXIMITY_THRESHOLD;
             for (const vehicle of vehicles) {
                 if (!vehicle.isOccupied) {
-                    const distance = currentAvatar.position.distanceTo(vehicle.position);
-                    if (distance < proximityThreshold) {
+                    const dist = avatar.position.distanceTo(vehicle.position);
+                    if (dist < threshold) {
                         nearbyVehicle = vehicle;
                         break;
                     }
                 }
             }
         }
-
-        // Avatar ground collision
-        if (currentAvatar && !isInVehicle) {
-            rayOrigin.copy(currentAvatar.position);
-            rayOrigin.y += 1;
-            avatarRaycaster.set(rayOrigin, down);
-            const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
-
-            if (intersections.length > 0) {
-                currentAvatar.position.y = intersections[0].point.y;
-                if (currentAvatar.userData.avatarName === 'Remy@T-Pose') { // Check if it's Remy
-                    currentAvatar.position.y += 0.3; // Further increased upward adjustment for Remy
-                }            }
-        }
     }
 
-    const targetToFollow = isInVehicle ? currentVehicle : currentAvatar;
-    const cameraRotationSpeed = 2; // Define once
+    // Input & Movement
+    const moveInput = inputManager.getMoveInput();
+    const cameraInput = inputManager.getCameraInput();
 
     if (isInVehicle && currentVehicle) {
-        // Vehicle Controls
-        const forward = moveData.vector.y;
-        const turn = -moveData.vector.x;
-        const maxReverseSpeed = -vehicleMaxSpeed * 0.5;
-
-        // Acceleration/deceleration
-        if (forward > 0) { // Accelerating forward
-            vehicleSpeed += vehicleAcceleration * delta;
-        } else if (forward < 0) { // Accelerating backward (reversing)
-            vehicleSpeed += vehicleAcceleration * forward * delta; // `forward` is negative
-        } else { // No joystick input, apply friction
-            if (vehicleSpeed > 0) vehicleSpeed -= vehicleFriction * delta;
-            if (vehicleSpeed < 0) vehicleSpeed += vehicleFriction * delta;
-            if (Math.abs(vehicleSpeed) < 0.1) vehicleSpeed = 0; // Stop friction from flipping direction
-        }
-        vehicleSpeed = Math.max(maxReverseSpeed, Math.min(vehicleSpeed, vehicleMaxSpeed));
-
-        // Steering
-        if (Math.abs(vehicleSpeed) > 0.1) {
-            const steeringDirection = vehicleSpeed > 0 ? 1 : -1; // Invert steering in reverse
-            const steering = turn * vehicleSteeringSpeed * delta * steeringDirection;
-            currentVehicle.rotation.y += steering;
-        }
-
-        // --- Vehicle Ground Collision ---
-        const vehicleRayOrigin = currentVehicle.position.clone().add({ x: 0, y: 1, z: 0 });
-        avatarRaycaster.set(vehicleRayOrigin, down); // Re-using avatarRaycaster
-        const groundIntersections = avatarRaycaster.intersectObjects(groundCollidableObjects, true);
-
-        let groundY = null;
-        for (const intersection of groundIntersections) {
-            let isSelf = false;
-            intersection.object.traverseAncestors((ancestor) => {
-                if (ancestor === currentVehicle) {
-                    isSelf = true;
-                }
-            });
-            if (!isSelf) {
-                groundY = intersection.point.y;
-                break; // Found the ground
-            }
-        }
-
-        if (groundY !== null) {
-            currentVehicle.position.y = groundY + 0.2; // 0.2 is offset for wheels
-        }
-
-        // --- Vehicle Wall Collision & Position Update ---
-        const moveDistance = vehicleSpeed * delta;
-        const forwardDirection = new THREE.Vector3(Math.sin(currentVehicle.rotation.y), 0, Math.cos(currentVehicle.rotation.y));
-        
-        const collisionPoints = [ // Points on the front of the car to cast rays from
-            {x: 0, y: 0.2, z: 0}, // Lower point
-            {x: 0, y: 0.7, z: 0}  // Upper point
-        ];
-        
-        let firstValidIntersection = null;
-
-        for (const point of collisionPoints) {
-            const rayOrigin = currentVehicle.position.clone().add(point);
-            avatarRaycaster.set(rayOrigin, forwardDirection);
-            const wallIntersections = avatarRaycaster.intersectObjects(collidableObjects, true);
-
-            for (const intersection of wallIntersections) {
-                let isSelf = false;
-                intersection.object.traverseAncestors((ancestor) => {
-                    if (ancestor === currentVehicle) { isSelf = true; }
-                });
-
-                if (!isSelf) {
-                    // Found the first valid intersection for this ray
-                    if (!firstValidIntersection || intersection.distance < firstValidIntersection.distance) {
-                        firstValidIntersection = intersection;
-                    }
-                    break; 
-                }
-            }
-        }
-
-        const collisionDistance = 1.5; // Bumper distance from center
-        if (firstValidIntersection && firstValidIntersection.distance < collisionDistance + moveDistance && vehicleSpeed > 0) {
-            // Imminent collision: Move car exactly to the wall.
-            const distanceToWall = firstValidIntersection.distance;
-            const allowedMove = Math.max(0, distanceToWall - collisionDistance);
-            
-            currentVehicle.position.x += allowedMove * Math.sin(currentVehicle.rotation.y);
-            currentVehicle.position.z += allowedMove * Math.cos(currentVehicle.rotation.y);
-            
-            vehicleSpeed = 0; // Stop for the next frame.
-        } else {
-            // No collision: Move normally.
-            currentVehicle.position.x += moveDistance * Math.sin(currentVehicle.rotation.y);
-            currentVehicle.position.z += moveDistance * Math.cos(currentVehicle.rotation.y);
-        }
-        
-        playAnimation('idle');
-
-        // Chase camera logic
-        if (Math.abs(cameraData.x) > 0.1) { // User is actively rotating camera
-            cameraAngleH += cameraData.x * cameraRotationSpeed * delta;
-        } else { // Auto-follow behind the car
-            const targetCameraAngleH = currentVehicle.rotation.y + Math.PI;
-            let diff = targetCameraAngleH - cameraAngleH;
-            if (diff > Math.PI) diff -= 2 * Math.PI;
-            if (diff < -Math.PI) diff += 2 * Math.PI;
-            cameraAngleH += diff * 0.5; // Smoothly follow the car
-        }
-
-    } else if (currentAvatar) {
-        // Avatar Controls
-        const moveSpeed = 3;
-        camera.getWorldDirection(viewDirection);
-        viewDirection.y = 0;
-        viewDirection.normalize();
-
-        right.crossVectors(camera.up, viewDirection).normalize();
-        moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
-
-        const moveThreshold = 0.1; // Define a small threshold for movement
-        if (moveData.distance > moveThreshold) {
-            const speed = moveData.distance / 50 * moveSpeed;
-            const moveVector = moveDirection.clone().multiplyScalar(speed * delta);
-
-            // --- Avatar Collision Detection ---
-            const avatarCenter = currentAvatar.position.clone().add({ x: 0, y: 0.5, z: 0 }); // Raycast from near avatar's center
-            avatarRaycaster.set(avatarCenter, moveDirection);
-            const intersections = avatarRaycaster.intersectObjects(collidableObjects, true);
-
-            const collisionThreshold = 0.5; // How close to an object to stop
-            if (intersections.length > 0 && intersections[0].distance < collisionThreshold) {
-                // Collision detected, do not move.
-                playAnimation('idle');
-            } else {
-                // No collision, move the avatar.
-                currentAvatar.position.add(moveVector);
-                currentAvatar.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
-                playAnimation('running');
-            }
-        } else {
-            playAnimation('idle');
-        }
-        // Avatar Camera Control
-        cameraAngleH -= cameraData.x * cameraRotationSpeed * delta;
-    }
-    
-    if (targetToFollow) {
-        // Camera Rotation (Vertical is universal)
-        cameraAngleVOffset -= cameraData.y * cameraRotationSpeed * delta; // Standard vertical rotation
-        cameraAngleVOffset = Math.max(-0.4, Math.min(0.4, cameraAngleVOffset));
-
-        const minAngleV = 0.1; // Look more forward
-        const maxAngleV = 0.9; // Even more top-down at min distance (lower floor)
-        const currentMinCameraDistance = isInVehicle ? vehicleMinCameraDistance : avatarMinCameraDistance;
-        const t = (cameraDistance - currentMinCameraDistance) / (maxCameraDistance - currentMinCameraDistance);
-        // Invert the vertical camera angle behavior:
-        // When camera is near (t=0), baseAngleV should be maxAngleV (high angle, low floor).
-        // When camera is far (t=1), baseAngleV should be minAngleV (low angle, high floor).
-        const baseAngleV = maxAngleV - t * (maxAngleV - minAngleV);
-        const cameraAngleV = baseAngleV + cameraAngleVOffset;
-        
-        followPosition.copy(targetToFollow.position).add({x: 0, y: 0.5, z: 0}); // Further lower camera pivot for closer view
-        cameraOffset.set(0, 0, cameraDistance);
-        cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV);
-        cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleH);
-        desiredCameraPosition.copy(followPosition).add(cameraOffset);
-
-        let finalCameraPosition = desiredCameraPosition;
-
-        // --- Throttled Camera Collision ---
-        if (frameCount % checkInterval === 0) {
-            direction.copy(desiredCameraPosition).sub(followPosition).normalize();
-            cameraRaycaster.set(followPosition, direction);
-            const cameraIntersections = cameraRaycaster.intersectObjects(collidableObjects, true);
-
-            // if (cameraIntersections.length > 0) { // Temporarily disabled camera collision for debugging bouncing issue
-            //     if (cameraIntersections[0].distance < cameraDistance) {
-            //         finalCameraPosition.copy(followPosition).add(direction.multiplyScalar(cameraIntersections[0].distance - 0.5)); // Increased buffer for camera collision
-            //     }
-            // }
-            // Store the calculated position to be used by the lerp
-            camera.userData.finalCameraPosition = finalCameraPosition;
-        }
-
-        // Use the stored position for smooth interpolation
-        if (camera.userData.finalCameraPosition) {
-            finalCameraPosition = camera.userData.finalCameraPosition;
-        }
-
-        if (finalCameraPosition.y < 1.0) { // Ensure camera stays above ground
-            finalCameraPosition.y = 1.0;
-        }
-
-        if (isInVehicle) {
-            camera.position.copy(finalCameraPosition);
-        } else {
-            camera.position.lerp(finalCameraPosition, avatarLerp);
-        }
-        camera.lookAt(followPosition);
+        currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
+    } else if (avatar.model) {
+        avatar.updateMovement(delta, moveInput, camera, collidableObjects);
     }
 
-    // Update UI
+    // Camera
+    const target = isInVehicle ? currentVehicle.mesh : avatar.model;
+    cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, frameCount);
+
+    // UI Updates
     if (isInVehicle) {
         enterExitButton.style.display = 'flex';
         enterExitButton.innerText = 'Exit';
@@ -905,11 +349,11 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-animate();
-
-// Handle window resize
+// Handle Resize
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+animate();
