@@ -7,7 +7,6 @@ import { Zombie } from './entities/Zombie.js';
 import { CameraController } from './systems/CameraController.js';
 import { InputManager } from './systems/InputManager.js';
 import { NetworkManager } from './systems/NetworkManager.js';
-import { NetworkManager } from './systems/NetworkManager.js';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -52,7 +51,6 @@ const groundCollidableObjects = [ground];
 const inputManager = new InputManager();
 const cameraController = new CameraController(camera);
 const networkManager = new NetworkManager(scene);
-const networkManager = new NetworkManager(scene);
 
 // ... (existing code) ...
 
@@ -74,53 +72,6 @@ function animate() {
             avatar.currentState
         );
     }
-    networkManager.update(delta);
-
-    // Network Update
-    if (avatar.model) {
-        networkManager.sendUpdate(
-            avatar.model.position,
-            avatar.model.rotation,
-            avatar.currentState // Ensure Avatar class exposes this or we get it from mixer
-        );
-    }
-
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
-
-    const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        powerPreference: 'high-performance'
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.PERFORMANCE.MAX_PIXEL_RATIO));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
-    document.body.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 10, 7.5);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.set(CONFIG.PERFORMANCE.SHADOW_MAP_SIZE, CONFIG.PERFORMANCE.SHADOW_MAP_SIZE);
-    scene.add(directionalLight);
-
-    // Ground
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide }));
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // Collision Systems
-    const collidableObjects = [ground];
-    const groundCollidableObjects = [ground];
-
-    // Systems
-    const inputManager = new InputManager();
-    const cameraController = new CameraController(camera);
 
     // Entities
     const avatar = new Avatar(scene);
