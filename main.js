@@ -54,6 +54,273 @@ const networkManager = new NetworkManager(scene);
 
 // ... (existing code) ...
 
+// Entities
+const avatar = new Avatar(scene);
+const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+const vehicles = []; // Array of Vehicle instances
+
+// Entities
+const avatar = new Avatar(scene);
+const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+const vehicles = []; // Array of Vehicle instances
+
+// Game State
+let currentMap = null;
+let isInVehicle = false;
+let currentVehicle = null; // Vehicle instance
+let nearbyVehicle = null; // Vehicle instance
+
+// Map Loading
+function loadMap(mapUrl) {
+    if (currentMap) {
+        // Cleanup
+        currentMap.traverse((child) => {
+            if (child.isMesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (child.material.map) child.material.map.dispose();
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => mat.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+
+        scene.remove(currentMap);
+        const index = collidableObjects.indexOf(currentMap);
+        if (index > -1) collidableObjects.splice(index, 1);
+        const groundIndex = groundCollidableObjects.indexOf(currentMap);
+        if (groundIndex > -1) groundCollidableObjects.splice(groundIndex, 1);
+    }
+
+    const gltfLoader = new GLTFLoader();
+    loadWithCache(mapUrl, gltfLoader).then((gltf) => {
+        currentMap = gltf.scene;
+
+        if (mapUrl.includes('mansion')) {
+            currentMap.scale.set(0.5, 0.5, 0.5);
+        } else if (mapUrl.includes('burnin_rubber')) {
+            currentMap.scale.set(25.0, 25.0, 25.0); // Aumentado a 2.5x el tamaño anterior (10.0 * 2.5)
+            currentMap.position.set(-320, 0, 230); // Ajustado para centrar mejor en el eje X
+        }
+
+        gltf.scene.traverse(function (child) {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                // Check for pre-placed vehicles in map if any (optional logic from original)
+                // The original code checked for 'car', 'bus' etc in map children but added them as raw meshes
+                // For now we keep the spawn logic separate
+            }
+        });
+        scene.add(gltf.scene);
+        collidableObjects.push(gltf.scene);
+        groundCollidableObjects.push(gltf.scene);
+
+        if (avatar.model) {
+            avatar.model.position.set(0, 0, 5);
+        }
+    });
+}
+
+// Vehicle Management
+const VEHICLE_MODELS = [
+    { path: '/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', name: 'Mazda RX-7' },
+    { path: '/2018_mazda_rx-7_fd3s_fatal_stinger.glb', name: 'Fatal Stinger' },
+    { path: '/2002_mazda_rx-7_spirit_r_type_a_fd.glb', name: 'Spirit R Type A' },
+    { path: '/2002_mazda_rx-7_spirit-r.glb', name: 'Spirit R' },
+    { path: '/2002_mazda_re-amemiya_super_greddy_3.glb', name: 'Re Amemiya' }
+];
+
+let vehicleTemplates = [];
+
+// Load all vehicle models
+async function loadVehicleModels() {
+    const loader = new GLTFLoader();
+
+    for (const model of VEHICLE_MODELS) {
+        try {
+            const gltf = await loadWithCache(model.path, loader);
+            const template = gltf.scene;
+
+            // Set up the model template
+            template.visible = false; // Hide the template
+            template.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            // Store the template with its metadata
+            vehicleTemplates.push({
+                template: template,
+                name: model.name,
+                path: model.path
+            });
+
+            scene.add(template);
+        } catch (error) {
+            console.error(`Error loading vehicle model ${model.path}:`, error);
+        }
+    }
+}
+
+// Spawn a random vehicle near the player
+function spawnRandomVehicle() {
+    if (vehicleTemplates.length === 0) {
+        console.warn('No vehicle models loaded yet');
+        return;
+    }
+
+    if (!avatar || !avatar.model) {
+        console.warn('Player avatar not found');
+        return;
+    }
+
+    // Get a random vehicle template
+    const randomIndex = Math.floor(Math.random() * vehicleTemplates.length);
+    const vehicleData = vehicleTemplates[randomIndex];
+
+    // Create a new instance of the vehicle
+    const vehicleMesh = vehicleData.template.clone();
+    vehicleMesh.visible = true;
+
+    // Calculate spawn position in front of the player
+    const spawnDistance = 3; // Distance in front of the player
+    const spawnAngle = avatar.model.rotation.y; // Same rotation as player
+
+    const spawnPosition = new THREE.Vector3(
+        avatar.model.position.x + Math.sin(spawnAngle) * spawnDistance,
+        avatar.model.position.y,
+        avatar.model.position.z + Math.cos(spawnAngle) * spawnDistance
+    );
+
+    // Position and rotate the vehicle
+    vehicleMesh.position.copy(spawnPosition);
+    vehicleMesh.rotation.y = spawnAngle + Math.PI; // Face the player
+    vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
+
+    // Add to scene and track it
+    scene.add(vehicleMesh);
+    collidableObjects.push(vehicleMesh);
+
+    // Create and store the vehicle instance
+    const vehicle = new Vehicle(vehicleMesh);
+    vehicles.push(vehicle);
+
+    console.log(`Spawned ${vehicleData.name} near player`);
+    return vehicle;
+}
+
+// UI & Interaction
+const avatarSelector = document.getElementById('avatar-selector');
+const enterExitButton = document.getElementById('enter-exit-button');
+const cameraPositionButton = document.getElementById('camera-position-button');
+const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
+
+// Setup spawn vehicle button
+spawnVehicleButton.addEventListener('click', () => {
+    spawnRandomVehicle();
+});
+
+const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
+avatarList.forEach(avatarName => {
+    const option = document.createElement('option');
+    option.value = avatarName;
+    option.innerText = avatarName;
+    avatarSelector.appendChild(option);
+});
+
+avatarSelector.addEventListener('change', (e) => {
+    avatar.load(e.target.value);
+});
+
+document.getElementById('home-button').addEventListener('click', () => loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb'));
+document.getElementById('city-button').addEventListener('click', () => loadMap('/maps/city 3/source/town4new.glb'));
+document.getElementById('circuit-button').addEventListener('click', () => loadMap('/maps/burnin_rubber_crash_n_burn_city.glb'));
+
+// Camera position states
+const CAMERA_POSITIONS = [
+    { distance: 2, label: '1' },  // Close
+    { distance: 4, label: '2' },  // Medium
+    { distance: 6, label: '3' }   // Far
+];
+let currentCameraPosition = 0;
+
+function updateCameraPosition() {
+    const position = CAMERA_POSITIONS[currentCameraPosition];
+    cameraController.setDistance(position.distance);
+    cameraPositionButton.textContent = position.label;
+}
+
+cameraPositionButton.addEventListener('click', () => {
+    currentCameraPosition = (currentCameraPosition + 1) % CAMERA_POSITIONS.length;
+    updateCameraPosition();
+});
+
+// Initialize camera position
+updateCameraPosition();
+
+function toggleVehicle() {
+    if (isInVehicle) {
+        // Exit
+        isInVehicle = false;
+        if (currentVehicle) {
+            currentVehicle.isOccupied = false;
+            avatar.setVisible(true);
+            const exitOffset = new THREE.Vector3(2, 0, 0);
+            exitOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), currentVehicle.rotation.y);
+            avatar.model.position.copy(currentVehicle.position).add(exitOffset);
+            currentVehicle = null;
+
+            // Update UI
+            cameraController.setDistance(CONFIG.AVATAR.MIN_CAMERA_DISTANCE);
+            // Reset to first camera position when exiting vehicle
+            currentCameraPosition = 0;
+            updateCameraPosition();
+        }
+    } else if (nearbyVehicle) {
+        // Enter
+        isInVehicle = true;
+        currentVehicle = nearbyVehicle;
+        currentVehicle.isOccupied = true;
+        avatar.setVisible(false);
+
+        // Update UI
+        cameraController.setDistance(CONFIG.VEHICLE.MIN_CAMERA_DISTANCE);
+        // Reset to first camera position when entering vehicle
+        currentCameraPosition = 0;
+        updateCameraPosition();
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') toggleVehicle();
+});
+enterExitButton.addEventListener('click', toggleVehicle);
+
+// Initial Setup - Load Burnin Rubber map by default
+loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
+
+// Load vehicle models and then load the avatar
+loadVehicleModels().then(() => {
+    console.log('All vehicle models loaded');
+    spawnVehicleButton.disabled = false; // Enable the button once models are loaded
+}).catch(error => {
+    console.error('Error loading vehicle models:', error);
+});
+
+// Load the default avatar
+avatar.load(avatarList[0]);
+
+// Animation Loop
+const clock = new THREE.Clock();
+let frameCount = 0;
+
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
@@ -73,356 +340,85 @@ function animate() {
         );
     }
 
-    // Entities
-    const avatar = new Avatar(scene);
-    const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
-    const vehicles = []; // Array of Vehicle instances
-
-    // Game State
-    let currentMap = null;
-    let isInVehicle = false;
-    let currentVehicle = null; // Vehicle instance
-    let nearbyVehicle = null; // Vehicle instance
-
-    // Map Loading
-    function loadMap(mapUrl) {
-        if (currentMap) {
-            // Cleanup
-            currentMap.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (child.material.map) child.material.map.dispose();
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.dispose());
-                        } else {
-                            child.material.dispose();
-                        }
-                    }
-                }
-            });
-
-            scene.remove(currentMap);
-            const index = collidableObjects.indexOf(currentMap);
-            if (index > -1) collidableObjects.splice(index, 1);
-            const groundIndex = groundCollidableObjects.indexOf(currentMap);
-            if (groundIndex > -1) groundCollidableObjects.splice(groundIndex, 1);
+    // Throttled AI & Checks
+    if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
+        if (avatar.model) {
+            zombie.updateAI(delta, avatar.position, avatar.model);
+            avatar.checkGroundCollision(collidableObjects);
         }
 
-        const gltfLoader = new GLTFLoader();
-        loadWithCache(mapUrl, gltfLoader).then((gltf) => {
-            currentMap = gltf.scene;
-
-            if (mapUrl.includes('mansion')) {
-                currentMap.scale.set(0.5, 0.5, 0.5);
-            } else if (mapUrl.includes('burnin_rubber')) {
-                currentMap.scale.set(25.0, 25.0, 25.0); // Aumentado a 2.5x el tamaño anterior (10.0 * 2.5)
-                currentMap.position.set(-320, 0, 230); // Ajustado para centrar mejor en el eje X
-            }
-
-            gltf.scene.traverse(function (child) {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-
-                    // Check for pre-placed vehicles in map if any (optional logic from original)
-                    // The original code checked for 'car', 'bus' etc in map children but added them as raw meshes
-                    // For now we keep the spawn logic separate
+        // Proximity Check
+        if (!isInVehicle && avatar.model) {
+            nearbyVehicle = null;
+            const threshold = CONFIG.AVATAR.PROXIMITY_THRESHOLD;
+            for (const vehicle of vehicles) {
+                if (!vehicle.isOccupied) {
+                    const dist = avatar.position.distanceTo(vehicle.position);
+                    if (dist < threshold) {
+                        nearbyVehicle = vehicle;
+                        break;
+                    }
                 }
-            });
-            scene.add(gltf.scene);
-            collidableObjects.push(gltf.scene);
-            groundCollidableObjects.push(gltf.scene);
-
-            if (avatar.model) {
-                avatar.model.position.set(0, 0, 5);
             }
+        }
+    }
+
+    // Input & Movement
+    const moveInput = inputManager.getMoveInput();
+    const cameraInput = inputManager.getCameraInput();
+
+    if (isInVehicle && currentVehicle) {
+        currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
+    } else if (avatar.model) {
+        avatar.updateMovement(delta, moveInput, camera, collidableObjects);
+    }
+
+    // Camera
+    const target = isInVehicle ? currentVehicle.mesh : avatar.model;
+    cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, groundCollidableObjects, frameCount);
+
+    // UI Updates
+    if (isInVehicle) {
+        enterExitButton.style.display = 'flex';
+        enterExitButton.innerText = 'Exit';
+    } else if (nearbyVehicle) {
+        enterExitButton.style.display = 'flex';
+        enterExitButton.innerText = 'Enter';
+    } else {
+        enterExitButton.style.display = 'none';
+    }
+
+    renderer.render(scene, camera);
+}
+
+// Handle Resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Damage Effect
+const damageOverlay = document.getElementById('damage-overlay');
+window.addEventListener('player-hit', () => {
+    damageOverlay.style.opacity = '0.5';
+    setTimeout(() => {
+        damageOverlay.style.opacity = '0';
+    }, 500);
+});
+
+// Fullscreen Toggle
+const fullscreenButton = document.getElementById('fullscreen-button');
+fullscreenButton.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
         });
-    }
-
-    // Vehicle Management
-    const VEHICLE_MODELS = [
-        { path: '/1999_mazdaspeed_rx-7_fd3s_a-spec_gt-concept.glb', name: 'Mazda RX-7' },
-        { path: '/2018_mazda_rx-7_fd3s_fatal_stinger.glb', name: 'Fatal Stinger' },
-        { path: '/2002_mazda_rx-7_spirit_r_type_a_fd.glb', name: 'Spirit R Type A' },
-        { path: '/2002_mazda_rx-7_spirit-r.glb', name: 'Spirit R' },
-        { path: '/2002_mazda_re-amemiya_super_greddy_3.glb', name: 'Re Amemiya' }
-    ];
-
-    let vehicleTemplates = [];
-
-    // Load all vehicle models
-    async function loadVehicleModels() {
-        const loader = new GLTFLoader();
-
-        for (const model of VEHICLE_MODELS) {
-            try {
-                const gltf = await loadWithCache(model.path, loader);
-                const template = gltf.scene;
-
-                // Set up the model template
-                template.visible = false; // Hide the template
-                template.traverse(child => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
-
-                // Store the template with its metadata
-                vehicleTemplates.push({
-                    template: template,
-                    name: model.name,
-                    path: model.path
-                });
-
-                scene.add(template);
-            } catch (error) {
-                console.error(`Error loading vehicle model ${model.path}:`, error);
-            }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
         }
     }
+});
 
-    // Spawn a random vehicle near the player
-    function spawnRandomVehicle() {
-        if (vehicleTemplates.length === 0) {
-            console.warn('No vehicle models loaded yet');
-            return;
-        }
-
-        if (!avatar || !avatar.model) {
-            console.warn('Player avatar not found');
-            return;
-        }
-
-        // Get a random vehicle template
-        const randomIndex = Math.floor(Math.random() * vehicleTemplates.length);
-        const vehicleData = vehicleTemplates[randomIndex];
-
-        // Create a new instance of the vehicle
-        const vehicleMesh = vehicleData.template.clone();
-        vehicleMesh.visible = true;
-
-        // Calculate spawn position in front of the player
-        const spawnDistance = 3; // Distance in front of the player
-        const spawnAngle = avatar.model.rotation.y; // Same rotation as player
-
-        const spawnPosition = new THREE.Vector3(
-            avatar.model.position.x + Math.sin(spawnAngle) * spawnDistance,
-            avatar.model.position.y,
-            avatar.model.position.z + Math.cos(spawnAngle) * spawnDistance
-        );
-
-        // Position and rotate the vehicle
-        vehicleMesh.position.copy(spawnPosition);
-        vehicleMesh.rotation.y = spawnAngle + Math.PI; // Face the player
-        vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
-
-        // Add to scene and track it
-        scene.add(vehicleMesh);
-        collidableObjects.push(vehicleMesh);
-
-        // Create and store the vehicle instance
-        const vehicle = new Vehicle(vehicleMesh);
-        vehicles.push(vehicle);
-
-        console.log(`Spawned ${vehicleData.name} near player`);
-        return vehicle;
-    }
-
-    // UI & Interaction
-    const avatarSelector = document.getElementById('avatar-selector');
-    const enterExitButton = document.getElementById('enter-exit-button');
-    const cameraPositionButton = document.getElementById('camera-position-button');
-    const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
-
-    // Setup spawn vehicle button
-    spawnVehicleButton.addEventListener('click', () => {
-        spawnRandomVehicle();
-    });
-
-    const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
-    avatarList.forEach(avatarName => {
-        const option = document.createElement('option');
-        option.value = avatarName;
-        option.innerText = avatarName;
-        avatarSelector.appendChild(option);
-    });
-
-    avatarSelector.addEventListener('change', (e) => {
-        avatar.load(e.target.value);
-    });
-
-    document.getElementById('home-button').addEventListener('click', () => loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb'));
-    document.getElementById('city-button').addEventListener('click', () => loadMap('/maps/city 3/source/town4new.glb'));
-    document.getElementById('circuit-button').addEventListener('click', () => loadMap('/maps/burnin_rubber_crash_n_burn_city.glb'));
-
-    // Camera position states
-    const CAMERA_POSITIONS = [
-        { distance: 2, label: '1' },  // Close
-        { distance: 4, label: '2' },  // Medium
-        { distance: 6, label: '3' }   // Far
-    ];
-    let currentCameraPosition = 0;
-
-    function updateCameraPosition() {
-        const position = CAMERA_POSITIONS[currentCameraPosition];
-        cameraController.setDistance(position.distance);
-        cameraPositionButton.textContent = position.label;
-    }
-
-    cameraPositionButton.addEventListener('click', () => {
-        currentCameraPosition = (currentCameraPosition + 1) % CAMERA_POSITIONS.length;
-        updateCameraPosition();
-    });
-
-    // Initialize camera position
-    updateCameraPosition();
-
-    function toggleVehicle() {
-        if (isInVehicle) {
-            // Exit
-            isInVehicle = false;
-            if (currentVehicle) {
-                currentVehicle.isOccupied = false;
-                avatar.setVisible(true);
-                const exitOffset = new THREE.Vector3(2, 0, 0);
-                exitOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), currentVehicle.rotation.y);
-                avatar.model.position.copy(currentVehicle.position).add(exitOffset);
-                currentVehicle = null;
-
-                // Update UI
-                cameraController.setDistance(CONFIG.AVATAR.MIN_CAMERA_DISTANCE);
-                // Reset to first camera position when exiting vehicle
-                currentCameraPosition = 0;
-                updateCameraPosition();
-            }
-        } else if (nearbyVehicle) {
-            // Enter
-            isInVehicle = true;
-            currentVehicle = nearbyVehicle;
-            currentVehicle.isOccupied = true;
-            avatar.setVisible(false);
-
-            // Update UI
-            cameraController.setDistance(CONFIG.VEHICLE.MIN_CAMERA_DISTANCE);
-            // Reset to first camera position when entering vehicle
-            currentCameraPosition = 0;
-            updateCameraPosition();
-        }
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'e') toggleVehicle();
-    });
-    enterExitButton.addEventListener('click', toggleVehicle);
-
-    // Initial Setup - Load Burnin Rubber map by default
-    loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
-
-    // Load vehicle models and then load the avatar
-    loadVehicleModels().then(() => {
-        console.log('All vehicle models loaded');
-        spawnVehicleButton.disabled = false; // Enable the button once models are loaded
-    }).catch(error => {
-        console.error('Error loading vehicle models:', error);
-    });
-
-    // Load the default avatar
-    avatar.load(avatarList[0]);
-
-    // Animation Loop
-    const clock = new THREE.Clock();
-    let frameCount = 0;
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const delta = clock.getDelta();
-        frameCount++;
-
-        // Update Entities
-        avatar.update(delta);
-        zombie.updateAnimation(delta);
-
-        // Throttled AI & Checks
-        if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
-            if (avatar.model) {
-                zombie.updateAI(delta, avatar.position, avatar.model);
-                avatar.checkGroundCollision(collidableObjects);
-            }
-
-            // Proximity Check
-            if (!isInVehicle && avatar.model) {
-                nearbyVehicle = null;
-                const threshold = CONFIG.AVATAR.PROXIMITY_THRESHOLD;
-                for (const vehicle of vehicles) {
-                    if (!vehicle.isOccupied) {
-                        const dist = avatar.position.distanceTo(vehicle.position);
-                        if (dist < threshold) {
-                            nearbyVehicle = vehicle;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Input & Movement
-        const moveInput = inputManager.getMoveInput();
-        const cameraInput = inputManager.getCameraInput();
-
-        if (isInVehicle && currentVehicle) {
-            currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
-        } else if (avatar.model) {
-            avatar.updateMovement(delta, moveInput, camera, collidableObjects);
-        }
-
-        // Camera
-        const target = isInVehicle ? currentVehicle.mesh : avatar.model;
-        cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, groundCollidableObjects, frameCount);
-
-        // UI Updates
-        if (isInVehicle) {
-            enterExitButton.style.display = 'flex';
-            enterExitButton.innerText = 'Exit';
-        } else if (nearbyVehicle) {
-            enterExitButton.style.display = 'flex';
-            enterExitButton.innerText = 'Enter';
-        } else {
-            enterExitButton.style.display = 'none';
-        }
-
-        renderer.render(scene, camera);
-    }
-
-    // Handle Resize
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Damage Effect
-    const damageOverlay = document.getElementById('damage-overlay');
-    window.addEventListener('player-hit', () => {
-        damageOverlay.style.opacity = '0.5';
-        setTimeout(() => {
-            damageOverlay.style.opacity = '0';
-        }, 500);
-    });
-
-    // Fullscreen Toggle
-    const fullscreenButton = document.getElementById('fullscreen-button');
-    fullscreenButton.addEventListener('click', () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable fullscreen: ${err.message}`);
-            });
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-        }
-    });
-
-    animate();
+animate();
