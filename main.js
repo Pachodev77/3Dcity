@@ -333,7 +333,8 @@ function animate() {
         networkManager.sendUpdate(
             avatar.model.position,
             avatar.model.rotation,
-            avatar.currentAction
+            avatar.currentAction,
+            avatar.name
         );
     }
 

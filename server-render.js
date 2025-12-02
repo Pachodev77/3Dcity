@@ -31,7 +31,8 @@ io.on('connection', (socket) => {
         y: 0,
         z: 0,
         rotation: 0,
-        animation: 'idle'
+        animation: 'idle',
+        avatarType: 'Ch02_nonPBR' // Default avatar
     };
 
     // Send the current players to the new client
@@ -51,6 +52,9 @@ io.on('connection', (socket) => {
             players[socket.id].z = movementData.z;
             players[socket.id].rotation = movementData.rotation;
             players[socket.id].animation = movementData.animation;
+            if (movementData.avatarType) {
+                players[socket.id].avatarType = movementData.avatarType;
+            }
 
             // Broadcast the update to all other players
             socket.broadcast.emit('playerMoved', {

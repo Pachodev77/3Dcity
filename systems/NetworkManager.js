@@ -57,7 +57,7 @@ export class NetworkManager {
         }
     }
 
-    sendUpdate(position, rotation, animation) {
+    sendUpdate(position, rotation, animation, avatarType) {
         const now = Date.now();
         if (now - this.lastUpdate > this.updateRate) {
             this.socket.emit('playerMovement', {
@@ -65,7 +65,8 @@ export class NetworkManager {
                 y: position.y,
                 z: position.z,
                 rotation: rotation.y,
-                animation: animation
+                animation: animation,
+                avatarType: avatarType
             });
             this.lastUpdate = now;
         }

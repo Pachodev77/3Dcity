@@ -17,13 +17,19 @@ export class RemoteAvatar {
 
     loadModel(initialData) {
         const loader = new FBXLoader();
-        // Use the default avatar for remote players for now
-        // In a full implementation, you'd send the avatar type in initialData
-        const avatarPath = '/avatars/Ch02_nonPBR.fbx';
+        // Use the avatar type sent by the remote player
+        const avatarType = initialData.avatarType || 'Ch02_nonPBR';
+        const avatarPath = `/avatars/${avatarType}.fbx`;
 
         loadWithCache(avatarPath, loader).then((object) => {
             this.model = object;
-            this.model.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
+
+            // Apply correct scale based on avatar type
+            if (avatarType === 'Remy@T-Pose') {
+                this.model.scale.set(CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE);
+            } else {
+                this.model.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
+            }
 
             // Set initial position
             this.model.position.set(initialData.x, initialData.y, initialData.z);
@@ -39,6 +45,8 @@ export class RemoteAvatar {
             this.scene.add(this.model);
             this.mixer = new THREE.AnimationMixer(this.model);
             this.loadAnimations();
+        }).catch((error) => {
+            console.error(`Error loading remote avatar ${avatarType}:`, error);
         });
     }
 
