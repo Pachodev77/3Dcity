@@ -7,6 +7,7 @@ export class CameraController {
         this.angleH = 0;
         this.angleVOffset = 0;
         this.distance = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
+        this.lastManualRotationTime = 0; // Track when the camera was last manually rotated
 
         // Reusable vectors
         this.followPosition = new THREE.Vector3();
@@ -21,9 +22,26 @@ export class CameraController {
 
         // --- 1. Update Angles from Input ---
         const cameraRotationSpeed = CONFIG.CAMERA.ROTATION_SPEED;
-        this.angleH -= input.x * cameraRotationSpeed * delta;
-        this.angleVOffset -= input.y * cameraRotationSpeed * delta;
-        this.angleVOffset = Math.max(-0.8, Math.min(0.2, this.angleVOffset)); // Antes era Math.max(-0.4, Math.min(0.4, ...))
+        
+        // Track when we're actively rotating the camera
+        const isRotating = Math.abs(input.x) > 0.1 || Math.abs(input.y) > 0.1;
+        
+        // Always allow camera rotation with joystick
+        if (input.x !== 0) {
+            this.angleH -= input.x * cameraRotationSpeed * delta;
+            this.lastManualRotationTime = Date.now();
+        }
+        
+        // Vertical angle adjustment with limits
+        if (input.y !== 0) {
+            this.angleVOffset -= input.y * cameraRotationSpeed * delta;
+            this.angleVOffset = Math.max(-0.8, Math.min(0.2, this.angleVOffset));
+            this.lastManualRotationTime = Date.now();
+        }
+        
+        // If not manually rotating and the avatar is moving, adjust camera to follow
+        const timeSinceLastRotation = Date.now() - (this.lastManualRotationTime || 0);
+        const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving && !isInVehicle;
 
         // --- 2. Determine Target Follow Position (Crucial for Terrain Height) ---
         const targetPosition = target.position.clone();
@@ -37,6 +55,20 @@ export class CameraController {
         }
         this.followPosition.set(targetPosition.x, targetGroundY + 0.5, targetPosition.z);
 
+        // If we should auto-follow the avatar
+        if (shouldAutoFollow) {
+            // Get the target's forward direction
+            const targetForward = new THREE.Vector3(0, 0, -1);
+            targetForward.applyQuaternion(target.quaternion);
+            
+            // Calculate desired angle to look at the target from behind
+            const targetAngle = Math.atan2(targetForward.x, targetForward.z);
+            
+            // Smoothly interpolate to the target angle
+            const angleDiff = ((targetAngle - this.angleH + Math.PI) % (Math.PI * 2)) - Math.PI;
+            this.angleH += angleDiff * 0.1 * delta * 10; // Adjusted for frame rate independence
+        }
+
         // --- 3. Calculate Ideal Camera Position ---
         const currentMinCameraDistance = isInVehicle ? CONFIG.VEHICLE.MIN_CAMERA_DISTANCE : CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
         const maxCameraDistance = CONFIG.CAMERA.MAX_DISTANCE;
@@ -44,7 +76,12 @@ export class CameraController {
 
         let t = (this.distance - currentMinCameraDistance) / (maxCameraDistance - currentMinCameraDistance);
         t = Math.sqrt(t); // Suaviza la transición del ángulo al estar cerca
-        const baseAngleV = CONFIG.CAMERA.MAX_ANGLE_V - t * (CONFIG.CAMERA.MAX_ANGLE_V - CONFIG.CAMERA.MIN_ANGLE_V);
+        
+        // Use a lower vertical angle when following the avatar
+        const maxAngleV = isInVehicle ? CONFIG.CAMERA.MAX_ANGLE_V : 0.3; // Reduced from default for better third-person view
+        const minAngleV = isInVehicle ? CONFIG.CAMERA.MIN_ANGLE_V : 0.1; // Slightly raised minimum angle
+        
+        const baseAngleV = maxAngleV - t * (maxAngleV - minAngleV);
         const cameraAngleV = baseAngleV + this.angleVOffset;
 
         const cameraOffset = new THREE.Vector3(0, 0, this.distance);

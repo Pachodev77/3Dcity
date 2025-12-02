@@ -167,10 +167,18 @@ export class Avatar {
             const collisionThreshold = CONFIG.AVATAR.COLLISION_THRESHOLD;
             if (intersections.length > 0 && intersections[0].distance < collisionThreshold) {
                 this.playAnimation('idle');
+                if (this.model.userData) {
+                    this.model.userData.isMoving = false;
+                }
             } else {
                 this.model.position.add(moveVector);
                 this.model.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
                 this.playAnimation('running');
+                if (this.model.userData) {
+                    this.model.userData.isMoving = true;
+                } else {
+                    this.model.userData = { isMoving: true };
+                }
             }
         } else {
             this.playAnimation('idle');
