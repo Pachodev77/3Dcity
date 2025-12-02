@@ -36,6 +36,9 @@ export class Zombie {
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
+                if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
+                    this.hips = child;
+                }
             });
             this.scene.add(this.model);
             this.collidableObjects.push(this.model);
@@ -94,6 +97,10 @@ export class Zombie {
     updateAnimation(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
+            if (this.hips) {
+                this.hips.position.x = 0;
+                this.hips.position.z = 0;
+            }
         }
     }
 
