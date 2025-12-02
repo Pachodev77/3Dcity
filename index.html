@@ -171,32 +171,29 @@
 
         #camera-position-button {
             position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            bottom: 140px;
+            right: 140px;
             width: 60px;
             height: 60px;
-            background-color: rgba(52, 152, 219, 0.8);
-            border: none;
             border-radius: 50%;
             color: white;
             font-size: 24px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            border: none;
             cursor: pointer;
-            z-index: 101;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             transition: all 0.2s ease;
         }
 
         #camera-position-button:hover {
-            background-color: rgba(41, 128, 185, 0.9);
-            transform: translateY(-50%) scale(1.1);
+            background-color: rgba(41, 128, 185, 0.9) !important;
+            transform: scale(1.1);
         }
 
         #camera-position-button:active {
-            transform: translateY(-50%) scale(0.95);
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -215,9 +212,9 @@
 
     <button id="spawn-vehicle-button" class="btn" style="position: absolute; bottom: 140px; left: 20px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);" title="Spawn Vehicle">🚗</button>
     <div id="joystick-container-move"></div>
+    <button id="camera-position-button" class="btn" style="position: absolute; bottom: 140px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);" title="Change Camera View">1</button>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
-    <button id="camera-position-button" title="Change Camera View">1</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script type="importmap">
