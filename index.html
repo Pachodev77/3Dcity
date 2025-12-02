@@ -161,38 +161,34 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        #zoom-slider {
+        #camera-position-button {
             position: absolute;
-            right: 10px;
+            right: 20px;
             top: 50%;
-            width: 150px;
-            height: 20px;
-            transform-origin: center;
-            transform: translateY(-50%) rotate(-90deg);
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(52, 152, 219, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
             z-index: 101;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255, 255, 255, 0.5);
-            outline: none;
-            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
         }
 
-        #zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 25px;
-            height: 25px;
-            background: rgba(76, 175, 80, 0.8);
-            cursor: pointer;
-            border-radius: 50%;
+        #camera-position-button:hover {
+            background-color: rgba(41, 128, 185, 0.9);
+            transform: translateY(-50%) scale(1.1);
         }
 
-        #zoom-slider::-moz-range-thumb {
-            width: 25px;
-            height: 25px;
-            background: rgba(76, 175, 80, 0.8);
-            cursor: pointer;
-            border-radius: 50%;
+        #camera-position-button:active {
+            transform: translateY(-50%) scale(0.95);
         }
     </style>
 </head>
@@ -213,7 +209,7 @@
     <div id="joystick-container-move"></div>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
-    <input type="range" min="1" max="7" value="4" id="zoom-slider">
+    <button id="camera-position-button" title="Change Camera View">1</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script type="importmap">

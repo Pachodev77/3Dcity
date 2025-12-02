@@ -208,7 +208,7 @@ function spawnRandomVehicle() {
 // UI & Interaction
 const avatarSelector = document.getElementById('avatar-selector');
 const enterExitButton = document.getElementById('enter-exit-button');
-const zoomSlider = document.getElementById('zoom-slider');
+const cameraPositionButton = document.getElementById('camera-position-button');
 const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
 
 // Setup spawn vehicle button
@@ -232,9 +232,27 @@ document.getElementById('home-button').addEventListener('click', () => loadMap('
 document.getElementById('city-button').addEventListener('click', () => loadMap('/maps/city 3/source/town4new.glb'));
 document.getElementById('circuit-button').addEventListener('click', () => loadMap('/maps/burnin_rubber_crash_n_burn_city.glb'));
 
-zoomSlider.addEventListener('input', (e) => {
-    cameraController.setDistance(parseFloat(e.target.value));
+// Camera position states
+const CAMERA_POSITIONS = [
+    { distance: 2, label: '1' },  // Close
+    { distance: 4, label: '2' },  // Medium
+    { distance: 6, label: '3' }   // Far
+];
+let currentCameraPosition = 0;
+
+function updateCameraPosition() {
+    const position = CAMERA_POSITIONS[currentCameraPosition];
+    cameraController.setDistance(position.distance);
+    cameraPositionButton.textContent = position.label;
+}
+
+cameraPositionButton.addEventListener('click', () => {
+    currentCameraPosition = (currentCameraPosition + 1) % CAMERA_POSITIONS.length;
+    updateCameraPosition();
 });
+
+// Initialize camera position
+updateCameraPosition();
 
 function toggleVehicle() {
     if (isInVehicle) {
@@ -249,9 +267,10 @@ function toggleVehicle() {
             currentVehicle = null;
 
             // Update UI
-            zoomSlider.min = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
             cameraController.setDistance(CONFIG.AVATAR.MIN_CAMERA_DISTANCE);
-            zoomSlider.value = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
+            // Reset to first camera position when exiting vehicle
+            currentCameraPosition = 0;
+            updateCameraPosition();
         }
     } else if (nearbyVehicle) {
         // Enter
@@ -261,9 +280,10 @@ function toggleVehicle() {
         avatar.setVisible(false);
 
         // Update UI
-        zoomSlider.min = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
         cameraController.setDistance(CONFIG.VEHICLE.MIN_CAMERA_DISTANCE);
-        zoomSlider.value = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
+        // Reset to first camera position when entering vehicle
+        currentCameraPosition = 0;
+        updateCameraPosition();
     }
 }
 
