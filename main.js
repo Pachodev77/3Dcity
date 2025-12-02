@@ -91,7 +91,20 @@ function loadMap(mapUrl) {
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
         } else if (mapUrl.includes('burnin_rubber')) {
-            currentMap.scale.set(25.0, 25.0, 25.0); // Aumentado a 2.5x el tamaño anterior (10.0 * 2.5)
+            // Primero ajustamos la escala
+            currentMap.scale.set(25.0, 25.0, 25.0);
+            
+            // Calculamos el bounding box del mapa para encontrar el suelo
+            const box = new THREE.Box3().setFromObject(currentMap);
+            const center = box.getCenter(new THREE.Vector3());
+            
+            // Ajustamos la posición del mapa para que el suelo esté en y=0
+            currentMap.position.x = -center.x;
+            currentMap.position.y = -box.min.y;  // El punto más bajo del mapa en y=0
+            currentMap.position.z = -center.z;
+            
+            // Altura del jugador sobre el suelo del mapa (no del plano base)
+            const playerHeight = 1.5; // Ajusta esta altura según sea necesario
         }
 
         gltf.scene.traverse(function (child) {
@@ -107,9 +120,24 @@ function loadMap(mapUrl) {
         scene.add(gltf.scene);
         collidableObjects.push(gltf.scene);
         groundCollidableObjects.push(gltf.scene);
+        
+        // Asegurarse de que el jugador esté por encima del suelo
+        if (avatar && avatar.model) {
+            // Colocar al jugador ligeramente por encima del suelo
+            avatar.model.position.y = 1.0; // Ajusta este valor según sea necesario
+        }
 
         if (avatar.model) {
-            avatar.model.position.set(0, 0, 5);
+            // Posicionamos al jugador sobre el suelo del mapa
+            const playerY = currentMap.position.y + playerHeight;
+            avatar.model.position.set(0, playerY, 5);
+            
+            // Si es el mapa de Burnin Rubber, ajustamos la cámara
+            if (mapUrl.includes('burnin_rubber')) {
+                // Posición de la cámara relativa al jugador
+                camera.position.set(0, playerY + 1.5, 8);
+                camera.lookAt(0, playerY, 0);
+            }
         }
     });
 }
