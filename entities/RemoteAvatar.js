@@ -11,6 +11,7 @@ export class RemoteAvatar {
         this.animations = {};
         this.currentAction = null;
         this.currentState = 'idle';
+        this.avatarType = initialData.avatarType || 'Ch02_nonPBR'; // Track current avatar type
 
         this.loadModel(initialData);
     }
@@ -96,6 +97,16 @@ export class RemoteAvatar {
     }
 
     updateState(data) {
+        // Check if avatar type has changed
+        if (data.avatarType && data.avatarType !== this.avatarType) {
+            console.log(`Remote player ${this.id} changed avatar from ${this.avatarType} to ${data.avatarType}`);
+            this.avatarType = data.avatarType;
+            // Reload the model with new avatar type
+            this.dispose();
+            this.loadModel(data);
+            return;
+        }
+
         if (!this.model) return;
 
         // Smoothly interpolate position (simple lerp)
@@ -113,8 +124,28 @@ export class RemoteAvatar {
     }
 
     dispose() {
-        if (this.model) {
-            this.scene.remove(this.model);
+        if (this.mixer) {
+            this.mixer.stopAllAction();
+            this.mixer = null;
         }
+        if (this.model) {
+            this.model.traverse((child) => {
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (child.material.map) child.material.map.dispose();
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => mat.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                }
+            });
+            this.scene.remove(this.model);
+            this.model = null;
+        }
+        this.animations = {};
+        this.currentAction = null;
     }
 }

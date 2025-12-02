@@ -1,25 +1,29 @@
 import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
-const port = 3000;
 
-// Serve static files from the current directory
-app.use(express.static(__dirname));
+// Enable CORS for all origins
+app.use(cors());
 
-// Store connected players: { socketId: { x, y, z, rotation, animation } }
+// Socket.IO with CORS configuration
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*', // Allow all origins (you can restrict this to your Vercel domain)
+        methods: ['GET', 'POST']
+    }
+});
+
+const port = process.env.PORT || 3001;
+
+// Store connected players
 const players = {};
 
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    console.log('User connected:', socket.id);
 
     // Create a new player object
     players[socket.id] = {
@@ -27,7 +31,8 @@ io.on('connection', (socket) => {
         y: 0,
         z: 0,
         rotation: 0,
-        animation: 'idle'
+        animation: 'idle',
+        avatarType: 'Ch02_nonPBR' // Default avatar
     };
 
     // Send the current players to the new client
@@ -47,6 +52,9 @@ io.on('connection', (socket) => {
             players[socket.id].z = movementData.z;
             players[socket.id].rotation = movementData.rotation;
             players[socket.id].animation = movementData.animation;
+            if (movementData.avatarType) {
+                players[socket.id].avatarType = movementData.avatarType;
+            }
 
             // Broadcast the update to all other players
             socket.broadcast.emit('playerMoved', {
@@ -64,8 +72,12 @@ io.on('connection', (socket) => {
     });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', players: Object.keys(players).length });
+});
+
 // Start the server
 httpServer.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-    console.log(`Make sure your browser is pointing to http://localhost:${port}/index.html`);
+    console.log(`Multiplayer server running on port ${port}`);
 });
