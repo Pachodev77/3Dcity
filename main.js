@@ -383,7 +383,7 @@ window.addEventListener('player-hit', () => {
     damageOverlay.style.opacity = '0.5';
     setTimeout(() => {
         damageOverlay.style.opacity = '0';
-    }, 200);
+    }, 500);
 });
 
 animate();
