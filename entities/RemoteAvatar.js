@@ -44,17 +44,25 @@ export class RemoteAvatar {
 
     loadAnimations() {
         const loader = new FBXLoader();
-        const anims = ['idle', 'walking', 'running'];
-        const animPath = '/avatars/animations/';
+        const animationsToLoad = {
+            'idle': '/avatars/animations/Idle.fbx',
+            'walking': '/avatars/animations/Walking.fbx',
+            'running': '/avatars/animations/Running.fbx'
+        };
 
         let loadedCount = 0;
-        anims.forEach(anim => {
-            loadWithCache(`${animPath}${anim}.fbx`, loader).then((object) => {
-                this.animations[anim] = object.animations[0];
-                loadedCount++;
-                if (loadedCount === anims.length) {
-                    this.setState('idle');
+        Object.entries(animationsToLoad).forEach(([name, url]) => {
+            loadWithCache(url, loader).then((object) => {
+                if (object.animations && object.animations.length > 0) {
+                    this.animations[name] = object.animations[0];
+                    loadedCount++;
+                    if (loadedCount === Object.keys(animationsToLoad).length) {
+                        this.setState('idle');
+                    }
                 }
+            }).catch((error) => {
+                console.warn(`Could not load remote avatar animation "${name}":`, error);
+                loadedCount++;
             });
         });
     }
