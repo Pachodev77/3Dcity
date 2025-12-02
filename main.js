@@ -59,10 +59,7 @@ const avatar = new Avatar(scene);
 const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
 const vehicles = []; // Array of Vehicle instances
 
-// Entities
-const avatar = new Avatar(scene);
-const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
-const vehicles = []; // Array of Vehicle instances
+
 
 // Game State
 let currentMap = null;
