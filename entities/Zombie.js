@@ -21,6 +21,7 @@ export class Zombie {
             new THREE.Vector3(-15, 0, 0),
         ];
         this.currentPatrolIndex = 0;
+        this.lastAttackTime = 0;
         this.loadModel();
     }
 
@@ -130,6 +131,13 @@ export class Zombie {
             // Face the player even while attacking
             const lookTarget = new THREE.Vector3(playerPosition.x, this.model.position.y, playerPosition.z);
             this.model.lookAt(lookTarget);
+
+            // Damage Logic
+            const now = Date.now();
+            if (now - this.lastAttackTime > 1000) { // 1 second cooldown
+                window.dispatchEvent(new CustomEvent('player-hit'));
+                this.lastAttackTime = now;
+            }
 
         } else if (distanceToPlayer < detectionThreshold) {
             this.setState('zombie running');

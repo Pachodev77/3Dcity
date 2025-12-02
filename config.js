@@ -23,7 +23,7 @@ export const CONFIG = {
     ZOMBIE: {
         SPEED: 2.5,
         DETECTION_RADIUS: 10,
-        ATTACK_RADIUS: 0.5,
+        ATTACK_RADIUS: 0.6,
         SCALE: 0.005
     },
     CAMERA: {

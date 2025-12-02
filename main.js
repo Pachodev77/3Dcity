@@ -377,4 +377,13 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// Damage Effect
+const damageOverlay = document.getElementById('damage-overlay');
+window.addEventListener('player-hit', () => {
+    damageOverlay.style.opacity = '0.5';
+    setTimeout(() => {
+        damageOverlay.style.opacity = '0';
+    }, 200);
+});
+
 animate();

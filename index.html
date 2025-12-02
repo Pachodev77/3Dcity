@@ -132,7 +132,7 @@
             justify-content: center;
             border: none;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             z-index: 100;
             padding: 0;
             margin: 0;
@@ -147,7 +147,8 @@
             background-color: rgba(76, 175, 80, 0.8);
             border: none;
             border-radius: 50%;
-            display: none; /* Initially hidden */
+            display: none;
+            /* Initially hidden */
             justify-content: center;
             align-items: center;
             color: white;
@@ -188,7 +189,7 @@
             justify-content: center;
             border: none;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
             padding: 0;
             margin: 0;
@@ -202,24 +203,49 @@
         #camera-position-button:active {
             transform: scale(0.95);
         }
+
+        #damage-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: red;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 0.1s ease-out;
+        }
     </style>
 </head>
 
 <body>
+    <div id="damage-overlay"></div>
     <div id="avatar-selector-container">
         <label for="avatar-selector">Choose an avatar:</label>
         <select id="avatar-selector"></select>
     </div>
 
-    <div id="map-selector-container" style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 1px; align-items: center; background-color: rgba(0, 0, 0, 0.5); padding: 0; border-radius: 0 0 4px 4px;">
-        <button id="home-button" class="btn" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;" title="Home">🏠</button>
-        <button id="city-button" class="btn" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;" title="City">🏙️</button>
-        <button id="circuit-button" class="btn" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;" title="Circuit">🏁</button>
+    <div id="map-selector-container"
+        style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 1px; align-items: center; background-color: rgba(0, 0, 0, 0.5); padding: 0; border-radius: 0 0 4px 4px;">
+        <button id="home-button" class="btn"
+            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
+            title="Home">🏠</button>
+        <button id="city-button" class="btn"
+            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
+            title="City">🏙️</button>
+        <button id="circuit-button" class="btn"
+            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
+            title="Circuit">🏁</button>
     </div>
 
-    <button id="spawn-vehicle-button" class="btn" style="position: absolute; bottom: 120px; left: 20px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);" title="Spawn Vehicle">🚗</button>
+    <button id="spawn-vehicle-button" class="btn"
+        style="position: absolute; bottom: 120px; left: 20px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);"
+        title="Spawn Vehicle">🚗</button>
     <div id="joystick-container-move"></div>
-    <button id="camera-position-button" class="btn" style="position: absolute; bottom: 120px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);" title="Change Camera View">1</button>
+    <button id="camera-position-button" class="btn"
+        style="position: absolute; bottom: 120px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);"
+        title="Change Camera View">1</button>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
 
