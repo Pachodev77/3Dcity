@@ -91,7 +91,7 @@ function loadMap(mapUrl) {
         if (mapUrl.includes('mansion')) {
             currentMap.scale.set(0.5, 0.5, 0.5);
         } else if (mapUrl.includes('burnin_rubber')) {
-            currentMap.scale.set(10.0, 10.0, 10.0);
+            currentMap.scale.set(25.0, 25.0, 25.0); // Aumentado a 2.5x el tamaño anterior (10.0 * 2.5)
         }
 
         gltf.scene.traverse(function (child) {
@@ -271,8 +271,8 @@ window.addEventListener('keydown', (e) => {
 });
 enterExitButton.addEventListener('click', toggleVehicle);
 
-// Initial Setup
-loadMap('/maps/city 3/source/town4new.glb');
+// Initial Setup - Load Burnin Rubber map by default
+loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
 
 // Load vehicle models and then load the avatar
 loadVehicleModels().then(() => {
