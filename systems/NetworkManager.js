@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { RemoteAvatar } from '../entities/RemoteAvatar.js';
 // socket.io is loaded globally via script tag in index.html
 
