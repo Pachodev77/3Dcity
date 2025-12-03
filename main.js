@@ -191,11 +191,27 @@ function spawnRandomVehicle() {
 }
 
 // Handle remote vehicle spawning
+let pendingVehicleSpawns = [];
+
 window.addEventListener('spawn-remote-vehicle', (e) => {
     const data = e.detail;
+
+    if (vehicleTemplates.length === 0) {
+        console.log(`Queueing vehicle spawn for ${data.id} (models not loaded)`);
+        pendingVehicleSpawns.push(data);
+        return;
+    }
+
+    spawnRemoteVehicle(data);
+});
+
+function spawnRemoteVehicle(data) {
     const templateData = vehicleTemplates.find(t => t.name === data.type);
 
     if (templateData) {
+        // Check if already exists to avoid duplicates
+        if (vehicles.find(v => v.networkId === data.id)) return;
+
         const vehicleMesh = templateData.template.clone();
         vehicleMesh.visible = true;
 
@@ -214,8 +230,10 @@ window.addEventListener('spawn-remote-vehicle', (e) => {
         networkManager.registerVehicle(data.id, vehicle);
 
         console.log(`Spawned networked vehicle: ${data.type}`);
+    } else {
+        console.warn(`Vehicle template not found for type: ${data.type}`);
     }
-});
+}
 
 // UI & Interaction
 const avatarSelector = document.getElementById('avatar-selector');
@@ -316,6 +334,13 @@ loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
 loadVehicleModels().then(() => {
     console.log('All vehicle models loaded');
     spawnVehicleButton.disabled = false; // Enable the button once models are loaded
+
+    // Process pending spawns
+    if (pendingVehicleSpawns.length > 0) {
+        console.log(`Processing ${pendingVehicleSpawns.length} pending vehicle spawns`);
+        pendingVehicleSpawns.forEach(data => spawnRemoteVehicle(data));
+        pendingVehicleSpawns = [];
+    }
 }).catch(error => {
     console.error('Error loading vehicle models:', error);
 });

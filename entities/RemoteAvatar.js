@@ -4,6 +4,7 @@ import { CONFIG } from '../config.js';
 
 export class RemoteAvatar {
     constructor(scene, id, initialData) {
+        console.log(`Creating RemoteAvatar for ${id}`, initialData);
         this.scene = scene;
         this.id = id;
         this.model = null;

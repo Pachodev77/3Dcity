@@ -4,6 +4,7 @@ import { CONFIG } from '../config.js';
 
 export class RemoteZombie {
     constructor(scene, id, initialData) {
+        console.log(`Creating RemoteZombie for ${id}`, initialData);
         this.scene = scene;
         this.id = id; // This ID corresponds to the player ID who owns the zombie
         this.model = null;
