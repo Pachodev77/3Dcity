@@ -141,7 +141,7 @@ export class CameraController {
         }
 
         const timeSinceLastRotation = Date.now() - (this.lastManualRotationTime || 0);
-        const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving && !isInVehicle;
+        const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving;
 
         // --- 2. Determine Target Follow Position ---
         const targetPosition = target.position.clone();

@@ -685,6 +685,32 @@
         </div>
     </div>
     <div id="damage-overlay"></div>
+
+    <!-- Music Player UI -->
+    <button id="music-toggle-btn">🎵</button>
+
+    <div id="music-panel">
+        <div class="music-header">
+            <h3>Music Player</h3>
+            <button id="close-music-panel">×</button>
+        </div>
+        <div class="music-controls">
+            <div id="current-track-info">No track selected</div>
+            <div class="control-buttons">
+                <button id="prev-btn">⏮️</button>
+                <button id="play-pause-btn">▶️</button>
+                <button id="next-btn">⏭️</button>
+            </div>
+            <div class="volume-control">
+                <span>🔈</span>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+                <span>🔊</span>
+            </div>
+        </div>
+        <div id="playlist-container">
+            <div class="playlist-empty">Loading playlist...</div>
+        </div>
+    </div>
     <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
     <div id="avatar-selector-container">
         <label for="avatar-selector">Choose an avatar:</label>

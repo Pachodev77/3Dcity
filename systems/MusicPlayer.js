@@ -31,37 +31,45 @@ export class MusicPlayer {
         if (savedVolume !== null) {
             this.volume = parseFloat(savedVolume);
             this.audio.volume = this.volume;
-            this.volumeSlider.value = this.volume;
+            if (this.volumeSlider) this.volumeSlider.value = this.volume;
         }
     }
 
     setupEventListeners() {
         // Toggle Panel
-        this.toggleBtn.addEventListener('click', () => {
-            const isHidden = this.panel.style.display === 'none' || this.panel.style.display === '';
-            this.panel.style.display = isHidden ? 'flex' : 'none';
-        });
+        if (this.toggleBtn) {
+            this.toggleBtn.addEventListener('click', () => {
+                if (this.panel) {
+                    const isHidden = this.panel.style.display === 'none' || this.panel.style.display === '';
+                    this.panel.style.display = isHidden ? 'flex' : 'none';
+                }
+            });
+        }
 
-        this.closeBtn.addEventListener('click', () => {
-            this.panel.style.display = 'none';
-        });
+        if (this.closeBtn && this.panel) {
+            this.closeBtn.addEventListener('click', () => {
+                this.panel.style.display = 'none';
+            });
+        }
 
         // Controls
-        this.playPauseBtn.addEventListener('click', () => this.togglePlay());
-        this.prevBtn.addEventListener('click', () => this.playPrev());
-        this.nextBtn.addEventListener('click', () => this.playNext());
+        if (this.playPauseBtn) this.playPauseBtn.addEventListener('click', () => this.togglePlay());
+        if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.playPrev());
+        if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.playNext());
 
-        this.volumeSlider.addEventListener('input', (e) => {
-            this.volume = parseFloat(e.target.value);
-            this.audio.volume = this.volume;
-            localStorage.setItem('musicVolume', this.volume);
-        });
+        if (this.volumeSlider) {
+            this.volumeSlider.addEventListener('input', (e) => {
+                this.volume = parseFloat(e.target.value);
+                this.audio.volume = this.volume;
+                localStorage.setItem('musicVolume', this.volume);
+            });
+        }
 
         // Audio Events
         this.audio.addEventListener('ended', () => this.playNext());
         this.audio.addEventListener('error', (e) => {
             console.error('Audio playback error:', e);
-            this.trackInfo.textContent = 'Error playing track';
+            if (this.trackInfo) this.trackInfo.textContent = 'Error playing track';
         });
     }
 
@@ -77,17 +85,19 @@ export class MusicPlayer {
                 this.currentTrackIndex = 0;
                 this.loadTrack(0, false); // Load first track but don't play
             } else {
-                this.trackInfo.textContent = 'No music found in /music folder';
-                this.playlistContainer.innerHTML = '<div class="playlist-empty">Add .mp3 files to the "music" folder</div>';
+                if (this.trackInfo) this.trackInfo.textContent = 'No music found in /music folder';
+                if (this.playlistContainer) this.playlistContainer.innerHTML = '<div class="playlist-empty">Add .mp3 files to the "music" folder</div>';
             }
         } catch (error) {
             console.error('Failed to fetch playlist:', error);
-            this.trackInfo.textContent = 'Error loading playlist';
-            this.playlistContainer.innerHTML = '<div class="playlist-empty">Failed to connect to server</div>';
+            if (this.trackInfo) this.trackInfo.textContent = 'Error loading playlist';
+            if (this.playlistContainer) this.playlistContainer.innerHTML = '<div class="playlist-empty">Failed to connect to server</div>';
         }
     }
 
     renderPlaylist() {
+        if (!this.playlistContainer) return;
+
         this.playlistContainer.innerHTML = '';
 
         if (this.playlist.length === 0) {
@@ -121,14 +131,16 @@ export class MusicPlayer {
         this.audio.load();
 
         const displayName = filename.replace(/\.[^/.]+$/, "");
-        this.trackInfo.textContent = displayName;
+        if (this.trackInfo) this.trackInfo.textContent = displayName;
 
         // Update active item in playlist
-        const items = this.playlistContainer.querySelectorAll('.playlist-item');
-        items.forEach((item, i) => {
-            if (i === index) item.classList.add('active');
-            else item.classList.remove('active');
-        });
+        if (this.playlistContainer) {
+            const items = this.playlistContainer.querySelectorAll('.playlist-item');
+            items.forEach((item, i) => {
+                if (i === index) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+        }
 
         if (autoPlay) {
             this.play();
@@ -138,7 +150,7 @@ export class MusicPlayer {
     play() {
         this.audio.play().then(() => {
             this.isPlaying = true;
-            this.playPauseBtn.textContent = '⏸️';
+            if (this.playPauseBtn) this.playPauseBtn.textContent = '⏸️';
         }).catch(e => {
             console.error('Play failed:', e);
         });
@@ -147,7 +159,7 @@ export class MusicPlayer {
     pause() {
         this.audio.pause();
         this.isPlaying = false;
-        this.playPauseBtn.textContent = '▶️';
+        if (this.playPauseBtn) this.playPauseBtn.textContent = '▶️';
     }
 
     togglePlay() {
