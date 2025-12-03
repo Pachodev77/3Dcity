@@ -105,11 +105,27 @@ export class RemoteZombie {
         this.model.rotation.y = data.rotation;
 
         // Update animation
-        if (data.state && data.state !== this.currentState) {
+        let stateToPlay = data.state;
+
+        // Fallback for idle if not loaded (Zombie.js usually walks)
+        if (stateToPlay === 'idle' && !this.animations['idle']) {
+            stateToPlay = 'walking';
+        }
+
+        if (stateToPlay && stateToPlay !== this.currentState) {
             if (this.animations[this.currentState]) this.animations[this.currentState].fadeOut(0.2);
-            this.currentState = data.state;
+
+            this.currentState = stateToPlay;
+
             if (this.animations[this.currentState]) {
                 this.animations[this.currentState].reset().fadeIn(0.2).play();
+            } else {
+                // Try to play ANY animation if the requested one is missing to avoid T-Pose
+                const firstAnim = Object.values(this.animations)[0];
+                if (firstAnim) {
+                    console.warn(`Missing animation ${stateToPlay}, playing fallback`);
+                    firstAnim.reset().fadeIn(0.2).play();
+                }
             }
         }
     }
@@ -117,6 +133,16 @@ export class RemoteZombie {
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
+        }
+
+        // BRUTE FORCE SCALE FIX: Ensure scale is correct every frame
+        if (this.model) {
+            const targetScale = CONFIG.ZOMBIE.SCALE || 0.005;
+            if (this.model.scale.x > targetScale * 2) { // If it's way too big
+                console.warn('Fixing Zombie Scale');
+                this.model.scale.set(targetScale, targetScale, targetScale);
+                this.model.updateMatrix();
+            }
         }
     }
 
