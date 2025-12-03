@@ -231,7 +231,7 @@ function spawnRemoteVehicle(data) {
 
         console.log(`Spawned networked vehicle: ${data.type}`);
     } else {
-        console.warn(`Vehicle template not found for type: ${data.type}`);
+        console.warn(`Vehicle template not found for type: ${data.type}. Available: ${vehicleTemplates.map(t => t.name).join(', ')}`);
     }
 }
 
