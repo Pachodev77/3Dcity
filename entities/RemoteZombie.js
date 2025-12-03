@@ -82,6 +82,8 @@ export class RemoteZombie {
             };
 
             loadFunc(path, loader).then((anim) => {
+                if (!this.mixer) return; // Zombie was disposed before animation loaded
+
                 if (anim.animations && anim.animations.length > 0) {
                     this.animations[name] = this.mixer.clipAction(anim.animations[0]);
 
@@ -138,18 +140,6 @@ export class RemoteZombie {
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
-        }
-
-        // BRUTE FORCE SCALE FIX: Ensure scale is correct every frame
-        if (this.model) {
-            const targetScale = CONFIG.ZOMBIE.SCALE || 0.005;
-            // console.log(`Zombie Scale: ${this.model.scale.x}`); // Spammy log
-
-            if (Math.abs(this.model.scale.x - targetScale) > 0.0001) {
-                console.warn(`Zombie scale deviation detected! Current: ${this.model.scale.x}, Target: ${targetScale}. Fixing...`);
-                this.model.scale.set(targetScale, targetScale, targetScale);
-                this.model.updateMatrix();
-            }
         }
     }
 
