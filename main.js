@@ -78,6 +78,8 @@ function updateLoadingProgress() {
     loadingState.loadedAssets++;
     loadingState.progress = (loadingState.loadedAssets / loadingState.totalAssets) * 100;
 
+    console.log(`Loading Progress: ${loadingState.loadedAssets}/${loadingState.totalAssets} (${Math.round(loadingState.progress)}%)`);
+
     const progressBar = document.getElementById('progress-bar');
     const loadingText = document.getElementById('loading-text');
 
@@ -85,20 +87,8 @@ function updateLoadingProgress() {
     if (loadingText) loadingText.innerText = `Loading Assets... ${Math.round(loadingState.progress)}%`;
 
     if (loadingState.loadedAssets >= loadingState.totalAssets) {
-        showWelcomeMessage();
-    }
-}
-
-function showWelcomeMessage() {
-    const loadingStatus = document.getElementById('loading-status');
-    const welcomeMessage = document.getElementById('welcome-message');
-
-    if (loadingStatus) loadingStatus.style.display = 'none';
-    if (welcomeMessage) welcomeMessage.style.display = 'flex';
-
-    const startButton = document.getElementById('start-button');
-    if (startButton) {
-        startButton.addEventListener('click', () => {
+        // Auto-start game
+        setTimeout(() => {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
                 loadingScreen.style.opacity = '0';
@@ -106,9 +96,11 @@ function showWelcomeMessage() {
                     loadingScreen.style.display = 'none';
                 }, 500);
             }
-        });
+        }, 500); // Short delay to show 100%
     }
 }
+
+
 
 // Map Loading
 function loadMap(mapUrl) {
@@ -164,6 +156,9 @@ function loadMap(mapUrl) {
             avatar.model.position.set(0, 0, 5);
         }
         updateLoadingProgress(); // Map loaded
+    }).catch(error => {
+        console.error(`Error loading map ${mapUrl}:`, error);
+        updateLoadingProgress(); // Count as loaded (failed) to avoid hanging
     });
 }
 
