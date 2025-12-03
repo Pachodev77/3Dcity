@@ -13,6 +13,7 @@ export class CameraController {
 
         // Vehicle camera state
         this.vehicleLookAtPosition = new THREE.Vector3();
+        this.vehicleCameraDistance = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
 
         // Reusable vectors
         this.followPosition = new THREE.Vector3();
@@ -32,7 +33,7 @@ export class CameraController {
         // Camera rotation with joystick (orbital around vehicle)
         const cameraRotationSpeed = CONFIG.CAMERA.ROTATION_SPEED * 0.8;
 
-        // Horizontal rotation (orbit around vehicle)
+        // Horizontal rotation (orbit around vehicle) - RELATIVE to vehicle
         if (Math.abs(input.x) > 0.1) {
             this.angleH -= input.x * cameraRotationSpeed * delta;
         }
@@ -44,14 +45,19 @@ export class CameraController {
         }
 
         // Calculate camera position using spherical coordinates around vehicle
-        const distance = 6; // Fixed distance from vehicle
+        // Use stored vehicle distance or default
+        const distance = this.vehicleCameraDistance || 6;
         const baseAngleV = 0.3; // Base vertical angle
         const cameraAngleV = baseAngleV + this.angleVOffset;
+
+        // Calculate total horizontal angle: Vehicle Rotation + Relative Camera Angle
+        const vehicleRotationY = vehicleMesh.rotation.y;
+        const totalAngleH = vehicleRotationY + this.angleH;
 
         // Create offset in local space
         const cameraOffset = new THREE.Vector3(0, 0, distance);
         cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV); // Vertical rotation
-        cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.angleH); // Horizontal rotation
+        cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), totalAngleH); // Horizontal rotation (Vehicle + Relative)
 
         // Position camera relative to vehicle
         this.desiredCameraPosition.copy(vehicleMesh.position).add(cameraOffset);
@@ -92,14 +98,14 @@ export class CameraController {
             }
         }
 
-        // INSTANT camera position update (no lerp for responsive feel)
+        // INSTANT camera position update
         this.camera.position.copy(finalCameraPosition);
 
         // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
         this.vehicleLookAtPosition.y += 1; // Look at center height of vehicle
 
-        // INSTANT camera rotation focused on vehicle
+        // INSTANT camera rotation
         this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
@@ -123,7 +129,7 @@ export class CameraController {
         }
 
         const timeSinceLastRotation = Date.now() - (this.lastManualRotationTime || 0);
-        const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving;
+        const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving && !isInVehicle;
 
         // --- 2. Determine Target Follow Position ---
         const targetPosition = target.position.clone();
@@ -207,19 +213,13 @@ export class CameraController {
 
     setDistance(distance) {
         this.distance = distance;
-        // Vehicle camera uses fixed offset, distance only affects avatar camera
+        this.vehicleCameraDistance = distance; // Update vehicle distance too
     }
 
     resetVehicleCamera(vehicleMesh) {
         // Set camera to start behind the vehicle
-        if (vehicleMesh) {
-            // Get vehicle's forward direction
-            const forward = new THREE.Vector3(0, 0, 1);
-            forward.applyQuaternion(vehicleMesh.quaternion);
-
-            // Calculate angle to position camera behind vehicle
-            this.angleH = Math.atan2(forward.x, forward.z);
-            this.angleVOffset = 0; // Reset vertical offset
-        }
+        // We use relative rotation, so PI is behind when using offset (0, 0, distance)
+        this.angleH = Math.PI;
+        this.angleVOffset = 0; // Reset vertical offset
     }
 }
