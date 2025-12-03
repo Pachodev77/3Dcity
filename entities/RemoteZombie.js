@@ -84,8 +84,6 @@ export class RemoteZombie {
             loadFunc(path, loader).then((anim) => {
                 if (anim.animations && anim.animations.length > 0) {
                     this.animations[name] = this.mixer.clipAction(anim.animations[0]);
-                    console.log(`[RemoteZombie] Loaded animation: ${name} for ${this.id}`);
-                    console.log(`[RemoteZombie] Clip duration: ${anim.animations[0].duration}`);
 
                     // If this is the current state, play it immediately
                     if (name === this.currentState) {

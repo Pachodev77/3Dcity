@@ -40,8 +40,8 @@ export const CONFIG = {
     },
     PERFORMANCE: {
         CHECK_INTERVAL: 4,
-        MAX_PIXEL_RATIO: 2,
-        SHADOW_MAP_SIZE: 1024,
+        MAX_PIXEL_RATIO: 1.5, // Reduced from 2
+        SHADOW_MAP_SIZE: 512, // Reduced from 1024
         RAYCAST_INTERVAL: 2, // Check ground collision every N frames
         NETWORK_POSITION_THRESHOLD: 0.01, // Minimum movement to send update
         NETWORK_ROTATION_THRESHOLD: 0.01 // Minimum rotation to send update
