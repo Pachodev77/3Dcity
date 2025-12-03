@@ -127,7 +127,7 @@ export class MusicPlayer {
         if (index < 0 || index >= this.playlist.length) return;
 
         const filename = this.playlist[index];
-        this.audio.src = `/music/${filename}`;
+        this.audio.src = `/music/${encodeURIComponent(filename)}`;
         this.audio.load();
 
         const displayName = filename.replace(/\.[^/.]+$/, "");
