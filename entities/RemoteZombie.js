@@ -138,8 +138,10 @@ export class RemoteZombie {
         // BRUTE FORCE SCALE FIX: Ensure scale is correct every frame
         if (this.model) {
             const targetScale = CONFIG.ZOMBIE.SCALE || 0.005;
-            if (this.model.scale.x > targetScale * 2) { // If it's way too big
-                console.warn('Fixing Zombie Scale');
+            // console.log(`Zombie Scale: ${this.model.scale.x}`); // Spammy log
+
+            if (Math.abs(this.model.scale.x - targetScale) > 0.0001) {
+                console.warn(`Zombie scale deviation detected! Current: ${this.model.scale.x}, Target: ${targetScale}. Fixing...`);
                 this.model.scale.set(targetScale, targetScale, targetScale);
                 this.model.updateMatrix();
             }
