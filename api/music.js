@@ -1,27 +1,13 @@
-import fs from 'fs';
-import path from 'path';
-
 export default function handler(req, res) {
-    const musicDir = path.join(process.cwd(), 'public', 'music');
+    // In production (Vercel), music files are served from /music/ as static assets
+    // This API just returns the list of known music files
+    // The files themselves are served directly by Vercel's CDN
 
-    // Check if directory exists
-    if (!fs.existsSync(musicDir)) {
-        console.warn(`Music directory not found at: ${musicDir}`);
-        return res.json([]);
-    }
+    const musicFiles = [
+        'Paul Wall - Sittin\' Sidewayz ft. Big Pokey (Official Video).mp3',
+        'Pop Smoke - Aim For The Moon (Official Music Video) ft. Quavo.mp3',
+        'Rich The Kid - Plug Walk (Audio).mp3'
+    ];
 
-    try {
-        const files = fs.readdirSync(musicDir);
-
-        // Filter for audio files
-        const audioFiles = files.filter(file => {
-            const ext = path.extname(file).toLowerCase();
-            return ['.mp3', '.wav', '.ogg', '.m4a'].includes(ext);
-        });
-
-        res.status(200).json(audioFiles);
-    } catch (error) {
-        console.error('Error reading music directory:', error);
-        res.status(500).json({ error: 'Failed to read music directory' });
-    }
+    res.status(200).json(musicFiles);
 }

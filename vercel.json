@@ -2,9 +2,6 @@
     "functions": {
         "api/socket.js": {
             "maxDuration": 10
-        },
-        "api/music.js": {
-            "includeFiles": "public/music/**"
         }
     }
 }
