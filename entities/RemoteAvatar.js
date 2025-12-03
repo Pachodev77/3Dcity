@@ -117,7 +117,7 @@ export class RemoteAvatar {
         this.currentState = stateName;
     }
 
-    update(delta) {
+    update(delta, camera) {
         if (this.mixer) {
             this.mixer.update(delta);
         }
@@ -125,7 +125,7 @@ export class RemoteAvatar {
         // Update chat bubble
         if (this.chatBubble) {
             const position = this.model ? this.model.position : new THREE.Vector3();
-            this.chatBubble.update(delta, position);
+            this.chatBubble.update(delta, position, camera);
             if (this.chatBubble.isExpired()) {
                 this.chatBubble = null;
             }

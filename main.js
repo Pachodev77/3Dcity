@@ -72,7 +72,8 @@ const chatUI = new ChatUI((message) => {
     const chatConfig = {
         duration: CONFIG.CHAT.BUBBLE_DURATION,
         heightOffset: CONFIG.CHAT.BUBBLE_HEIGHT_OFFSET,
-        scale: CONFIG.CHAT.BUBBLE_SCALE
+        scale: CONFIG.CHAT.BUBBLE_SCALE,
+        visibilityRange: CONFIG.CHAT.BUBBLE_VISIBILITY_RANGE
     };
     avatar.showChatBubble(message, ChatBubble, chatConfig);
 
@@ -95,7 +96,8 @@ window.addEventListener('chat-message-received', (e) => {
         const chatConfig = {
             duration: CONFIG.CHAT.BUBBLE_DURATION,
             heightOffset: CONFIG.CHAT.BUBBLE_HEIGHT_OFFSET,
-            scale: CONFIG.CHAT.BUBBLE_SCALE
+            scale: CONFIG.CHAT.BUBBLE_SCALE,
+            visibilityRange: CONFIG.CHAT.BUBBLE_VISIBILITY_RANGE
         };
         remoteAvatar.showChatBubble(data.message, ChatBubble, chatConfig);
     }
@@ -472,9 +474,9 @@ function animate() {
     }
 
     // Update Entities
-    avatar.update(delta);
+    avatar.update(delta, camera);
     zombie.updateAnimation(delta);
-    networkManager.update(delta);
+    networkManager.update(delta, camera);
 
     // Network Update
     if (avatar.model) {

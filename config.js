@@ -50,6 +50,7 @@ export const CONFIG = {
         BUBBLE_DURATION: 5000, // Duration in ms
         BUBBLE_HEIGHT_OFFSET: 2.5, // Height above avatar
         MAX_MESSAGE_LENGTH: 150, // Max characters
-        BUBBLE_SCALE: 1.0 // Scale of bubble
+        BUBBLE_SCALE: 1.0, // Scale of bubble
+        BUBBLE_VISIBILITY_RANGE: 15 // Only visible within this distance
     }
 };

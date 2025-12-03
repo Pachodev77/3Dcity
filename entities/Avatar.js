@@ -114,14 +114,14 @@ export class Avatar {
         }
     }
 
-    update(delta) {
+    update(delta, camera) {
         if (this.mixer) {
             this.mixer.update(delta);
         }
 
         // Update chat bubble
         if (this.chatBubble) {
-            this.chatBubble.update(delta, this.position);
+            this.chatBubble.update(delta, this.position, camera);
             if (this.chatBubble.isExpired()) {
                 this.chatBubble = null;
             }

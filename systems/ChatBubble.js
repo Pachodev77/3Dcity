@@ -14,13 +14,15 @@ export class ChatBubble {
             maxWidth: config.maxWidth || 300,
             fontSize: config.fontSize || 24,
             padding: config.padding || 20,
-            tailHeight: config.tailHeight || 20
+            tailHeight: config.tailHeight || 20,
+            visibilityRange: config.visibilityRange || 15 // Only visible within this range
         };
 
         this.sprite = null;
         this.isVisible = false;
         this.startTime = Date.now();
         this.animationProgress = 0;
+        this.camera = null; // Will be set during update
 
         this.createBubble(position);
         this.show();
@@ -82,16 +84,18 @@ export class ChatBubble {
             transparent: true,
             opacity: 0,
             depthTest: false,
-            depthWrite: false
+            depthWrite: false,
+            sizeAttenuation: false // Constant size regardless of distance
         });
 
         this.sprite = new THREE.Sprite(spriteMaterial);
 
         // Scale sprite to maintain aspect ratio
+        // Smaller scale for constant size mode (sizeAttenuation: false)
         const aspectRatio = canvas.width / canvas.height;
         this.sprite.scale.set(
-            aspectRatio * this.config.scale * 2,
-            this.config.scale * 2,
+            aspectRatio * this.config.scale * 0.15,
+            this.config.scale * 0.15,
             1
         );
 
@@ -192,7 +196,7 @@ export class ChatBubble {
         this.animationProgress = 0;
     }
 
-    update(delta, avatarPosition) {
+    update(delta, avatarPosition, camera) {
         if (!this.sprite || !this.isVisible) return;
 
         const elapsed = Date.now() - this.startTime;
@@ -204,20 +208,43 @@ export class ChatBubble {
             this.sprite.position.z = avatarPosition.z;
         }
 
+        // Check distance from camera for visibility
+        let distanceOpacity = 1;
+        if (camera && avatarPosition) {
+            const distance = camera.position.distanceTo(avatarPosition);
+
+            // Only visible within range
+            if (distance > this.config.visibilityRange) {
+                this.sprite.visible = false;
+                return;
+            } else {
+                this.sprite.visible = true;
+
+                // Fade in/out based on distance
+                const fadeStart = this.config.visibilityRange * 0.7;
+                if (distance > fadeStart) {
+                    distanceOpacity = 1 - ((distance - fadeStart) / (this.config.visibilityRange - fadeStart));
+                }
+            }
+        }
+
         // Entrance animation (scale up)
         if (this.animationProgress < 1) {
             this.animationProgress = Math.min(1, this.animationProgress + delta * 4);
             const scale = this.easeOutBack(this.animationProgress);
-            this.sprite.material.opacity = this.animationProgress;
+            this.sprite.material.opacity = this.animationProgress * distanceOpacity;
             this.sprite.scale.multiplyScalar(scale / (this.lastScale || 1));
             this.lastScale = scale;
+        } else {
+            // Apply distance-based opacity after entrance animation
+            this.sprite.material.opacity = distanceOpacity;
         }
 
         // Auto-hide after duration
         if (elapsed > this.config.duration) {
             const fadeOutDuration = 500;
             const fadeProgress = Math.min(1, (elapsed - this.config.duration) / fadeOutDuration);
-            this.sprite.material.opacity = 1 - fadeProgress;
+            this.sprite.material.opacity = (1 - fadeProgress) * distanceOpacity;
 
             if (fadeProgress >= 1) {
                 this.dispose();

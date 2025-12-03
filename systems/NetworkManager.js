@@ -246,10 +246,10 @@ export class NetworkManager {
         });
     }
 
-    update(delta) {
+    update(delta, camera) {
         // Update animations of all remote players
         Object.values(this.remotePlayers).forEach(player => {
-            player.update(delta);
+            player.update(delta, camera);
         });
         // Update zombies
         Object.values(this.remoteZombies).forEach(zombie => {
