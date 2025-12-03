@@ -39,7 +39,8 @@ export class RemoteZombie {
             this.scene.remove(this.model); // Cleanup if exists
         }
 
-        this.model = object.clone(); // Clone to avoid sharing state with local zombie
+        // Use the object directly like Zombie.js does, don't clone
+        this.model = object;
 
         // Force scale immediately BEFORE adding to scene
         this.model.scale.set(0.005, 0.005, 0.005);
