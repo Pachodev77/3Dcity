@@ -34,7 +34,13 @@ export class NetworkManager {
 
     setupSocketEvents() {
         this.socket.on('connect', () => {
-            console.log('Connected to server with ID:', this.socket.id);
+            console.log('%c Connected to Multiplayer Server ', 'background: #222; color: #bada55; font-size: 20px');
+            console.log('Server URL:', this.socket.io.uri);
+            console.log('Socket ID:', this.socket.id);
+        });
+
+        this.socket.on('connect_error', (err) => {
+            console.error('%c Connection Error ', 'background: #222; color: #ff0000; font-size: 20px', err);
         });
 
         this.socket.on('currentWorldState', (worldState) => {
