@@ -42,7 +42,7 @@ export class RemoteZombie {
         this.model = object.clone(); // Clone to avoid sharing state with local zombie
 
         // Force scale immediately BEFORE adding to scene
-        this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
+        this.model.scale.set(0.005, 0.005, 0.005);
         this.model.updateMatrix();
 
         // Set initial position
