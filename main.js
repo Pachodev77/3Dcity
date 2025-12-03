@@ -9,6 +9,7 @@ import { InputManager } from './systems/InputManager.js';
 import { NetworkManager } from './systems/NetworkManager.js';
 import { ChatBubble } from './systems/ChatBubble.js';
 import { ChatUI } from './systems/ChatUI.js';
+import { MusicPlayer } from './systems/MusicPlayer.js';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -53,6 +54,7 @@ const groundCollidableObjects = [ground];
 const inputManager = new InputManager();
 const cameraController = new CameraController(camera);
 const networkManager = new NetworkManager(scene);
+const musicPlayer = new MusicPlayer();
 
 // ... (existing code) ...
 

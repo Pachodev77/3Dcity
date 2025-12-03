@@ -2,12 +2,46 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
 
 // Enable CORS for all origins
 app.use(cors());
+
+// Serve music files statically
+app.use('/music', express.static(path.join(__dirname, 'music')));
+
+// API Endpoint to get music list
+app.get('/api/music', (req, res) => {
+    const musicDir = path.join(__dirname, 'music');
+
+    // Check if directory exists
+    if (!fs.existsSync(musicDir)) {
+        return res.json([]);
+    }
+
+    fs.readdir(musicDir, (err, files) => {
+        if (err) {
+            console.error('Error reading music directory:', err);
+            return res.status(500).json({ error: 'Failed to read music directory' });
+        }
+
+        // Filter for audio files
+        const audioFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return ['.mp3', '.wav', '.ogg', '.m4a'].includes(ext);
+        });
+
+        res.json(audioFiles);
+    });
+});
 
 // Socket.IO with CORS configuration
 const io = new Server(httpServer, {
