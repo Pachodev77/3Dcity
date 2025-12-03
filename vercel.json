@@ -2,6 +2,9 @@
     "functions": {
         "api/socket.js": {
             "maxDuration": 10
+        },
+        "api/music.js": {
+            "includeFiles": "music/**"
         }
     }
 }
