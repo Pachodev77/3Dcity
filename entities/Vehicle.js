@@ -13,6 +13,11 @@ export class Vehicle {
         this.acceleration = CONFIG.VEHICLE.ACCELERATION;
         this.friction = CONFIG.VEHICLE.FRICTION;
         this.steeringSpeed = CONFIG.VEHICLE.STEERING_SPEED;
+
+        // Performance: Reusable objects
+        this.raycaster = new THREE.Raycaster();
+        this.tempVector = new THREE.Vector3();
+        this.forwardDirection = new THREE.Vector3();
     }
 
     get position() {
@@ -50,10 +55,9 @@ export class Vehicle {
         }
 
         // --- Vehicle Ground Collision ---
-        const vehicleRayOrigin = this.mesh.position.clone().add({ x: 0, y: 1, z: 0 });
-        const down = new THREE.Vector3(0, -1, 0);
-        const raycaster = new THREE.Raycaster(vehicleRayOrigin, down);
-        const groundIntersections = raycaster.intersectObjects(groundCollidableObjects, true);
+        this.tempVector.copy(this.mesh.position).add({ x: 0, y: 1, z: 0 });
+        this.raycaster.set(this.tempVector, new THREE.Vector3(0, -1, 0));
+        const groundIntersections = this.raycaster.intersectObjects(groundCollidableObjects, true);
 
         let groundY = null;
         for (const intersection of groundIntersections) {
@@ -75,7 +79,7 @@ export class Vehicle {
 
         // --- Vehicle Wall Collision & Position Update ---
         const moveDistance = this.speed * delta;
-        const forwardDirection = new THREE.Vector3(Math.sin(this.mesh.rotation.y), 0, Math.cos(this.mesh.rotation.y));
+        this.forwardDirection.set(Math.sin(this.mesh.rotation.y), 0, Math.cos(this.mesh.rotation.y));
 
         const collisionPoints = [ // Points on the front of the car to cast rays from
             { x: 0, y: 0.2, z: 0 }, // Lower point
@@ -85,9 +89,9 @@ export class Vehicle {
         let firstValidIntersection = null;
 
         for (const point of collisionPoints) {
-            const rayOrigin = this.mesh.position.clone().add(point);
-            raycaster.set(rayOrigin, forwardDirection);
-            const wallIntersections = raycaster.intersectObjects(collidableObjects, true);
+            this.tempVector.copy(this.mesh.position).add(point);
+            this.raycaster.set(this.tempVector, this.forwardDirection);
+            const wallIntersections = this.raycaster.intersectObjects(collidableObjects, true);
 
             for (const intersection of wallIntersections) {
                 let isSelf = false;

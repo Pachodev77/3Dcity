@@ -11,6 +11,11 @@ export class Avatar {
         this.currentAction = 'idle';
         this.name = null;
         this.visible = true;
+
+        // Performance: Reusable objects
+        this.raycaster = new THREE.Raycaster();
+        this.tempVector = new THREE.Vector3();
+        this.tempDirection = new THREE.Vector3();
     }
 
     get position() {
@@ -143,16 +148,16 @@ export class Avatar {
         if (!this.model) return;
 
         const moveSpeed = CONFIG.AVATAR.MOVE_SPEED;
-        const viewDirection = new THREE.Vector3();
-        camera.getWorldDirection(viewDirection);
-        viewDirection.y = 0;
-        viewDirection.normalize();
+        camera.getWorldDirection(this.tempDirection);
+        this.tempDirection.y = 0;
+        this.tempDirection.normalize();
 
-        const right = new THREE.Vector3();
-        right.crossVectors(camera.up, viewDirection).normalize();
+        this.tempVector.crossVectors(camera.up, this.tempDirection).normalize();
 
-        const moveDirection = new THREE.Vector3();
-        moveDirection.copy(right).multiplyScalar(-moveData.vector.x).add(viewDirection.multiplyScalar(moveData.vector.y)).normalize();
+        const moveDirection = this.tempVector.clone()
+            .multiplyScalar(-moveData.vector.x)
+            .add(this.tempDirection.multiplyScalar(moveData.vector.y))
+            .normalize();
 
         const moveThreshold = 0.1;
         if (moveData.distance > moveThreshold) {
@@ -160,9 +165,9 @@ export class Avatar {
             const moveVector = moveDirection.clone().multiplyScalar(speed * delta);
 
             // --- Avatar Collision Detection ---
-            const avatarCenter = this.model.position.clone().add({ x: 0, y: 0.5, z: 0 });
-            const raycaster = new THREE.Raycaster(avatarCenter, moveDirection);
-            const intersections = raycaster.intersectObjects(collidableObjects, true);
+            this.tempVector.copy(this.model.position).add({ x: 0, y: 0.5, z: 0 });
+            this.raycaster.set(this.tempVector, moveDirection);
+            const intersections = this.raycaster.intersectObjects(collidableObjects, true);
 
             const collisionThreshold = CONFIG.AVATAR.COLLISION_THRESHOLD;
             if (intersections.length > 0 && intersections[0].distance < collisionThreshold) {
@@ -188,11 +193,10 @@ export class Avatar {
     checkGroundCollision(collidableObjects) {
         if (!this.model) return;
 
-        const rayOrigin = this.model.position.clone();
-        rayOrigin.y += 1;
-        const down = new THREE.Vector3(0, -1, 0);
-        const raycaster = new THREE.Raycaster(rayOrigin, down);
-        const intersections = raycaster.intersectObjects(collidableObjects, true);
+        this.tempVector.copy(this.model.position);
+        this.tempVector.y += 1;
+        this.raycaster.set(this.tempVector, new THREE.Vector3(0, -1, 0));
+        const intersections = this.raycaster.intersectObjects(collidableObjects, true);
 
         if (intersections.length > 0) {
             this.model.position.y = intersections[0].point.y;

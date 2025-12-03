@@ -12,6 +12,12 @@ export class NetworkManager {
         this.lastUpdate = 0;
         this.updateRate = 50; // Send updates every 50ms (20 times/sec)
 
+        // Performance: Track last sent state to avoid spam
+        this.lastSentPosition = new THREE.Vector3();
+        this.lastSentRotation = 0;
+        this.lastSentAnimation = '';
+        this.lastSentAvatarType = '';
+
         this.setupSocketEvents();
     }
 
@@ -60,15 +66,29 @@ export class NetworkManager {
     sendUpdate(position, rotation, animation, avatarType) {
         const now = Date.now();
         if (now - this.lastUpdate > this.updateRate) {
-            this.socket.emit('playerMovement', {
-                x: position.x,
-                y: position.y,
-                z: position.z,
-                rotation: rotation.y,
-                animation: animation,
-                avatarType: avatarType
-            });
-            this.lastUpdate = now;
+            // Check if anything actually changed
+            const positionChanged = position.distanceTo(this.lastSentPosition) > CONFIG.PERFORMANCE.NETWORK_POSITION_THRESHOLD;
+            const rotationChanged = Math.abs(rotation.y - this.lastSentRotation) > CONFIG.PERFORMANCE.NETWORK_ROTATION_THRESHOLD;
+            const animationChanged = animation !== this.lastSentAnimation;
+            const avatarChanged = avatarType !== this.lastSentAvatarType;
+
+            if (positionChanged || rotationChanged || animationChanged || avatarChanged) {
+                this.socket.emit('playerMovement', {
+                    x: position.x,
+                    y: position.y,
+                    z: position.z,
+                    rotation: rotation.y,
+                    animation: animation,
+                    avatarType: avatarType
+                });
+
+                // Update last sent state
+                this.lastSentPosition.copy(position);
+                this.lastSentRotation = rotation.y;
+                this.lastSentAnimation = animation;
+                this.lastSentAvatarType = avatarType;
+                this.lastUpdate = now;
+            }
         }
     }
 

@@ -318,10 +318,25 @@ avatar.load(avatarList[0]);
 const clock = new THREE.Clock();
 let frameCount = 0;
 
+// FPS Counter
+let lastTime = performance.now();
+let frames = 0;
+const fpsCounter = document.getElementById('fps-counter');
+
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     frameCount++;
+
+    // Update FPS counter
+    frames++;
+    const currentTime = performance.now();
+    if (currentTime >= lastTime + 1000) {
+        const fps = Math.round((frames * 1000) / (currentTime - lastTime));
+        if (fpsCounter) fpsCounter.textContent = `FPS: ${fps}`;
+        frames = 0;
+        lastTime = currentTime;
+    }
 
     // Update Entities
     avatar.update(delta);

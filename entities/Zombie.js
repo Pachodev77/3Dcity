@@ -22,6 +22,13 @@ export class Zombie {
         ];
         this.currentPatrolIndex = 0;
         this.lastAttackTime = 0;
+
+        // Performance: Reusable objects
+        this.raycaster = new THREE.Raycaster();
+        this.tempVector = new THREE.Vector3();
+        this.tempDirection = new THREE.Vector3();
+        this.frameCounter = 0;
+
         this.loadModel();
     }
 
@@ -108,29 +115,30 @@ export class Zombie {
     updateAI(delta, playerPosition, playerAvatar) {
         if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
 
-        // --- Ground Collision ---
-        const rayOrigin = this.model.position.clone().add({ x: 0, y: 1, z: 0 });
-        const down = new THREE.Vector3(0, -1, 0);
-        const raycaster = new THREE.Raycaster(rayOrigin, down);
-        const intersections = raycaster.intersectObjects(this.groundCollidableObjects, true);
+        this.frameCounter++;
 
-        if (intersections.length > 0) {
-            this.model.position.y = intersections[0].point.y;
+        // --- Ground Collision (Throttled) ---
+        if (this.frameCounter % CONFIG.PERFORMANCE.RAYCAST_INTERVAL === 0) {
+            this.tempVector.copy(this.model.position).add({ x: 0, y: 1, z: 0 });
+            this.raycaster.set(this.tempVector, new THREE.Vector3(0, -1, 0));
+            const intersections = this.raycaster.intersectObjects(this.groundCollidableObjects, true);
+
+            if (intersections.length > 0) {
+                this.model.position.y = intersections[0].point.y;
+            }
         }
-
 
         const distanceToPlayer = this.model.position.distanceTo(playerPosition);
 
         // Hysteresis: Keep chasing a bit longer than the initial detection radius
-        // to prevent flickering at the boundary.
         const isChasing = this.currentState === 'zombie running';
         const detectionThreshold = isChasing ? this.detectionRadius * 1.2 : this.detectionRadius;
 
         if (distanceToPlayer < this.attackRadius) {
             this.setState('zombie attack');
             // Face the player even while attacking
-            const lookTarget = new THREE.Vector3(playerPosition.x, this.model.position.y, playerPosition.z);
-            this.model.lookAt(lookTarget);
+            this.tempVector.set(playerPosition.x, this.model.position.y, playerPosition.z);
+            this.model.lookAt(this.tempVector);
 
             // Damage Logic
             const now = Date.now();
@@ -141,15 +149,15 @@ export class Zombie {
 
         } else if (distanceToPlayer < detectionThreshold) {
             this.setState('zombie running');
-            const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position);
-            direction.y = 0;
-            direction.normalize();
+            this.tempDirection.subVectors(playerPosition, this.model.position);
+            this.tempDirection.y = 0;
+            this.tempDirection.normalize();
 
-            this.model.position.add(direction.multiplyScalar(this.speed * 2 * delta));
+            this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 2 * delta));
 
-            // Look at player but keep upright (ignore Y difference for rotation)
-            const lookTarget = new THREE.Vector3(playerPosition.x, this.model.position.y, playerPosition.z);
-            this.model.lookAt(lookTarget);
+            // Look at player but keep upright
+            this.tempVector.set(playerPosition.x, this.model.position.y, playerPosition.z);
+            this.model.lookAt(this.tempVector);
         } else {
             this.setState('walking');
             const target = this.patrolPath[this.currentPatrolIndex];
@@ -158,14 +166,14 @@ export class Zombie {
             if (distanceToTarget < 1) {
                 this.currentPatrolIndex = (this.currentPatrolIndex + 1) % this.patrolPath.length;
             } else {
-                const direction = new THREE.Vector3().subVectors(target, this.model.position);
-                direction.y = 0;
-                direction.normalize();
-                this.model.position.add(direction.multiplyScalar(this.speed * delta));
+                this.tempDirection.subVectors(target, this.model.position);
+                this.tempDirection.y = 0;
+                this.tempDirection.normalize();
+                this.model.position.add(this.tempDirection.multiplyScalar(this.speed * delta));
 
                 // Look at patrol target but keep upright
-                const lookTarget = new THREE.Vector3(target.x, this.model.position.y, target.z);
-                this.model.lookAt(lookTarget);
+                this.tempVector.set(target.x, this.model.position.y, target.z);
+                this.model.lookAt(this.tempVector);
             }
         }
     }
