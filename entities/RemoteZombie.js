@@ -70,9 +70,9 @@ export class RemoteZombie {
         // Actually Zombie.js uses: 'walking', 'zombie running', 'zombie attack'
 
         const animFiles = {
-            'walking': '/avatars/zombi/Walking.fbx',
-            'zombie running': '/avatars/zombi/Run.fbx',
-            'zombie attack': '/avatars/zombi/Attack.fbx'
+            'walking': '/avatars/zombi/animations/walking.fbx',
+            'zombie running': '/avatars/zombi/animations/zombie running.fbx',
+            'zombie attack': '/avatars/zombi/animations/zombie attack.fbx'
         };
 
         // Load Idle from model itself if it has it, or separate?

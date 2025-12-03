@@ -34,6 +34,10 @@ export const CONFIG = {
         MIN_HEIGHT: 1.0,
         GROUND_OFFSET: 0.5 // Añadido en un paso anterior
     },
+    MAP: {
+        SCALE: 1.0,
+        ROTATION: 0
+    },
     PERFORMANCE: {
         CHECK_INTERVAL: 4,
         MAX_PIXEL_RATIO: 2,

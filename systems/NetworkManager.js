@@ -76,10 +76,12 @@ export class NetworkManager {
         });
 
         this.socket.on('zombieMoved', (zombieInfo) => {
+            // console.log('Zombie moved:', zombieInfo.id); // Uncomment for spammy debug
             if (this.remoteZombies[zombieInfo.id]) {
                 this.remoteZombies[zombieInfo.id].updateState(zombieInfo);
             } else {
                 // If zombie doesn't exist yet (maybe joined late), create it
+                console.log('Creating missing remote zombie from move event:', zombieInfo.id);
                 this.addRemoteZombie(zombieInfo.id, zombieInfo);
             }
         });
