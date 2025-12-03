@@ -67,6 +67,49 @@ let isInVehicle = false;
 let currentVehicle = null; // Vehicle instance
 let nearbyVehicle = null; // Vehicle instance
 
+// Loading State
+const loadingState = {
+    totalAssets: 7, // 1 Map + 5 Vehicles + 1 Avatar
+    loadedAssets: 0,
+    progress: 0
+};
+
+function updateLoadingProgress() {
+    loadingState.loadedAssets++;
+    loadingState.progress = (loadingState.loadedAssets / loadingState.totalAssets) * 100;
+
+    const progressBar = document.getElementById('progress-bar');
+    const loadingText = document.getElementById('loading-text');
+
+    if (progressBar) progressBar.style.width = `${loadingState.progress}%`;
+    if (loadingText) loadingText.innerText = `Loading Assets... ${Math.round(loadingState.progress)}%`;
+
+    if (loadingState.loadedAssets >= loadingState.totalAssets) {
+        showWelcomeMessage();
+    }
+}
+
+function showWelcomeMessage() {
+    const loadingStatus = document.getElementById('loading-status');
+    const welcomeMessage = document.getElementById('welcome-message');
+
+    if (loadingStatus) loadingStatus.style.display = 'none';
+    if (welcomeMessage) welcomeMessage.style.display = 'flex';
+
+    const startButton = document.getElementById('start-button');
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        });
+    }
+}
+
 // Map Loading
 function loadMap(mapUrl) {
     if (currentMap) {
@@ -120,6 +163,7 @@ function loadMap(mapUrl) {
         if (avatar.model) {
             avatar.model.position.set(0, 0, 5);
         }
+        updateLoadingProgress(); // Map loaded
     });
 }
 
@@ -160,8 +204,10 @@ async function loadVehicleModels() {
             });
 
             scene.add(template);
+            updateLoadingProgress(); // Vehicle loaded
         } catch (error) {
             console.error(`Error loading vehicle model ${model.path}:`, error);
+            updateLoadingProgress(); // Count errors as loaded to avoid getting stuck
         }
     }
 }
@@ -264,6 +310,7 @@ avatarList.forEach(avatarName => {
 });
 
 avatarSelector.addEventListener('change', (e) => {
+    // Reset loading for avatar switch if we wanted to show it, but for now just load
     avatar.load(e.target.value);
 });
 
@@ -360,7 +407,9 @@ loadVehicleModels().then(() => {
 });
 
 // Load the default avatar
-avatar.load(avatarList[0]);
+avatar.load(avatarList[0]).then(() => {
+    updateLoadingProgress(); // Avatar loaded
+});
 
 // Animation Loop
 const clock = new THREE.Clock();

@@ -249,10 +249,127 @@
             z-index: 100;
             user-select: none;
         }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #loading-content {
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        h1.game-title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+
+        #loading-text {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 2rem;
+        }
+
+        #welcome-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #start-button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        #start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6);
+            background: linear-gradient(45deg, #2980b9, #3498db);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div id="loading-screen">
+        <div id="loading-content">
+            <h1 class="game-title">3D City World</h1>
+            <div id="loading-status">
+                <div class="progress-container">
+                    <div id="progress-bar"></div>
+                </div>
+                <div id="loading-text">Loading Assets... 0%</div>
+            </div>
+            <div id="welcome-message">
+                <h2>Welcome to the City!</h2>
+                <p style="margin-bottom: 20px; color: #ddd;">Explore, Drive, and Survive.</p>
+                <button id="start-button">START GAME</button>
+            </div>
+        </div>
+    </div>
     <div id="damage-overlay"></div>
     <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
     <div id="avatar-selector-container">
