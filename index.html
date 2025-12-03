@@ -310,46 +310,6 @@
             color: #aaa;
             margin-bottom: 2rem;
         }
-
-        #welcome-message {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        #start-button {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-
-        #start-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6);
-            background: linear-gradient(45deg, #2980b9, #3498db);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 
@@ -362,11 +322,6 @@
                     <div id="progress-bar"></div>
                 </div>
                 <div id="loading-text">Loading Assets... 0%</div>
-            </div>
-            <div id="welcome-message">
-                <h2>Welcome to the City!</h2>
-                <p style="margin-bottom: 20px; color: #ddd;">Explore, Drive, and Survive.</p>
-                <button id="start-button">START GAME</button>
             </div>
         </div>
     </div>

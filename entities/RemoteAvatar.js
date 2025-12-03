@@ -50,6 +50,7 @@ export class RemoteAvatar {
                 }
             });
 
+            this.model.visible = false; // Hide initially to prevent T-Pose
             this.scene.add(this.model);
             this.mixer = new THREE.AnimationMixer(this.model);
             this.loadAnimations();
@@ -77,9 +78,19 @@ export class RemoteAvatar {
             loadFunc(url, loader).then((object) => {
                 if (object.animations && object.animations.length > 0) {
                     this.animations[name] = object.animations[0];
+
+                    // If idle animation is loaded, play it and show the model immediately
+                    if (name === 'idle') {
+                        this.setState('idle');
+                        if (this.model) this.model.visible = true;
+                    }
+
                     loadedCount++;
                     if (loadedCount === Object.keys(animationsToLoad).length) {
-                        this.setState('idle');
+                        // Ensure state is correct if we missed the immediate check or switched state
+                        if (this.currentState === 'idle') {
+                            this.setState('idle');
+                        }
                     }
                 }
             }).catch((error) => {

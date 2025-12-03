@@ -55,8 +55,9 @@ export class Avatar {
                     child.receiveShadow = true;
                 }
             });
+            this.model.visible = false; // Hide initially to prevent T-Pose
             this.scene.add(this.model);
-            this.model.visible = this.visible;
+            // this.model.visible = this.visible; // Handled after animation load
 
             // Load Animations
             this.mixer = new THREE.AnimationMixer(this.model);
@@ -90,6 +91,9 @@ export class Avatar {
 
         // Start idle animation
         this.playAnimation('idle');
+        if (this.model && this.visible) {
+            this.model.visible = true;
+        }
     }
 
     playAnimation(name) {
