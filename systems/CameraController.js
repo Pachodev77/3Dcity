@@ -11,11 +11,8 @@ export class CameraController {
         this.distance = CONFIG.AVATAR.MIN_CAMERA_DISTANCE;
         this.lastManualRotationTime = 0;
 
-        // Vehicle camera state (completely independent)
-        this.vehicleCameraOffset = new THREE.Vector3(0, 2, -5); // Behind and above the vehicle
-        this.vehicleCameraPosition = new THREE.Vector3();
+        // Vehicle camera state
         this.vehicleLookAtPosition = new THREE.Vector3();
-        this.vehicleCameraDistance = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
 
         // Reusable vectors
         this.followPosition = new THREE.Vector3();
@@ -32,21 +29,11 @@ export class CameraController {
 
         const vehicleMesh = vehicle.mesh;
 
-        // Allow manual camera rotation with joystick
-        const cameraRotationSpeed = CONFIG.CAMERA.ROTATION_SPEED * 0.5; // Slower for vehicle
+        // Fixed camera offset behind the vehicle (no manual rotation for instant following)
+        const fixedOffset = new THREE.Vector3(0, 2.5, -6); // Behind and above
 
-        if (Math.abs(input.x) > 0.1) {
-            this.vehicleCameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), -input.x * cameraRotationSpeed * delta);
-        }
-
-        // Vertical angle adjustment
-        if (Math.abs(input.y) > 0.1) {
-            const verticalChange = -input.y * cameraRotationSpeed * delta;
-            this.vehicleCameraOffset.y = Math.max(1, Math.min(4, this.vehicleCameraOffset.y + verticalChange));
-        }
-
-        // Calculate desired camera position relative to vehicle
-        this.tempVector.copy(this.vehicleCameraOffset);
+        // Calculate camera position relative to vehicle (instant, no lerp)
+        this.tempVector.copy(fixedOffset);
         this.tempVector.applyQuaternion(vehicleMesh.quaternion);
         this.desiredCameraPosition.copy(vehicleMesh.position).add(this.tempVector);
 
@@ -86,26 +73,15 @@ export class CameraController {
             }
         }
 
-        // Smooth camera movement with higher lerp for responsiveness
-        const lerpFactor = 0.15; // Increased from 0.1 for smoother, more responsive following
-        this.camera.position.lerp(finalCameraPosition, lerpFactor);
+        // INSTANT camera position update (no lerp)
+        this.camera.position.copy(finalCameraPosition);
 
-        // Look at point slightly ahead of the vehicle for better view
+        // Look at point at the vehicle center
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
-        this.vehicleLookAtPosition.y += 0.5; // Look at center of vehicle
+        this.vehicleLookAtPosition.y += 1; // Look at center of vehicle
 
-        // Add forward offset to look ahead
-        this.tempVector.set(0, 0, 2);
-        this.tempVector.applyQuaternion(vehicleMesh.quaternion);
-        this.vehicleLookAtPosition.add(this.tempVector);
-
-        // Smooth camera rotation
-        const targetQuaternion = new THREE.Quaternion();
-        const lookAtMatrix = new THREE.Matrix4();
-        lookAtMatrix.lookAt(this.camera.position, this.vehicleLookAtPosition, new THREE.Vector3(0, 1, 0));
-        targetQuaternion.setFromRotationMatrix(lookAtMatrix);
-
-        this.camera.quaternion.slerp(targetQuaternion, 0.1);
+        // INSTANT camera rotation (no slerp, direct lookAt)
+        this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
     updateAvatarCamera(delta, target, input, collidableObjects, groundCollidableObjects, frameCount) {
@@ -212,11 +188,6 @@ export class CameraController {
 
     setDistance(distance) {
         this.distance = distance;
-        this.vehicleCameraDistance = distance;
-
-        // Update vehicle camera offset based on distance (negative to stay behind)
-        const baseOffset = 5;
-        const offsetMultiplier = distance / CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
-        this.vehicleCameraOffset.z = -baseOffset * offsetMultiplier;
+        // Vehicle camera uses fixed offset, distance only affects avatar camera
     }
 }
