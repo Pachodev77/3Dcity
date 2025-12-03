@@ -12,7 +12,7 @@ export class CameraController {
         this.lastManualRotationTime = 0;
 
         // Vehicle camera state (completely independent)
-        this.vehicleCameraOffset = new THREE.Vector3(0, 2, 5); // Behind and above the vehicle
+        this.vehicleCameraOffset = new THREE.Vector3(0, 2, -5); // Behind and above the vehicle
         this.vehicleCameraPosition = new THREE.Vector3();
         this.vehicleLookAtPosition = new THREE.Vector3();
         this.vehicleCameraDistance = CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
@@ -95,7 +95,7 @@ export class CameraController {
         this.vehicleLookAtPosition.y += 0.5; // Look at center of vehicle
 
         // Add forward offset to look ahead
-        this.tempVector.set(0, 0, -2);
+        this.tempVector.set(0, 0, 2);
         this.tempVector.applyQuaternion(vehicleMesh.quaternion);
         this.vehicleLookAtPosition.add(this.tempVector);
 
@@ -214,9 +214,9 @@ export class CameraController {
         this.distance = distance;
         this.vehicleCameraDistance = distance;
 
-        // Update vehicle camera offset based on distance
+        // Update vehicle camera offset based on distance (negative to stay behind)
         const baseOffset = 5;
         const offsetMultiplier = distance / CONFIG.VEHICLE.MIN_CAMERA_DISTANCE;
-        this.vehicleCameraOffset.z = baseOffset * offsetMultiplier;
+        this.vehicleCameraOffset.z = -baseOffset * offsetMultiplier;
     }
 }
