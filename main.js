@@ -543,6 +543,14 @@ function animate() {
         currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
     } else if (avatar.model && !isChatFocused) {
         avatar.updateMovement(delta, moveInput, camera, collidableObjects);
+
+        // Handle jump and attack when on foot
+        if (inputManager.isJumpPressed()) {
+            avatar.jump();
+        }
+        if (inputManager.isAttackPressed()) {
+            avatar.attack();
+        }
     }
 
     // Camera

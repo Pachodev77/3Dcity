@@ -15,6 +15,18 @@ export class Avatar {
         // Chat bubble
         this.chatBubble = null;
 
+        // Jump mechanics
+        this.isJumping = false;
+        this.jumpVelocity = 0;
+        this.gravity = -20; // Gravity acceleration
+        this.jumpForce = 8; // Initial jump velocity
+        this.isGrounded = true;
+
+        // Attack mechanics
+        this.isAttacking = false;
+        this.lastAttackTime = 0;
+        this.attackCooldown = 500; // 500ms cooldown between attacks
+
         // Performance: Reusable objects
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
@@ -76,7 +88,8 @@ export class Avatar {
         const animationsToLoad = {
             'idle': '/avatars/animations/Idle.fbx',
             'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
+            'running': '/avatars/animations/Running.fbx',
+            'punching': '/avatars/animations/Punching.fbx' // Attack animation
         };
 
         const promises = Object.entries(animationsToLoad).map(async ([name, url]) => {
@@ -217,8 +230,43 @@ export class Avatar {
         }
     }
 
+    // Jump method
+    jump() {
+        if (!this.model || !this.isGrounded || this.isJumping) return;
+
+        this.isJumping = true;
+        this.isGrounded = false;
+        this.jumpVelocity = this.jumpForce;
+    }
+
+    // Attack method
+    attack() {
+        if (!this.model || this.isAttacking) return;
+
+        const now = Date.now();
+        if (now - this.lastAttackTime < this.attackCooldown) return;
+
+        this.isAttacking = true;
+        this.lastAttackTime = now;
+        this.playAnimation('punching');
+
+        // Reset attack state after animation
+        setTimeout(() => {
+            this.isAttacking = false;
+            if (this.currentAction === 'punching') {
+                this.playAnimation('idle');
+            }
+        }, this.attackCooldown);
+    }
+
     checkGroundCollision(collidableObjects) {
         if (!this.model) return;
+
+        // Apply jump physics
+        if (this.isJumping) {
+            this.jumpVelocity += this.gravity * 0.016; // Assuming ~60fps (delta ~0.016)
+            this.model.position.y += this.jumpVelocity * 0.016;
+        }
 
         this.tempVector.copy(this.model.position);
         this.tempVector.y += 1;
@@ -226,9 +274,21 @@ export class Avatar {
         const intersections = this.raycaster.intersectObjects(collidableObjects, true);
 
         if (intersections.length > 0) {
-            this.model.position.y = intersections[0].point.y;
-            if (this.name === 'Remy@T-Pose') {
-                this.model.position.y += CONFIG.AVATAR.REMY_Y_OFFSET;
+            const groundY = intersections[0].point.y;
+            const adjustedY = this.name === 'Remy@T-Pose' ? groundY + CONFIG.AVATAR.REMY_Y_OFFSET : groundY;
+
+            // If falling and hit ground
+            if (this.model.position.y <= adjustedY && this.jumpVelocity <= 0) {
+                this.model.position.y = adjustedY;
+                this.isJumping = false;
+                this.isGrounded = true;
+                this.jumpVelocity = 0;
+            }
+        } else {
+            // Not on ground
+            if (!this.isJumping) {
+                this.isJumping = true;
+                this.isGrounded = false;
             }
         }
     }

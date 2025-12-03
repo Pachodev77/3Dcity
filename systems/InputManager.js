@@ -4,9 +4,9 @@ export class InputManager {
         this.cameraData = { x: 0, y: 0 };
         this.keys = {};
 
-        // Vehicle control buttons state
-        this.isAccelerating = false;
-        this.isBraking = false;
+        // Multi-purpose button states (vehicle: accelerate/brake, on foot: jump/attack)
+        this.isButton1Pressed = false; // Accelerate button (or Jump when on foot)
+        this.isButton2Pressed = false; // Brake button (or Attack when on foot)
 
         this.setupJoysticks();
         this.setupKeyboard();
@@ -70,22 +70,22 @@ export class InputManager {
             // Touch events
             accelerateBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                this.isAccelerating = true;
+                this.isButton1Pressed = true;
             });
             accelerateBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                this.isAccelerating = false;
+                this.isButton1Pressed = false;
             });
 
             // Mouse events (for desktop)
             accelerateBtn.addEventListener('mousedown', () => {
-                this.isAccelerating = true;
+                this.isButton1Pressed = true;
             });
             accelerateBtn.addEventListener('mouseup', () => {
-                this.isAccelerating = false;
+                this.isButton1Pressed = false;
             });
             accelerateBtn.addEventListener('mouseleave', () => {
-                this.isAccelerating = false;
+                this.isButton1Pressed = false;
             });
         }
 
@@ -93,22 +93,22 @@ export class InputManager {
             // Touch events
             brakeBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                this.isBraking = true;
+                this.isButton2Pressed = true;
             });
             brakeBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                this.isBraking = false;
+                this.isButton2Pressed = false;
             });
 
             // Mouse events (for desktop)
             brakeBtn.addEventListener('mousedown', () => {
-                this.isBraking = true;
+                this.isButton2Pressed = true;
             });
             brakeBtn.addEventListener('mouseup', () => {
-                this.isBraking = false;
+                this.isButton2Pressed = false;
             });
             brakeBtn.addEventListener('mouseleave', () => {
-                this.isBraking = false;
+                this.isButton2Pressed = false;
             });
         }
     }
@@ -118,15 +118,25 @@ export class InputManager {
         const input = { ...this.moveData };
 
         // If buttons are pressed, override the y-axis (forward/backward)
-        if (this.isAccelerating) {
+        if (this.isButton1Pressed) {
             input.vector = { ...input.vector, y: 1 }; // Forward
             input.distance = 1;
-        } else if (this.isBraking) {
+        } else if (this.isButton2Pressed) {
             input.vector = { ...input.vector, y: -1 }; // Backward/Brake
             input.distance = 1;
         }
 
         return input;
+    }
+
+    // Check if jump button is pressed (Button 1 when on foot)
+    isJumpPressed() {
+        return this.isButton1Pressed;
+    }
+
+    // Check if attack button is pressed (Button 2 when on foot)
+    isAttackPressed() {
+        return this.isButton2Pressed;
     }
 
     getCameraInput() {
