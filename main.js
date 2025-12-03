@@ -7,6 +7,8 @@ import { Zombie } from './entities/Zombie.js';
 import { CameraController } from './systems/CameraController.js';
 import { InputManager } from './systems/InputManager.js';
 import { NetworkManager } from './systems/NetworkManager.js';
+import { ChatBubble } from './systems/ChatBubble.js';
+import { ChatUI } from './systems/ChatUI.js';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -59,6 +61,45 @@ const avatar = new Avatar(scene);
 const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
 const vehicles = []; // Array of Vehicle instances
 
+
+
+// Chat System
+const chatUI = new ChatUI((message) => {
+    // Send message to server
+    networkManager.sendChatMessage(message);
+
+    // Show local chat bubble
+    const chatConfig = {
+        duration: CONFIG.CHAT.BUBBLE_DURATION,
+        heightOffset: CONFIG.CHAT.BUBBLE_HEIGHT_OFFSET,
+        scale: CONFIG.CHAT.BUBBLE_SCALE
+    };
+    avatar.showChatBubble(message, ChatBubble, chatConfig);
+
+    // Add to chat UI
+    chatUI.addMessage('You', message, true);
+});
+
+// Handle incoming chat messages
+window.addEventListener('chat-message-received', (e) => {
+    const data = e.detail;
+    console.log('Displaying chat message:', data);
+
+    // Add to chat UI
+    const playerName = data.playerName || `Player ${data.id?.substring(0, 6)}`;
+    chatUI.addMessage(playerName, data.message, false);
+
+    // Show bubble on remote avatar
+    const remoteAvatar = networkManager.remotePlayers[data.id];
+    if (remoteAvatar) {
+        const chatConfig = {
+            duration: CONFIG.CHAT.BUBBLE_DURATION,
+            heightOffset: CONFIG.CHAT.BUBBLE_HEIGHT_OFFSET,
+            scale: CONFIG.CHAT.BUBBLE_SCALE
+        };
+        remoteAvatar.showChatBubble(data.message, ChatBubble, chatConfig);
+    }
+});
 
 
 // Game State
@@ -490,9 +531,12 @@ function animate() {
     const moveInput = inputManager.getMoveInput();
     const cameraInput = inputManager.getCameraInput();
 
-    if (isInVehicle && currentVehicle) {
+    // Don't process movement if chat is focused
+    const isChatFocused = window.chatInputFocused || false;
+
+    if (isInVehicle && currentVehicle && !isChatFocused) {
         currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
-    } else if (avatar.model) {
+    } else if (avatar.model && !isChatFocused) {
         avatar.updateMovement(delta, moveInput, camera, collidableObjects);
     }
 

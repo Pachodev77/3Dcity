@@ -101,6 +101,13 @@ export class NetworkManager {
             this.removeRemotePlayer(id);
             this.removeRemoteZombie(id);
         });
+
+        // Chat events
+        this.socket.on('chatMessage', (data) => {
+            console.log('Chat message received:', data);
+            // Dispatch event for ChatUI to handle
+            window.dispatchEvent(new CustomEvent('chat-message-received', { detail: data }));
+        });
     }
 
     addRemotePlayer(id, data) {
@@ -230,6 +237,12 @@ export class NetworkManager {
             y: position.y,
             z: position.z,
             rotation: rotation
+        });
+    }
+
+    sendChatMessage(message) {
+        this.socket.emit('chatMessage', {
+            message: message
         });
     }
 

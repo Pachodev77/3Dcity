@@ -114,6 +114,22 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Handle chat messages
+    socket.on('chatMessage', (data) => {
+        console.log(`Chat message from ${socket.id}:`, data.message);
+
+        // Get player name or use ID
+        const playerName = players[socket.id]?.name || `Player ${socket.id.substring(0, 6)}`;
+
+        // Broadcast to all clients including sender
+        io.emit('chatMessage', {
+            id: socket.id,
+            playerName: playerName,
+            message: data.message,
+            timestamp: Date.now()
+        });
+    });
+
     // Handle disconnect
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);

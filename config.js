@@ -45,5 +45,11 @@ export const CONFIG = {
         RAYCAST_INTERVAL: 2, // Check ground collision every N frames
         NETWORK_POSITION_THRESHOLD: 0.01, // Minimum movement to send update
         NETWORK_ROTATION_THRESHOLD: 0.01 // Minimum rotation to send update
+    },
+    CHAT: {
+        BUBBLE_DURATION: 5000, // Duration in ms
+        BUBBLE_HEIGHT_OFFSET: 2.5, // Height above avatar
+        MAX_MESSAGE_LENGTH: 150, // Max characters
+        BUBBLE_SCALE: 1.0 // Scale of bubble
     }
 };

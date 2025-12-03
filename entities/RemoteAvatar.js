@@ -14,6 +14,9 @@ export class RemoteAvatar {
         this.currentState = 'idle';
         this.avatarType = initialData.avatarType || 'Ch02_nonPBR'; // Track current avatar type
 
+        // Chat bubble
+        this.chatBubble = null;
+
         this.loadModel(initialData);
     }
 
@@ -117,6 +120,28 @@ export class RemoteAvatar {
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
+        }
+
+        // Update chat bubble
+        if (this.chatBubble) {
+            const position = this.model ? this.model.position : new THREE.Vector3();
+            this.chatBubble.update(delta, position);
+            if (this.chatBubble.isExpired()) {
+                this.chatBubble = null;
+            }
+        }
+    }
+
+    showChatBubble(message, ChatBubbleClass, config) {
+        // Remove existing bubble
+        if (this.chatBubble) {
+            this.chatBubble.dispose();
+        }
+
+        // Create new bubble
+        if (this.model) {
+            const position = this.model.position;
+            this.chatBubble = new ChatBubbleClass(this.scene, message, position, config);
         }
     }
 

@@ -12,6 +12,9 @@ export class Avatar {
         this.name = null;
         this.visible = true;
 
+        // Chat bubble
+        this.chatBubble = null;
+
         // Performance: Reusable objects
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
@@ -114,6 +117,26 @@ export class Avatar {
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
+        }
+
+        // Update chat bubble
+        if (this.chatBubble) {
+            this.chatBubble.update(delta, this.position);
+            if (this.chatBubble.isExpired()) {
+                this.chatBubble = null;
+            }
+        }
+    }
+
+    showChatBubble(message, ChatBubbleClass, config) {
+        // Remove existing bubble
+        if (this.chatBubble) {
+            this.chatBubble.dispose();
+        }
+
+        // Create new bubble
+        if (this.model) {
+            this.chatBubble = new ChatBubbleClass(this.scene, message, this.position, config);
         }
     }
 
