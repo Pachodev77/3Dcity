@@ -124,7 +124,9 @@ export class RemoteAvatar {
 
         // Smoothly interpolate position (simple lerp)
         // For production, use a proper snapshot interpolation buffer
-        this.model.position.lerp(new THREE.Vector3(data.x, data.y, data.z), 0.3);
+        if (!this.targetPosition) this.targetPosition = new THREE.Vector3();
+        this.targetPosition.set(data.x, data.y, data.z);
+        this.model.position.lerp(this.targetPosition, 0.3);
 
         // Update rotation
         // Shortest path rotation interpolation could be added here

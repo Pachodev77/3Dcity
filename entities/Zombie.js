@@ -27,13 +27,18 @@ export class Zombie {
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
         this.tempDirection = new THREE.Vector3();
+        this.downVector = new THREE.Vector3(0, -1, 0); // Reused down vector
+        this.upVector = new THREE.Vector3(0, 1, 0); // Reused up vector
         this.frameCounter = 0;
 
         this.loadModel();
     }
 
     loadModel() {
+        // Reuse a global loader if available, otherwise create one (but ideally we should pass it in)
+        // For now, we'll keep creating it here but it's less critical than the update loop
         const fbxLoader = new FBXLoader();
+
         // Assuming loadWithCache is available globally as in main.js
         loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
             this.model = zombie;
@@ -119,8 +124,8 @@ export class Zombie {
 
         // --- Ground Collision (Throttled) ---
         if (this.frameCounter % CONFIG.PERFORMANCE.RAYCAST_INTERVAL === 0) {
-            this.tempVector.copy(this.model.position).add({ x: 0, y: 1, z: 0 });
-            this.raycaster.set(this.tempVector, new THREE.Vector3(0, -1, 0));
+            this.tempVector.copy(this.model.position).add(this.upVector);
+            this.raycaster.set(this.tempVector, this.downVector);
             const intersections = this.raycaster.intersectObjects(this.groundCollidableObjects, true);
 
             if (intersections.length > 0) {

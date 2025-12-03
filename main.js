@@ -180,6 +180,10 @@ function spawnRandomVehicle() {
     // Calculate spawn position
     const spawnDistance = 5;
     const spawnAngle = Math.random() * Math.PI * 2;
+
+    // Reuse a global temp vector if possible, or just create one here (less critical as it's an event, not per-frame)
+    // But for consistency let's use a static-like approach if we were inside a class.
+    // Since we are in a module, we can define a module-level temp vector.
     const spawnPosition = new THREE.Vector3(
         avatar.position.x + Math.sin(spawnAngle) * spawnDistance,
         avatar.position.y + 1, // Slightly above ground

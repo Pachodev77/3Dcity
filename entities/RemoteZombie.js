@@ -109,7 +109,14 @@ export class RemoteZombie {
         if (!this.model) return;
 
         // Interpolate position
-        this.model.position.lerp(new THREE.Vector3(data.x, data.y, data.z), 0.3);
+        // Reuse tempVector if possible, but lerp needs a target vector.
+        // We can create a reusable target vector in constructor if we want to be super strict,
+        // but for now, let's just avoid creating it if we can or reuse one.
+        // Actually, lerp takes a vector. So we need a reusable vector for the target.
+        if (!this.targetPosition) this.targetPosition = new THREE.Vector3();
+        this.targetPosition.set(data.x, data.y, data.z);
+
+        this.model.position.lerp(this.targetPosition, 0.3);
         this.model.rotation.y = data.rotation;
 
         // Update animation
