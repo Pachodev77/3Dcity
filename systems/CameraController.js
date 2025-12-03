@@ -29,13 +29,32 @@ export class CameraController {
 
         const vehicleMesh = vehicle.mesh;
 
-        // Fixed camera offset behind the vehicle (no manual rotation for instant following)
-        const fixedOffset = new THREE.Vector3(0, 2.5, -6); // Behind and above
+        // Camera rotation with joystick (orbital around vehicle)
+        const cameraRotationSpeed = CONFIG.CAMERA.ROTATION_SPEED * 0.8;
 
-        // Calculate camera position relative to vehicle (instant, no lerp)
-        this.tempVector.copy(fixedOffset);
-        this.tempVector.applyQuaternion(vehicleMesh.quaternion);
-        this.desiredCameraPosition.copy(vehicleMesh.position).add(this.tempVector);
+        // Horizontal rotation (orbit around vehicle)
+        if (Math.abs(input.x) > 0.1) {
+            this.angleH -= input.x * cameraRotationSpeed * delta;
+        }
+
+        // Vertical angle adjustment
+        if (Math.abs(input.y) > 0.1) {
+            this.angleVOffset -= input.y * cameraRotationSpeed * delta;
+            this.angleVOffset = Math.max(-0.5, Math.min(0.8, this.angleVOffset)); // Limit vertical angle
+        }
+
+        // Calculate camera position using spherical coordinates around vehicle
+        const distance = 6; // Fixed distance from vehicle
+        const baseAngleV = 0.3; // Base vertical angle
+        const cameraAngleV = baseAngleV + this.angleVOffset;
+
+        // Create offset in local space
+        const cameraOffset = new THREE.Vector3(0, 0, distance);
+        cameraOffset.applyAxisAngle(new THREE.Vector3(1, 0, 0), cameraAngleV); // Vertical rotation
+        cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.angleH); // Horizontal rotation
+
+        // Position camera relative to vehicle
+        this.desiredCameraPosition.copy(vehicleMesh.position).add(cameraOffset);
 
         // Ground collision check for camera
         const groundRayOrigin = this.desiredCameraPosition.clone().setY(vehicleMesh.position.y + 20);
@@ -73,14 +92,14 @@ export class CameraController {
             }
         }
 
-        // INSTANT camera position update (no lerp)
+        // INSTANT camera position update (no lerp for responsive feel)
         this.camera.position.copy(finalCameraPosition);
 
-        // Look at point at the vehicle center
+        // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
-        this.vehicleLookAtPosition.y += 1; // Look at center of vehicle
+        this.vehicleLookAtPosition.y += 1; // Look at center height of vehicle
 
-        // INSTANT camera rotation (no slerp, direct lookAt)
+        // INSTANT camera rotation focused on vehicle
         this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
@@ -189,5 +208,18 @@ export class CameraController {
     setDistance(distance) {
         this.distance = distance;
         // Vehicle camera uses fixed offset, distance only affects avatar camera
+    }
+
+    resetVehicleCamera(vehicleMesh) {
+        // Set camera to start behind the vehicle
+        if (vehicleMesh) {
+            // Get vehicle's forward direction
+            const forward = new THREE.Vector3(0, 0, 1);
+            forward.applyQuaternion(vehicleMesh.quaternion);
+
+            // Calculate angle to position camera behind vehicle
+            this.angleH = Math.atan2(forward.x, forward.z);
+            this.angleVOffset = 0; // Reset vertical offset
+        }
     }
 }

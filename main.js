@@ -403,8 +403,9 @@ function toggleVehicle() {
         currentVehicle.isOccupied = true;
         avatar.setVisible(false);
 
-        // Update UI
+        // Update UI and reset camera to behind vehicle
         cameraController.setDistance(CONFIG.VEHICLE.MIN_CAMERA_DISTANCE);
+        cameraController.resetVehicleCamera(currentVehicle.mesh);
         // Reset to first camera position when entering vehicle
         currentCameraPosition = 0;
         updateCameraPosition();
