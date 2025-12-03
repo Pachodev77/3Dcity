@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default function handler(req, res) {
-    const musicDir = path.join(process.cwd(), 'music');
+    const musicDir = path.join(process.cwd(), 'public', 'music');
 
     // Check if directory exists
     if (!fs.existsSync(musicDir)) {

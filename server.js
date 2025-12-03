@@ -16,11 +16,11 @@ const httpServer = createServer(app);
 app.use(cors());
 
 // Serve music files statically
-app.use('/music', express.static(path.join(__dirname, 'music')));
+app.use('/music', express.static(path.join(__dirname, 'public', 'music')));
 
 // API Endpoint to get music list
 app.get('/api/music', (req, res) => {
-    const musicDir = path.join(__dirname, 'music');
+    const musicDir = path.join(__dirname, 'public', 'music');
 
     // Check if directory exists
     if (!fs.existsSync(musicDir)) {

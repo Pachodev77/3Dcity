@@ -4,7 +4,7 @@
             "maxDuration": 10
         },
         "api/music.js": {
-            "includeFiles": "music/**"
+            "includeFiles": "public/music/**"
         }
     }
 }
