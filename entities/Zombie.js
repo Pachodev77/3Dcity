@@ -15,10 +15,10 @@ export class Zombie {
         this.detectionRadius = CONFIG.ZOMBIE.DETECTION_RADIUS;
         this.attackRadius = CONFIG.ZOMBIE.ATTACK_RADIUS;
         this.patrolPath = [
-            new THREE.Vector3(0, 0, 15),
-            new THREE.Vector3(15, 0, 0),
-            new THREE.Vector3(0, 0, -15),
-            new THREE.Vector3(-15, 0, 0),
+            new THREE.Vector3(0, 0, 50),
+            new THREE.Vector3(50, 0, 0),
+            new THREE.Vector3(0, 0, -50),
+            new THREE.Vector3(-50, 0, 0),
         ];
         this.currentPatrolIndex = 0;
         this.lastAttackTime = 0;
@@ -43,7 +43,7 @@ export class Zombie {
         loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
             this.model = zombie;
             this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
-            this.model.position.set(0, 0, 10);
+            this.model.position.set(0, 0, 50);
             this.model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
