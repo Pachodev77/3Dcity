@@ -21,6 +21,7 @@ const port = process.env.PORT || 3001;
 
 // Store connected players
 const players = {};
+const vehicles = {};
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
@@ -32,11 +33,21 @@ io.on('connection', (socket) => {
         z: 0,
         rotation: 0,
         animation: 'idle',
-        avatarType: 'Ch02_nonPBR' // Default avatar
+        avatarType: 'Ch02_nonPBR', // Default avatar
+        zombie: { // Each player has a zombie
+            x: 0,
+            y: 0,
+            z: 0,
+            rotation: 0,
+            state: 'idle'
+        }
     };
 
-    // Send the current players to the new client
-    socket.emit('currentPlayers', players);
+    // Send the current world state to the new client
+    socket.emit('currentWorldState', {
+        players: players,
+        vehicles: vehicles
+    });
 
     // Broadcast to other players that a new player has connected
     socket.broadcast.emit('newPlayer', {
@@ -64,10 +75,56 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Handle zombie update
+    socket.on('zombieUpdate', (zombieData) => {
+        if (players[socket.id]) {
+            players[socket.id].zombie = zombieData;
+            socket.broadcast.emit('zombieMoved', {
+                id: socket.id, // Zombie belongs to this player
+                ...zombieData
+            });
+        }
+    });
+
+    // Handle vehicle spawn
+    socket.on('spawnVehicle', (vehicleData) => {
+        const vehicleId = Date.now().toString(); // Simple ID generation
+        vehicles[vehicleId] = {
+            id: vehicleId,
+            type: vehicleData.type,
+            x: vehicleData.x,
+            y: vehicleData.y,
+            z: vehicleData.z,
+            rotation: vehicleData.rotation,
+            owner: null // No driver initially
+        };
+        io.emit('vehicleSpawned', vehicles[vehicleId]);
+    });
+
+    // Handle vehicle update (movement/ownership)
+    socket.on('vehicleUpdate', (vehicleData) => {
+        if (vehicles[vehicleData.id]) {
+            vehicles[vehicleData.id].x = vehicleData.x;
+            vehicles[vehicleData.id].y = vehicleData.y;
+            vehicles[vehicleData.id].z = vehicleData.z;
+            vehicles[vehicleData.id].rotation = vehicleData.rotation;
+            vehicles[vehicleData.id].owner = socket.id; // Current driver
+
+            socket.broadcast.emit('vehicleMoved', vehicles[vehicleData.id]);
+        }
+    });
+
     // Handle disconnect
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         delete players[socket.id];
+        // Also release any vehicles owned by this player? 
+        // For now, let's just leave them or set owner to null
+        Object.values(vehicles).forEach(v => {
+            if (v.owner === socket.id) {
+                v.owner = null;
+            }
+        });
         io.emit('playerDisconnected', socket.id);
     });
 });

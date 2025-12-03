@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { RemoteAvatar } from '../entities/RemoteAvatar.js';
+import { RemoteZombie } from '../entities/RemoteZombie.js';
+import { Vehicle } from '../entities/Vehicle.js'; // Reuse Vehicle for remote vehicles
 import { CONFIG } from '../config.js';
 // socket.io is loaded globally via script tag in index.html
 
@@ -11,6 +13,9 @@ export class NetworkManager {
             transports: ['websocket', 'polling']
         });
         this.remotePlayers = {}; // Map of id -> RemoteAvatar
+        this.remoteZombies = {}; // Map of id -> RemoteZombie (id is player id)
+        this.remoteVehicles = {}; // Map of vehicleId -> Vehicle
+
         this.lastUpdate = 0;
         this.updateRate = 50; // Send updates every 50ms (20 times/sec)
 
@@ -20,6 +25,10 @@ export class NetworkManager {
         this.lastSentAnimation = '';
         this.lastSentAvatarType = '';
 
+        this.lastSentZombiePosition = new THREE.Vector3();
+        this.lastSentZombieRotation = 0;
+        this.lastSentZombieState = '';
+
         this.setupSocketEvents();
     }
 
@@ -28,15 +37,29 @@ export class NetworkManager {
             console.log('Connected to server with ID:', this.socket.id);
         });
 
-        this.socket.on('currentPlayers', (players) => {
-            Object.keys(players).forEach((id) => {
+        this.socket.on('currentWorldState', (worldState) => {
+            // Handle Players & Zombies
+            Object.keys(worldState.players).forEach((id) => {
                 if (id === this.socket.id) return; // Ignore self
-                this.addRemotePlayer(id, players[id]);
+                this.addRemotePlayer(id, worldState.players[id]);
+                if (worldState.players[id].zombie) {
+                    this.addRemoteZombie(id, worldState.players[id].zombie);
+                }
             });
+
+            // Handle Vehicles
+            if (worldState.vehicles) {
+                Object.values(worldState.vehicles).forEach((vehicleData) => {
+                    this.addRemoteVehicle(vehicleData);
+                });
+            }
         });
 
         this.socket.on('newPlayer', (playerInfo) => {
             this.addRemotePlayer(playerInfo.id, playerInfo);
+            if (playerInfo.zombie) {
+                this.addRemoteZombie(playerInfo.id, playerInfo.zombie);
+            }
         });
 
         this.socket.on('playerMoved', (playerInfo) => {
@@ -45,8 +68,28 @@ export class NetworkManager {
             }
         });
 
+        this.socket.on('zombieMoved', (zombieInfo) => {
+            if (this.remoteZombies[zombieInfo.id]) {
+                this.remoteZombies[zombieInfo.id].updateState(zombieInfo);
+            } else {
+                // If zombie doesn't exist yet (maybe joined late), create it
+                this.addRemoteZombie(zombieInfo.id, zombieInfo);
+            }
+        });
+
+        this.socket.on('vehicleSpawned', (vehicleData) => {
+            this.addRemoteVehicle(vehicleData);
+        });
+
+        this.socket.on('vehicleMoved', (vehicleData) => {
+            if (this.remoteVehicles[vehicleData.id]) {
+                this.updateRemoteVehicle(vehicleData);
+            }
+        });
+
         this.socket.on('playerDisconnected', (id) => {
             this.removeRemotePlayer(id);
+            this.removeRemoteZombie(id);
         });
     }
 
@@ -62,6 +105,51 @@ export class NetworkManager {
             console.log('Removing remote player:', id);
             this.remotePlayers[id].dispose();
             delete this.remotePlayers[id];
+        }
+    }
+
+    addRemoteZombie(id, data) {
+        if (this.remoteZombies[id]) return;
+        console.log('Adding remote zombie for player:', id);
+        const remoteZombie = new RemoteZombie(this.scene, id, data);
+        this.remoteZombies[id] = remoteZombie;
+    }
+
+    removeRemoteZombie(id) {
+        if (this.remoteZombies[id]) {
+            this.remoteZombies[id].dispose();
+            delete this.remoteZombies[id];
+        }
+    }
+
+    addRemoteVehicle(data) {
+        if (this.remoteVehicles[data.id]) return;
+        console.log('Adding remote vehicle:', data.id);
+
+        // We need to load the vehicle model first
+        // Reuse loadVehicleModels logic or similar?
+        // For now, let's assume we can clone a template if available or load it.
+        // Since we don't have easy access to vehicleTemplates here, we might need to rely on main.js 
+        // OR we can just dispatch an event to main.js to spawn it?
+        // Better: NetworkManager handles data, main.js handles rendering? 
+        // No, NetworkManager handles other entities.
+        // Let's try to find the template in the scene or load it.
+
+        // Simplification: Dispatch event to main.js to spawn the vehicle
+        window.dispatchEvent(new CustomEvent('spawn-remote-vehicle', { detail: data }));
+    }
+
+    registerVehicle(id, vehicleInstance) {
+        this.remoteVehicles[id] = vehicleInstance;
+    }
+
+    updateRemoteVehicle(data) {
+        const vehicle = this.remoteVehicles[data.id];
+        if (vehicle && vehicle.mesh) {
+            // Interpolate
+            vehicle.mesh.position.lerp(new THREE.Vector3(data.x, data.y, data.z), 0.3);
+            vehicle.mesh.rotation.y = data.rotation;
+            // If we want to show wheels turning etc, we'd need more data
         }
     }
 
@@ -94,10 +182,55 @@ export class NetworkManager {
         }
     }
 
+    sendZombieUpdate(position, rotation, state) {
+        // Throttle zombie updates too
+        const positionChanged = position.distanceTo(this.lastSentZombiePosition) > CONFIG.PERFORMANCE.NETWORK_POSITION_THRESHOLD;
+        const rotationChanged = Math.abs(rotation - this.lastSentZombieRotation) > CONFIG.PERFORMANCE.NETWORK_ROTATION_THRESHOLD;
+        const stateChanged = state !== this.lastSentZombieState;
+
+        if (positionChanged || rotationChanged || stateChanged) {
+            this.socket.emit('zombieUpdate', {
+                x: position.x,
+                y: position.y,
+                z: position.z,
+                rotation: rotation,
+                state: state
+            });
+
+            this.lastSentZombiePosition.copy(position);
+            this.lastSentZombieRotation = rotation;
+            this.lastSentZombieState = state;
+        }
+    }
+
+    spawnVehicle(type, position, rotation) {
+        this.socket.emit('spawnVehicle', {
+            type: type,
+            x: position.x,
+            y: position.y,
+            z: position.z,
+            rotation: rotation
+        });
+    }
+
+    sendVehicleUpdate(id, position, rotation) {
+        this.socket.emit('vehicleUpdate', {
+            id: id,
+            x: position.x,
+            y: position.y,
+            z: position.z,
+            rotation: rotation
+        });
+    }
+
     update(delta) {
         // Update animations of all remote players
         Object.values(this.remotePlayers).forEach(player => {
             player.update(delta);
+        });
+        // Update zombies
+        Object.values(this.remoteZombies).forEach(zombie => {
+            zombie.update(delta);
         });
     }
 }

@@ -166,15 +166,10 @@ async function loadVehicleModels() {
     }
 }
 
-// Spawn a random vehicle near the player
+// Spawn a random vehicle near the player (Networked)
 function spawnRandomVehicle() {
     if (vehicleTemplates.length === 0) {
         console.warn('No vehicle models loaded yet');
-        return;
-    }
-
-    if (!avatar || !avatar.model) {
-        console.warn('Player avatar not found');
         return;
     }
 
@@ -182,36 +177,45 @@ function spawnRandomVehicle() {
     const randomIndex = Math.floor(Math.random() * vehicleTemplates.length);
     const vehicleData = vehicleTemplates[randomIndex];
 
-    // Create a new instance of the vehicle
-    const vehicleMesh = vehicleData.template.clone();
-    vehicleMesh.visible = true;
-
-    // Calculate spawn position in front of the player
-    const spawnDistance = 3; // Distance in front of the player
-    const spawnAngle = avatar.model.rotation.y; // Same rotation as player
-
+    // Calculate spawn position
+    const spawnDistance = 5;
+    const spawnAngle = Math.random() * Math.PI * 2;
     const spawnPosition = new THREE.Vector3(
-        avatar.model.position.x + Math.sin(spawnAngle) * spawnDistance,
-        avatar.model.position.y,
-        avatar.model.position.z + Math.cos(spawnAngle) * spawnDistance
+        avatar.position.x + Math.sin(spawnAngle) * spawnDistance,
+        avatar.position.y + 1, // Slightly above ground
+        avatar.position.z + Math.cos(spawnAngle) * spawnDistance
     );
 
-    // Position and rotate the vehicle
-    vehicleMesh.position.copy(spawnPosition);
-    vehicleMesh.rotation.y = spawnAngle + Math.PI; // Face the player
-    vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
-
-    // Add to scene and track it
-    scene.add(vehicleMesh);
-    collidableObjects.push(vehicleMesh);
-
-    // Create and store the vehicle instance
-    const vehicle = new Vehicle(vehicleMesh);
-    vehicles.push(vehicle);
-
-    console.log(`Spawned ${vehicleData.name} near player`);
-    return vehicle;
+    // Send spawn request to server
+    networkManager.spawnVehicle(vehicleData.name, spawnPosition, spawnAngle + Math.PI);
 }
+
+// Handle remote vehicle spawning
+window.addEventListener('spawn-remote-vehicle', (e) => {
+    const data = e.detail;
+    const templateData = vehicleTemplates.find(t => t.name === data.type);
+
+    if (templateData) {
+        const vehicleMesh = templateData.template.clone();
+        vehicleMesh.visible = true;
+
+        vehicleMesh.position.set(data.x, data.y, data.z);
+        vehicleMesh.rotation.y = data.rotation;
+        vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
+
+        scene.add(vehicleMesh);
+        collidableObjects.push(vehicleMesh);
+
+        const vehicle = new Vehicle(vehicleMesh);
+        vehicle.networkId = data.id; // Assign network ID
+        vehicles.push(vehicle);
+
+        // Register with NetworkManager
+        networkManager.registerVehicle(data.id, vehicle);
+
+        console.log(`Spawned networked vehicle: ${data.type}`);
+    }
+});
 
 // UI & Interaction
 const avatarSelector = document.getElementById('avatar-selector');
@@ -350,6 +354,24 @@ function animate() {
             avatar.model.rotation,
             avatar.currentAction,
             avatar.name
+        );
+    }
+
+    // Zombie Network Update
+    if (zombie.model) {
+        networkManager.sendZombieUpdate(
+            zombie.model.position,
+            zombie.model.rotation.y,
+            zombie.currentState
+        );
+    }
+
+    // Vehicle Network Update
+    if (isInVehicle && currentVehicle && currentVehicle.networkId) {
+        networkManager.sendVehicleUpdate(
+            currentVehicle.networkId,
+            currentVehicle.mesh.position,
+            currentVehicle.mesh.rotation.y
         );
     }
 
