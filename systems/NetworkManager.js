@@ -38,6 +38,7 @@ export class NetworkManager {
         });
 
         this.socket.on('currentWorldState', (worldState) => {
+            console.log('Received world state:', worldState);
             // Handle Players & Zombies
             Object.keys(worldState.players).forEach((id) => {
                 if (id === this.socket.id) return; // Ignore self
