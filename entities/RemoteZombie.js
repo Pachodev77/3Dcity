@@ -36,7 +36,10 @@ export class RemoteZombie {
 
     setupModel(object, initialData) {
         this.model = object.clone(); // Clone to avoid sharing state with local zombie
+
+        // Force scale immediately
         this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
+        this.model.updateMatrix(); // Ensure matrix is updated
 
         // Set initial position
         if (initialData) {
@@ -54,29 +57,16 @@ export class RemoteZombie {
         this.scene.add(this.model);
         this.mixer = new THREE.AnimationMixer(this.model);
 
-        // Load animations (reuse from cache if possible or load new)
-        // For simplicity, we'll just try to load them again or assume they are in the file
-        // If animations are separate files like Avatar, we need to load them.
-        // The Zombie.js loads animations from the same file usually or separate?
-        // Let's check Zombie.js... it calls loadAnimations().
-        // Assuming the FBX has animations embedded for now or we need to copy that logic.
-        // Wait, Zombie.js uses `this.loadAnimations()` which loads 'walking.fbx', 'run.fbx', 'attack.fbx'.
         this.loadAnimations();
     }
 
     loadAnimations() {
         const loader = new FBXLoader();
-        const anims = ['walking', 'run', 'attack']; // Match Zombie.js names roughly
-        // Actually Zombie.js uses: 'walking', 'zombie running', 'zombie attack'
-
         const animFiles = {
             'walking': '/avatars/zombi/animations/walking.fbx',
             'zombie running': '/avatars/zombi/animations/zombie running.fbx',
             'zombie attack': '/avatars/zombi/animations/zombie attack.fbx'
         };
-
-        // Load Idle from model itself if it has it, or separate?
-        // Zombie.js assumes animations are separate.
 
         const loadAnim = (name, path) => {
             const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
@@ -88,7 +78,14 @@ export class RemoteZombie {
             loadFunc(path, loader).then((anim) => {
                 if (anim.animations && anim.animations.length > 0) {
                     this.animations[name] = this.mixer.clipAction(anim.animations[0]);
-                    if (name === this.currentState) this.animations[name].play();
+                    console.log(`Loaded remote zombie animation: ${name}`);
+
+                    // If this is the current state, play it immediately
+                    if (name === this.currentState) {
+                        this.animations[name].play();
+                    }
+                } else {
+                    console.warn(`No animations found in ${path}`);
                 }
             }).catch(err => {
                 console.error(`Error loading remote zombie animation ${name}:`, err);
