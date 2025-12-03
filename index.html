@@ -205,6 +205,71 @@
             transform: scale(0.95);
         }
 
+        /* Vehicle Control Buttons */
+        #accelerate-button {
+            position: absolute;
+            bottom: 180px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(46, 204, 113, 0.8);
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            z-index: 100;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #accelerate-button:hover {
+            background-color: rgba(39, 174, 96, 0.9);
+            transform: scale(1.1);
+        }
+
+        #accelerate-button:active {
+            background-color: rgba(39, 174, 96, 1);
+            transform: scale(0.95);
+        }
+
+        #brake-button {
+            position: absolute;
+            bottom: 240px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(231, 76, 60, 0.8);
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            z-index: 100;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #brake-button:hover {
+            background-color: rgba(192, 57, 43, 0.9);
+            transform: scale(1.1);
+        }
+
+        #brake-button:active {
+            background-color: rgba(192, 57, 43, 1);
+            transform: scale(0.95);
+        }
+
         #damage-overlay {
             position: fixed;
             top: 0;
@@ -737,6 +802,8 @@
     <button id="camera-position-button" class="btn"
         style="position: absolute; bottom: 120px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);"
         title="Change Camera View">1</button>
+    <button id="accelerate-button" title="Accelerate">⬆️</button>
+    <button id="brake-button" title="Brake / Reverse">⬇️</button>
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
 

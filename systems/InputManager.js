@@ -4,8 +4,13 @@ export class InputManager {
         this.cameraData = { x: 0, y: 0 };
         this.keys = {};
 
+        // Vehicle control buttons state
+        this.isAccelerating = false;
+        this.isBraking = false;
+
         this.setupJoysticks();
         this.setupKeyboard();
+        this.setupVehicleButtons();
     }
 
     setupJoysticks() {
@@ -57,8 +62,71 @@ export class InputManager {
         });
     }
 
+    setupVehicleButtons() {
+        const accelerateBtn = document.getElementById('accelerate-button');
+        const brakeBtn = document.getElementById('brake-button');
+
+        if (accelerateBtn) {
+            // Touch events
+            accelerateBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.isAccelerating = true;
+            });
+            accelerateBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.isAccelerating = false;
+            });
+
+            // Mouse events (for desktop)
+            accelerateBtn.addEventListener('mousedown', () => {
+                this.isAccelerating = true;
+            });
+            accelerateBtn.addEventListener('mouseup', () => {
+                this.isAccelerating = false;
+            });
+            accelerateBtn.addEventListener('mouseleave', () => {
+                this.isAccelerating = false;
+            });
+        }
+
+        if (brakeBtn) {
+            // Touch events
+            brakeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.isBraking = true;
+            });
+            brakeBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.isBraking = false;
+            });
+
+            // Mouse events (for desktop)
+            brakeBtn.addEventListener('mousedown', () => {
+                this.isBraking = true;
+            });
+            brakeBtn.addEventListener('mouseup', () => {
+                this.isBraking = false;
+            });
+            brakeBtn.addEventListener('mouseleave', () => {
+                this.isBraking = false;
+            });
+        }
+    }
+
     getMoveInput() {
-        return this.moveData;
+        // Combine joystick input with button input for vehicles
+        const input = { ...this.moveData };
+
+        // If buttons are pressed, override the y-axis (forward/backward)
+        if (this.isAccelerating) {
+            input.vector = { ...input.vector, y: 1 }; // Forward
+            input.distance = 1;
+        } else if (this.isBraking) {
+            input.vector = { ...input.vector, y: -1 }; // Backward/Brake
+            input.distance = 1;
+        }
+
+        return input;
     }
 
     getCameraInput() {
