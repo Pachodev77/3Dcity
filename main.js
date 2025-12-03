@@ -324,6 +324,16 @@ function toggleVehicle() {
 
 window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'e') toggleVehicle();
+    if (e.key.toLowerCase() === 'p') {
+        console.log('--- Scene Graph Debug ---');
+        console.log('Total objects:', scene.children.length);
+        scene.children.forEach(child => {
+            console.log(child.type, child.name, child.visible, child.position);
+        });
+        console.log('Remote Players:', networkManager.remotePlayers);
+        console.log('Remote Zombies:', networkManager.remoteZombies);
+        console.log('Vehicles:', vehicles);
+    }
 });
 enterExitButton.addEventListener('click', toggleVehicle);
 
