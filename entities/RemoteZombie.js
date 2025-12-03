@@ -19,16 +19,18 @@ export class RemoteZombie {
         // Use the same zombie model as local
         const zombiePath = '/avatars/zombi/Yaku J Ignite.fbx';
 
-        // Assuming loadWithCache is global, otherwise use loader.load
-        if (window.loadWithCache) {
-            window.loadWithCache(zombiePath, loader).then((object) => {
-                this.setupModel(object, initialData);
+        // Use global loadWithCache if available
+        const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
+            return new Promise((resolve, reject) => {
+                loader.load(path, resolve, undefined, reject);
             });
-        } else {
-            loader.load(zombiePath, (object) => {
-                this.setupModel(object, initialData);
-            });
-        }
+        };
+
+        loadFunc(zombiePath, loader).then((object) => {
+            this.setupModel(object, initialData);
+        }).catch(err => {
+            console.error("Error loading remote zombie model:", err);
+        });
     }
 
     setupModel(object, initialData) {
@@ -76,17 +78,20 @@ export class RemoteZombie {
         // Zombie.js assumes animations are separate.
 
         const loadAnim = (name, path) => {
-            if (window.loadWithCache) {
-                window.loadWithCache(path, loader).then((anim) => {
+            const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
+                return new Promise((resolve, reject) => {
+                    loader.load(path, resolve, undefined, reject);
+                });
+            };
+
+            loadFunc(path, loader).then((anim) => {
+                if (anim.animations && anim.animations.length > 0) {
                     this.animations[name] = this.mixer.clipAction(anim.animations[0]);
                     if (name === this.currentState) this.animations[name].play();
-                });
-            } else {
-                loader.load(path, (anim) => {
-                    this.animations[name] = this.mixer.clipAction(anim.animations[0]);
-                    if (name === this.currentState) this.animations[name].play();
-                });
-            }
+                }
+            }).catch(err => {
+                console.error(`Error loading remote zombie animation ${name}:`, err);
+            });
         };
 
         for (const [name, path] of Object.entries(animFiles)) {

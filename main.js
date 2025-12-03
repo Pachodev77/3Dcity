@@ -223,9 +223,14 @@ const enterExitButton = document.getElementById('enter-exit-button');
 const cameraPositionButton = document.getElementById('camera-position-button');
 const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
 
-// Setup spawn vehicle button
+// Setup spawn vehicle// Event Listeners
 spawnVehicleButton.addEventListener('click', () => {
     spawnRandomVehicle();
+    // Disable button briefly to prevent spam
+    spawnVehicleButton.disabled = true;
+    setTimeout(() => {
+        spawnVehicleButton.disabled = false;
+    }, 1000);
 });
 
 const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
