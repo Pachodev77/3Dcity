@@ -543,7 +543,7 @@ function animate() {
     }
 
     // Camera
-    const target = isInVehicle ? currentVehicle.mesh : avatar.model;
+    const target = isInVehicle ? currentVehicle : avatar;
     cameraController.update(delta, target, cameraInput, isInVehicle, collidableObjects, groundCollidableObjects, frameCount);
 
     // UI Updates
