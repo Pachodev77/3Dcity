@@ -23,7 +23,13 @@ export class RemoteAvatar {
         const avatarType = initialData.avatarType || 'Ch02_nonPBR';
         const avatarPath = `/avatars/${avatarType}.fbx`;
 
-        loadWithCache(avatarPath, loader).then((object) => {
+        const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
+            return new Promise((resolve, reject) => {
+                loader.load(path, resolve, undefined, reject);
+            });
+        };
+
+        loadFunc(avatarPath, loader).then((object) => {
             this.model = object;
 
             // Apply correct scale based on avatar type
@@ -60,9 +66,15 @@ export class RemoteAvatar {
             'running': '/avatars/animations/Running.fbx'
         };
 
+        const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
+            return new Promise((resolve, reject) => {
+                loader.load(path, resolve, undefined, reject);
+            });
+        };
+
         let loadedCount = 0;
         Object.entries(animationsToLoad).forEach(([name, url]) => {
-            loadWithCache(url, loader).then((object) => {
+            loadFunc(url, loader).then((object) => {
                 if (object.animations && object.animations.length > 0) {
                     this.animations[name] = object.animations[0];
                     loadedCount++;
