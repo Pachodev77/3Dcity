@@ -97,6 +97,7 @@ export class NetworkManager {
         });
 
         this.socket.on('playerDisconnected', (id) => {
+            console.log('Player disconnected event received:', id);
             this.removeRemotePlayer(id);
             this.removeRemoteZombie(id);
         });

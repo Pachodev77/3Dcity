@@ -35,11 +35,15 @@ export class RemoteZombie {
     }
 
     setupModel(object, initialData) {
+        if (this.model) {
+            this.scene.remove(this.model); // Cleanup if exists
+        }
+
         this.model = object.clone(); // Clone to avoid sharing state with local zombie
 
-        // Force scale immediately
+        // Force scale immediately BEFORE adding to scene
         this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
-        this.model.updateMatrix(); // Ensure matrix is updated
+        this.model.updateMatrix();
 
         // Set initial position
         if (initialData) {
@@ -54,8 +58,10 @@ export class RemoteZombie {
             }
         });
 
-        this.scene.add(this.model);
         this.mixer = new THREE.AnimationMixer(this.model);
+
+        // Add to scene ONLY after everything is set
+        this.scene.add(this.model);
 
         this.loadAnimations();
     }
