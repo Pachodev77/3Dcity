@@ -19,6 +19,10 @@ export class Vehicle {
         this.tempVector = new THREE.Vector3();
         this.forwardDirection = new THREE.Vector3();
 
+        // Set rotation order to YXZ to prevent Gimbal Lock and ensure 
+        // Pitch (X) and Roll (Z) are always applied relative to the Yaw (Y) direction.
+        this.mesh.rotation.order = 'YXZ';
+
         // Terrain Tilt System
         this.frontLeft = new THREE.Vector3();
         this.frontRight = new THREE.Vector3();
@@ -197,11 +201,10 @@ export class Vehicle {
         this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
 
         // Smooth interpolation
-        // CORRECTION: Pitch (slope climbing) must be on X axis.
-        // Z axis rotation causes Roll (side-to-side), which is what we want to avoid.
-        // We use negative targetPitch because +X rotation tilts nose DOWN, we want nose UP for positive pitch.
+        // CORRECTION: Using Rotation Order 'YXZ' to ensure X is always local Pitch.
+        // Using positive targetPitch based on "other side" feedback (assuming previous negative was inverted).
 
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, -this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
         this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
