@@ -99,7 +99,7 @@ export class Vehicle {
         this.forwardDirection.set(Math.sin(this.mesh.rotation.y), 0, Math.cos(this.mesh.rotation.y));
 
         const collisionPoints = [ // Points on the front of the car to cast rays from
-            { x: 0, y: 0.2, z: 0 }, // Lower point
+            { x: 0, y: 0.5, z: 0 }, // Lower point (Raised to avoid hitting slopes)
             { x: 0, y: 0.7, z: 0 }  // Upper point
         ];
 

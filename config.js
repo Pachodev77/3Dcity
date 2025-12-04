@@ -18,11 +18,11 @@ export const CONFIG = {
         SCALE: 0.5,
         MIN_CAMERA_DISTANCE: 3,
         COLLISION_DISTANCE: 1.5,
-        GROUND_OFFSET: 0.05,
+        GROUND_OFFSET: 0.01,
         // Terrain Tilt System
         TILT_ENABLED: true,
         TILT_LERP_FACTOR: 0.15,
-        TILT_MAX_PITCH: Math.PI / 6,  // 30 degrees
+        TILT_MAX_PITCH: Math.PI / 4,  // 45 degrees
         TILT_MAX_ROLL: Math.PI / 6,   // 30 degrees
         WHEEL_BASE: 1.2,              // Distance front-back
         TRACK_WIDTH: 0.7              // Distance left-right
