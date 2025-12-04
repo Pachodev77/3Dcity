@@ -29,6 +29,12 @@ export class NetworkManager {
         this.lastSentZombieRotation = 0;
         this.lastSentZombieState = '';
 
+        // Throttling for vehicles and zombies
+        this.lastVehicleUpdate = 0;
+        this.lastZombieUpdate = 0;
+        this.vehicleUpdateRate = 100; // 10 times per second
+        this.zombieUpdateRate = 100; // 10 times per second
+
         this.setupSocketEvents();
     }
 
@@ -200,6 +206,9 @@ export class NetworkManager {
     }
 
     sendZombieUpdate(position, rotation, state) {
+        const now = Date.now();
+        if (now - this.lastZombieUpdate < this.zombieUpdateRate) return;
+
         // Throttle zombie updates too
         const positionChanged = position.distanceTo(this.lastSentZombiePosition) > CONFIG.PERFORMANCE.NETWORK_POSITION_THRESHOLD;
         const rotationChanged = Math.abs(rotation - this.lastSentZombieRotation) > CONFIG.PERFORMANCE.NETWORK_ROTATION_THRESHOLD;
@@ -217,6 +226,7 @@ export class NetworkManager {
             this.lastSentZombiePosition.copy(position);
             this.lastSentZombieRotation = rotation;
             this.lastSentZombieState = state;
+            this.lastZombieUpdate = now;
         }
     }
 
@@ -231,6 +241,9 @@ export class NetworkManager {
     }
 
     sendVehicleUpdate(id, position, rotation) {
+        const now = Date.now();
+        if (now - this.lastVehicleUpdate < this.vehicleUpdateRate) return;
+
         this.socket.emit('vehicleUpdate', {
             id: id,
             x: position.x,
@@ -238,6 +251,7 @@ export class NetworkManager {
             z: position.z,
             rotation: rotation
         });
+        this.lastVehicleUpdate = now;
     }
 
     sendChatMessage(message) {

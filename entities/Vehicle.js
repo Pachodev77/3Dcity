@@ -30,6 +30,7 @@ export class Vehicle {
         this.backRight = new THREE.Vector3();
         this.targetPitch = 0;
         this.targetRoll = 0;
+        this.frameCounter = 0;
     }
 
     get position() {
@@ -42,6 +43,8 @@ export class Vehicle {
 
     update(delta, input, collidableObjects, groundCollidableObjects) {
         if (!this.isOccupied) return;
+
+        this.frameCounter++;
 
         const forward = input.y;
         const turn = -input.x;
@@ -89,10 +92,14 @@ export class Vehicle {
             this.mesh.position.y = groundY + CONFIG.VEHICLE.GROUND_OFFSET;
         }
 
-        // --- Terrain Tilt Detection ---
-        if (CONFIG.VEHICLE.TILT_ENABLED) {
+        // --- Terrain Tilt Detection (Throttled) ---
+        if (CONFIG.VEHICLE.TILT_ENABLED && this.frameCounter % 3 === 0) {
             this.detectTerrainTilt(groundCollidableObjects);
         }
+
+        // Always interpolate rotation (smooths out the throttled updates)
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, -this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
 
         // --- Vehicle Wall Collision & Position Update ---
         const moveDistance = this.speed * delta;
@@ -199,13 +206,5 @@ export class Vehicle {
         // Clamp to max angles
         this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -CONFIG.VEHICLE.TILT_MAX_PITCH, CONFIG.VEHICLE.TILT_MAX_PITCH);
         this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
-
-        // Smooth interpolation
-        // CORRECTION: Using Rotation Order 'YXZ' to ensure X is always local Pitch.
-        // User requested to INVERT the tilt direction (opposite side).
-        // Switching to negative targetPitch.
-
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, -this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }

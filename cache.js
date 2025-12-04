@@ -1,8 +1,12 @@
+import * as THREE from 'three';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+
 const DB_NAME = '3DModelsCache';
 const STORE_NAME = 'models';
 const DB_VERSION = 1;
 
 let db = null;
+const memoryCache = new Map(); // In-memory cache for parsed models
 
 function openDB() {
     return new Promise((resolve, reject) => {
@@ -67,43 +71,71 @@ async function setCachedModel(url, data) {
     });
 }
 
-async function loadWithCache(url, loader) {
+export async function loadWithCache(url, loader) {
+    // 1. Check Memory Cache first (Fastest)
+    if (memoryCache.has(url)) {
+        // Clone the model to ensure unique instances
+        const cached = memoryCache.get(url);
+        // Use SkeletonUtils.clone for skinned meshes (avatars), regular clone for others
+        const clone = SkeletonUtils.clone(cached);
+
+        // Clone animations if present
+        if (cached.animations) {
+            clone.animations = cached.animations; // Animations are read-only, reference is fine
+        }
+        return clone;
+    }
+
     try {
+        // 2. Check IndexedDB (Persistent Cache)
         const cachedData = await getCachedModel(url);
+        let model;
 
         if (cachedData) {
             const objectURL = URL.createObjectURL(new Blob([cachedData]));
-            return new Promise((resolve, reject) => {
-                loader.load(objectURL, (model) => {
+            model = await new Promise((resolve, reject) => {
+                loader.load(objectURL, (m) => {
                     URL.revokeObjectURL(objectURL);
-                    resolve(model);
+                    resolve(m);
                 }, undefined, (error) => {
                     console.error(`Error loading cached model ${url}:`, error);
                     reject(error);
                 });
             });
         } else {
+            // 3. Network Load
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
             }
             const arrayBuffer = await response.arrayBuffer();
-            await setCachedModel(url, arrayBuffer.slice(0)); // Use slice(0) to clone the buffer
+            await setCachedModel(url, arrayBuffer.slice(0)); // Store in DB
 
             const objectURL = URL.createObjectURL(new Blob([arrayBuffer]));
-            return new Promise((resolve, reject) => {
-                loader.load(objectURL, (model) => {
+            model = await new Promise((resolve, reject) => {
+                loader.load(objectURL, (m) => {
                     URL.revokeObjectURL(objectURL);
-                    resolve(model);
+                    resolve(m);
                 }, undefined, (error) => {
                     console.error(`Error loading network model ${url}:`, error);
                     reject(error);
                 });
             });
         }
+
+        // Store in memory cache for future use
+        memoryCache.set(url, model);
+
+        // Return a clone for the first usage too, to keep the cached one pure
+        const clone = SkeletonUtils.clone(model);
+        if (model.animations) {
+            clone.animations = model.animations;
+        }
+        return clone;
+
     } catch (error) {
         console.error(`Failed to load model ${url} with cache:`, error);
-        // Fallback to simple network load on cache error
+        // Fallback
         return new Promise((resolve, reject) => {
             loader.load(url, resolve, undefined, reject);
         });
