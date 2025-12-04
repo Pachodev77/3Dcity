@@ -18,8 +18,8 @@ export class Avatar {
         // Jump mechanics
         this.isJumping = false;
         this.jumpVelocity = 0;
-        this.gravity = -20; // Gravity acceleration
-        this.jumpForce = 8; // Initial jump velocity
+        this.gravity = -30; // Gravity acceleration
+        this.jumpForce = 6; // Initial jump velocity
         this.isGrounded = true;
 
         // Attack mechanics
