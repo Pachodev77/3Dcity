@@ -229,6 +229,7 @@ async function loadVehicleModels() {
 
             // Set up the model template
             template.visible = false; // Hide the template
+            template.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE); // Apply scale to template
             template.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -267,14 +268,23 @@ function spawnRandomVehicle() {
     const spawnDistance = 5;
     const spawnAngle = Math.random() * Math.PI * 2;
 
-    // Reuse a global temp vector if possible, or just create one here (less critical as it's an event, not per-frame)
-    // But for consistency let's use a static-like approach if we were inside a class.
-    // Since we are in a module, we can define a module-level temp vector.
-    const spawnPosition = new THREE.Vector3(
-        avatar.position.x + Math.sin(spawnAngle) * spawnDistance,
-        avatar.position.y + 1, // Slightly above ground
-        avatar.position.z + Math.cos(spawnAngle) * spawnDistance
-    );
+    const spawnX = avatar.position.x + Math.sin(spawnAngle) * spawnDistance;
+    const spawnZ = avatar.position.z + Math.cos(spawnAngle) * spawnDistance;
+
+    // Raycast to find ground level at spawn position
+    const raycaster = new THREE.Raycaster();
+    const rayOrigin = new THREE.Vector3(spawnX, avatar.position.y + 10, spawnZ);
+    const rayDirection = new THREE.Vector3(0, -1, 0);
+    raycaster.set(rayOrigin, rayDirection);
+
+    const intersections = raycaster.intersectObjects(groundCollidableObjects, true);
+    let spawnY = avatar.position.y; // Default to avatar height if no ground found
+
+    if (intersections.length > 0) {
+        spawnY = intersections[0].point.y + CONFIG.VEHICLE.GROUND_OFFSET;
+    }
+
+    const spawnPosition = new THREE.Vector3(spawnX, spawnY, spawnZ);
 
     // Send spawn request to server
     networkManager.spawnVehicle(vehicleData.name, spawnPosition, spawnAngle + Math.PI);
@@ -307,7 +317,7 @@ function spawnRemoteVehicle(data) {
 
         vehicleMesh.position.set(data.x, data.y, data.z);
         vehicleMesh.rotation.y = data.rotation;
-        vehicleMesh.scale.set(CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE, CONFIG.VEHICLE.SCALE);
+        // Scale is already applied to template, no need to reapply
 
         scene.add(vehicleMesh);
         collidableObjects.push(vehicleMesh);
