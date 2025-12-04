@@ -197,11 +197,11 @@ export class Vehicle {
         this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
 
         // Smooth interpolation
-        // User reported orientation mismatch. 
-        // Applying Pitch to Z axis based on previous "swap X for Z" request.
-        // Disabling X axis rotation.
+        // CORRECTION: Pitch (slope climbing) must be on X axis.
+        // Z axis rotation causes Roll (side-to-side), which is what we want to avoid.
+        // We use negative targetPitch because +X rotation tilts nose DOWN, we want nose UP for positive pitch.
 
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, -this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
