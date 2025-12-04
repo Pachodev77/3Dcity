@@ -18,6 +18,14 @@ export class Vehicle {
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
         this.forwardDirection = new THREE.Vector3();
+
+        // Terrain Tilt System
+        this.frontLeft = new THREE.Vector3();
+        this.frontRight = new THREE.Vector3();
+        this.backLeft = new THREE.Vector3();
+        this.backRight = new THREE.Vector3();
+        this.targetPitch = 0;
+        this.targetRoll = 0;
     }
 
     get position() {
@@ -77,6 +85,11 @@ export class Vehicle {
             this.mesh.position.y = groundY + CONFIG.VEHICLE.GROUND_OFFSET;
         }
 
+        // --- Terrain Tilt Detection ---
+        if (CONFIG.VEHICLE.TILT_ENABLED) {
+            this.detectTerrainTilt(groundCollidableObjects);
+        }
+
         // --- Vehicle Wall Collision & Position Update ---
         const moveDistance = this.speed * delta;
         this.forwardDirection.set(Math.sin(this.mesh.rotation.y), 0, Math.cos(this.mesh.rotation.y));
@@ -124,5 +137,67 @@ export class Vehicle {
             this.mesh.position.x += moveDistance * Math.sin(this.mesh.rotation.y);
             this.mesh.position.z += moveDistance * Math.cos(this.mesh.rotation.y);
         }
+    }
+
+    detectTerrainTilt(groundCollidableObjects) {
+        const halfWheelBase = CONFIG.VEHICLE.WHEEL_BASE / 2;
+        const halfTrackWidth = CONFIG.VEHICLE.TRACK_WIDTH / 2;
+
+        // Define local corner positions (relative to vehicle center)
+        const corners = [
+            { name: 'frontLeft', offset: new THREE.Vector3(-halfTrackWidth, 0, halfWheelBase) },
+            { name: 'frontRight', offset: new THREE.Vector3(halfTrackWidth, 0, halfWheelBase) },
+            { name: 'backLeft', offset: new THREE.Vector3(-halfTrackWidth, 0, -halfWheelBase) },
+            { name: 'backRight', offset: new THREE.Vector3(halfTrackWidth, 0, -halfWheelBase) }
+        ];
+
+        const heights = {};
+
+        // Raycast from each corner to find ground height
+        for (const corner of corners) {
+            // Transform local offset to world position
+            const localOffset = corner.offset.clone();
+            localOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.mesh.rotation.y);
+
+            const worldPos = this.mesh.position.clone().add(localOffset);
+            worldPos.y += 1; // Start raycast from above
+
+            // Cast ray downward
+            this.raycaster.set(worldPos, new THREE.Vector3(0, -1, 0));
+            const intersections = this.raycaster.intersectObjects(groundCollidableObjects, true);
+
+            // Find first valid intersection (not self)
+            let groundHeight = this.mesh.position.y; // Default to current height
+            for (const intersection of intersections) {
+                let isSelf = false;
+                intersection.object.traverseAncestors((ancestor) => {
+                    if (ancestor === this.mesh) isSelf = true;
+                });
+                if (!isSelf) {
+                    groundHeight = intersection.point.y;
+                    break;
+                }
+            }
+
+            heights[corner.name] = groundHeight;
+        }
+
+        // Calculate pitch (front-back tilt)
+        const frontAvg = (heights.frontLeft + heights.frontRight) / 2;
+        const backAvg = (heights.backLeft + heights.backRight) / 2;
+        this.targetPitch = Math.atan2(frontAvg - backAvg, CONFIG.VEHICLE.WHEEL_BASE);
+
+        // Calculate roll (left-right tilt)
+        const leftAvg = (heights.frontLeft + heights.backLeft) / 2;
+        const rightAvg = (heights.frontRight + heights.backRight) / 2;
+        this.targetRoll = Math.atan2(rightAvg - leftAvg, CONFIG.VEHICLE.TRACK_WIDTH);
+
+        // Clamp to max angles
+        this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -CONFIG.VEHICLE.TILT_MAX_PITCH, CONFIG.VEHICLE.TILT_MAX_PITCH);
+        this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
+
+        // Smooth interpolation
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, this.targetRoll, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
