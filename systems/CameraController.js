@@ -141,7 +141,7 @@ export class CameraController {
 
 
         // Smooth camera position update
-        this.camera.position.lerp(finalCameraPosition, 0.1);
+        this.camera.position.lerp(finalCameraPosition, 0.5);
 
         // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
