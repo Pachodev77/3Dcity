@@ -16,7 +16,7 @@ export const CONFIG = {
         FRICTION: 4,
         STEERING_SPEED: 1.5,
         SCALE: 0.5,
-        MIN_CAMERA_DISTANCE: 3,
+        MIN_CAMERA_DISTANCE: 4,
         COLLISION_DISTANCE: 1.5,
         GROUND_OFFSET: 0.01,
         // Terrain Tilt System

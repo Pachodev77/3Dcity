@@ -102,22 +102,40 @@ export class CameraController {
                 if (ancestor === vehicleMesh) isSelf = true;
             });
 
-            if (!isSelf && intersection.distance < lineOfSightDistance) {
+            // Check if it's a ground object
+            let isGround = false;
+            // Simple check: if the object is in groundCollidableObjects (or its parent)
+            // Note: This is an O(N*M) check potentially, but N (intersections) and M (ground objects) are small.
+            // A better way is checking if the normal is pointing up, but let's stick to the list for now.
+            if (groundCollidableObjects.includes(intersection.object) ||
+                (intersection.object.parent && groundCollidableObjects.includes(intersection.object.parent))) {
+                isGround = true;
+            }
+
+            // Also check normal just in case (if normal.y > 0.7 it's likely a floor/slope)
+            if (intersection.face && intersection.face.normal.y > 0.7) {
+                isGround = true;
+            }
+
+            if (!isSelf && !isGround && intersection.distance < lineOfSightDistance) {
+                // Enforce minimum distance of 2.0 to avoid clipping
+                const hitDistance = Math.max(2.0, intersection.distance - 0.3);
                 finalCameraPosition.copy(vehicleMesh.position).add(
-                    this.direction.multiplyScalar(Math.max(0.5, intersection.distance - 0.3))
+                    this.direction.multiplyScalar(hitDistance)
                 );
                 break;
             }
         }
 
-        // INSTANT camera position update
-        this.camera.position.copy(finalCameraPosition);
+        // Smooth camera position update
+        const lerpFactor = 0.2; // Fast but smooth
+        this.camera.position.lerp(finalCameraPosition, lerpFactor);
 
         // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
         this.vehicleLookAtPosition.y += 1; // Look at center height of vehicle
 
-        // INSTANT camera rotation
+        // Smooth rotation
         this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
