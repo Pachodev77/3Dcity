@@ -277,15 +277,15 @@ export class Avatar {
             const groundY = intersections[0].point.y;
             const adjustedY = this.name === 'Remy@T-Pose' ? groundY + CONFIG.AVATAR.REMY_Y_OFFSET : groundY;
 
-            // If falling and hit ground
-            if (this.model.position.y <= adjustedY && this.jumpVelocity <= 0) {
+            // Always keep avatar on ground when not jumping or when landing
+            if (!this.isJumping || (this.model.position.y <= adjustedY && this.jumpVelocity <= 0)) {
                 this.model.position.y = adjustedY;
                 this.isJumping = false;
                 this.isGrounded = true;
                 this.jumpVelocity = 0;
             }
         } else {
-            // Not on ground
+            // Not on ground - start falling
             if (!this.isJumping) {
                 this.isJumping = true;
                 this.isGrounded = false;
