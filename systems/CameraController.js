@@ -74,69 +74,8 @@ export class CameraController {
         // Position camera relative to vehicle
         this.desiredCameraPosition.copy(vehicleMesh.position).add(cameraOffset);
 
-        // Ground collision check for camera
-        const groundRayOrigin = this.desiredCameraPosition.clone().setY(vehicleMesh.position.y + 20);
-        this.raycaster.set(groundRayOrigin, new THREE.Vector3(0, -1, 0));
-        const groundIntersects = this.raycaster.intersectObjects(groundCollidableObjects, true);
-
-        let minGroundY = vehicleMesh.position.y + 0.5;
-        if (groundIntersects.length > 0) {
-            minGroundY = Math.max(minGroundY, groundIntersects[0].point.y + 0.5);
-        }
-
-        if (this.desiredCameraPosition.y < minGroundY) {
-            this.desiredCameraPosition.y = minGroundY;
-
-            // Maintain distance from vehicle to prevent zoom effect when hitting ground
-            const distSq = distance * distance;
-            const heightDiff = this.desiredCameraPosition.y - vehicleMesh.position.y;
-            const heightDiffSq = heightDiff * heightDiff;
-
-            if (distSq > heightDiffSq) {
-                const newHDist = Math.sqrt(distSq - heightDiffSq);
-                this.desiredCameraPosition.x = vehicleMesh.position.x + Math.sin(totalAngleH) * newHDist;
-                this.desiredCameraPosition.z = vehicleMesh.position.z + Math.cos(totalAngleH) * newHDist;
-            }
-        }
-
-        // Wall collision check
-        this.direction.copy(this.desiredCameraPosition).sub(vehicleMesh.position).normalize();
-        const lineOfSightDistance = vehicleMesh.position.distanceTo(this.desiredCameraPosition);
-        this.raycaster.set(vehicleMesh.position, this.direction);
-        const wallIntersections = this.raycaster.intersectObjects(collidableObjects, true);
-
+        // Ground and Wall collision checks removed to prevent vibration
         let finalCameraPosition = this.desiredCameraPosition.clone();
-
-        for (const intersection of wallIntersections) {
-            let isSelf = false;
-            intersection.object.traverseAncestors((ancestor) => {
-                if (ancestor === vehicleMesh) isSelf = true;
-            });
-
-            // Check if it's a ground object
-            let isGround = false;
-            // Simple check: if the object is in groundCollidableObjects (or its parent)
-            // Note: This is an O(N*M) check potentially, but N (intersections) and M (ground objects) are small.
-            // A better way is checking if the normal is pointing up, but let's stick to the list for now.
-            if (groundCollidableObjects.includes(intersection.object) ||
-                (intersection.object.parent && groundCollidableObjects.includes(intersection.object.parent))) {
-                isGround = true;
-            }
-
-            // Also check normal just in case (if normal.y > 0.7 it's likely a floor/slope)
-            if (intersection.face && intersection.face.normal.y > 0.7) {
-                isGround = true;
-            }
-
-            if (!isSelf && !isGround && intersection.distance < lineOfSightDistance) {
-                // Enforce minimum distance of 2.0 to avoid clipping
-                const hitDistance = Math.max(2.0, intersection.distance - 0.3);
-                finalCameraPosition.copy(vehicleMesh.position).add(
-                    this.direction.multiplyScalar(hitDistance)
-                );
-                break;
-            }
-        }
 
 
 
