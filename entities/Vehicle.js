@@ -197,12 +197,11 @@ export class Vehicle {
         this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
 
         // Smooth interpolation
-        // User requested ONLY Pitch (forward/backward tilt)
-        // Pitch is rotation around X axis for a Z-forward vehicle
+        // User reported orientation mismatch. 
+        // Applying Pitch to Z axis based on previous "swap X for Z" request.
+        // Disabling X axis rotation.
 
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
-
-        // Roll (side-to-side) is disabled
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
