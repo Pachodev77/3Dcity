@@ -127,15 +127,14 @@ export class CameraController {
             }
         }
 
-        // Smooth camera position update
-        const lerpFactor = 0.2; // Fast but smooth
-        this.camera.position.lerp(finalCameraPosition, lerpFactor);
+        // INSTANT camera position update (Reverted to fix vibration)
+        this.camera.position.copy(finalCameraPosition);
 
         // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
         this.vehicleLookAtPosition.y += 1; // Look at center height of vehicle
 
-        // Smooth rotation
+        // INSTANT camera rotation
         this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
