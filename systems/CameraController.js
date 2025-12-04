@@ -41,8 +41,10 @@ export class CameraController {
         // Vertical angle adjustment
         if (Math.abs(input.y) > 0.1) {
             this.angleVOffset -= input.y * cameraRotationSpeed * delta;
-            this.angleVOffset = Math.max(-1.0, Math.min(-0.3, this.angleVOffset)); // Limit vertical angle
         }
+
+        // Always enforce vertical angle limits (not just when input is detected)
+        this.angleVOffset = Math.max(-1.0, Math.min(-0.3, this.angleVOffset));
 
         // Auto-center camera behind vehicle when moving
         if (vehicle.speed && Math.abs(vehicle.speed) > 0.5 && Math.abs(input.x) < 0.1) {
@@ -59,7 +61,7 @@ export class CameraController {
         // Calculate camera position using spherical coordinates around vehicle
         // Use stored vehicle distance or default
         const distance = this.vehicleCameraDistance || 6;
-        const baseAngleV = 0.3; // Base vertical angle
+        const baseAngleV = 0.5; // Base vertical angle (raised to keep camera higher)
         const cameraAngleV = baseAngleV + this.angleVOffset;
 
         // Calculate total horizontal angle: Vehicle Rotation + Relative Camera Angle
@@ -201,6 +203,6 @@ export class CameraController {
         // Set camera to start behind the vehicle
         // We use relative rotation, so PI is behind when using offset (0, 0, distance)
         this.angleH = Math.PI;
-        this.angleVOffset = 0; // Reset vertical offset
+        this.angleVOffset = -0.5; // Reset vertical offset to a higher position
     }
 }
