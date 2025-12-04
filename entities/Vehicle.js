@@ -197,17 +197,12 @@ export class Vehicle {
         this.targetRoll = THREE.MathUtils.clamp(this.targetRoll, -CONFIG.VEHICLE.TILT_MAX_ROLL, CONFIG.VEHICLE.TILT_MAX_ROLL);
 
         // Smooth interpolation
-        // User requested to swap X and Z axes for tilt
-        // Pitch (front-back) now affects Z axis
-        // Roll (left-right) now affects X axis
+        // User requested ONLY Pitch (forward/backward tilt)
+        // Pitch is rotation around X axis for a Z-forward vehicle
 
-        // Note: For Z rotation, positive is usually Counter-Clockwise. 
-        // If front is high (positive pitch), we want Nose Up.
-        // If Nose is along X, +Z rot lifts Nose. 
-        // If Nose is along -Z, +Z rot tilts sideways.
-        // Assuming user wants this swap because of model orientation or specific behavior:
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
 
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetRoll, CONFIG.VEHICLE.TILT_LERP_FACTOR);
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        // Roll (side-to-side) is disabled
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
