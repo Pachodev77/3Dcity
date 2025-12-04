@@ -124,6 +124,11 @@ export class Vehicle {
                 });
 
                 if (!isSelf) {
+                    // Ignore slopes (ground) - if normal points up, it's drivable
+                    if (intersection.face && intersection.face.normal.y > 0.5) {
+                        continue;
+                    }
+
                     // Found the first valid intersection for this ray
                     if (!firstValidIntersection || intersection.distance < firstValidIntersection.distance) {
                         firstValidIntersection = intersection;

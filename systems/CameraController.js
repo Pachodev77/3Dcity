@@ -138,14 +138,16 @@ export class CameraController {
             }
         }
 
-        // INSTANT camera position update (Reverted to fix vibration)
-        this.camera.position.copy(finalCameraPosition);
+
+
+        // Smooth camera position update
+        this.camera.position.lerp(finalCameraPosition, 0.1);
 
         // Always look at the center of the vehicle
         this.vehicleLookAtPosition.copy(vehicleMesh.position);
         this.vehicleLookAtPosition.y += 1; // Look at center height of vehicle
 
-        // INSTANT camera rotation
+        // Smooth camera rotation
         this.camera.lookAt(this.vehicleLookAtPosition);
     }
 
