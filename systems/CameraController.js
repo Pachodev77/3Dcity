@@ -41,7 +41,7 @@ export class CameraController {
         // Vertical angle adjustment
         if (Math.abs(input.y) > 0.1) {
             this.angleVOffset -= input.y * cameraRotationSpeed * delta;
-            this.angleVOffset = Math.max(-0.1, Math.min(1.5, this.angleVOffset)); // Limit vertical angle
+            this.angleVOffset = Math.max(-1.0, Math.min(0.5, this.angleVOffset)); // Limit vertical angle
         }
 
         // Auto-center camera behind vehicle when moving
