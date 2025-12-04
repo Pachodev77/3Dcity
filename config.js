@@ -18,7 +18,7 @@ export const CONFIG = {
         SCALE: 0.5,
         MIN_CAMERA_DISTANCE: 3,
         COLLISION_DISTANCE: 1.5,
-        GROUND_OFFSET: 0.2
+        GROUND_OFFSET: 0.05
     },
     ZOMBIE: {
         SPEED: 2.5,
