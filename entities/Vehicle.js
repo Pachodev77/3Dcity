@@ -202,9 +202,10 @@ export class Vehicle {
 
         // Smooth interpolation
         // CORRECTION: Using Rotation Order 'YXZ' to ensure X is always local Pitch.
-        // Using positive targetPitch based on "other side" feedback (assuming previous negative was inverted).
+        // User requested to INVERT the tilt direction (opposite side).
+        // Switching to negative targetPitch.
 
-        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
+        this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, -this.targetPitch, CONFIG.VEHICLE.TILT_LERP_FACTOR);
         this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, CONFIG.VEHICLE.TILT_LERP_FACTOR);
     }
 }
