@@ -845,7 +845,6 @@ function animate() {
     if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
         if (avatar.model) {
             zombie.updateAI(delta, avatar.position, avatar.model);
-            avatar.checkGroundCollision(collidableObjects);
         }
 
         // Proximity Check
@@ -862,6 +861,11 @@ function animate() {
                 }
             }
         }
+    }
+
+    // Avatar Physics (Run every frame)
+    if (avatar.model) {
+        avatar.checkGroundCollision(collidableObjects);
     }
 
     // Input & Movement
