@@ -126,17 +126,21 @@ export class NetworkManager {
 
         // PvP Events
         this.socket.on('playerDamaged', (data) => {
+            console.log(`[NetworkManager] Received playerDamaged:`, data);
             // data: { targetId, attackerId, damage }
 
             // Check if WE are the target
             if (data.targetId === this.socket.id) {
-                console.log(`I was hit by ${data.attackerId} for ${data.damage} damage!`);
+                console.log(`[NetworkManager] I AM THE PLAYER HIT by ${data.attackerId} for ${data.damage} damage!`);
                 window.dispatchEvent(new CustomEvent('player-hit', { detail: { amount: data.damage } }));
             }
             // Check if a remote player we see is the target (visual feedback)
             else if (this.remotePlayers[data.targetId]) {
+                console.log(`[NetworkManager] Remote player ${data.targetId} hit.`);
                 const victim = this.remotePlayers[data.targetId];
                 if (victim.onHit) victim.onHit();
+            } else {
+                console.log(`[NetworkManager] Target ${data.targetId} not found (local socket: ${this.socket.id}).`);
             }
         });
 
@@ -300,6 +304,7 @@ export class NetworkManager {
     }
 
     sendPlayerDamage(targetId, damage) {
+        console.log(`[NetworkManager] Sending playerDamage: target=${targetId}, damage=${damage}, socket=${this.socket.id}`);
         this.socket.emit('playerDamage', {
             targetId: targetId,
             damage: damage
