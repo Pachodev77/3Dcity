@@ -46,7 +46,13 @@ export class Avatar {
     }
 
     async load(avatarName) {
+        // Store current position and rotation if model exists
+        let currentPosition = null;
+        let currentRotation = null;
+
         if (this.model) {
+            currentPosition = this.model.position.clone();
+            currentRotation = this.model.rotation.clone();
             this.cleanup();
         }
 
@@ -63,7 +69,14 @@ export class Avatar {
                 this.model.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
             }
 
-            this.model.position.set(0, 0, 5);
+            // Restore previous position and rotation, or use default
+            if (currentPosition && currentRotation) {
+                this.model.position.copy(currentPosition);
+                this.model.rotation.copy(currentRotation);
+            } else {
+                this.model.position.set(0, 0, 5);
+            }
+
             this.model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = false;
