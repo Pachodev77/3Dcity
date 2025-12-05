@@ -104,60 +104,6 @@ export class Vehicle {
     startEngine() {
         if (!this.audioLoaded) return;
 
-        // 1. Play Ignition
-        if (this.ignitionSound) {
-            if (this.ignitionSound.isPlaying) this.ignitionSound.stop();
-            this.ignitionSound.play();
-            this.audioState = 'starting';
-
-            // 2. Start Idle loop immediately (or after short delay)
-            if (this.idleSound) {
-                this.idleSound.play();
-                this.idleSound.setVolume(0.3); // Base volume
-            }
-
-            // Start other loops muted so we can crossfade
-            if (this.accelSound) {
-                this.accelSound.play();
-                this.accelSound.setVolume(0);
-            }
-            if (this.decelSound) {
-                this.decelSound.play();
-                this.decelSound.setVolume(0);
-            }
-        }
-    }
-
-    stopEngine() {
-        if (!this.audioLoaded) return;
-
-        [this.ignitionSound, this.idleSound, this.accelSound, this.decelSound, this.skidSound].forEach(s => {
-            if (s && s.isPlaying) s.stop();
-        });
-        this.audioState = 'off';
-    }
-
-    updateAudio(delta, input) {
-        if (!this.audioLoaded || this.audioState === 'off') return;
-
-        const speed = Math.abs(this.speed);
-        const maxSpeed = this.maxSpeed;
-        const forwardInput = input.y; // >0 accel, <0 brake/reverse
-
-        // --- State Logic ---
-        let targetState = 'idle';
-
-        if (forwardInput > 0.1) {
-            targetState = 'accelerating';
-        } else if (speed > 2 && forwardInput < 0.1 && forwardInput > -0.1) {
-            // Moving but not pressing gas/brake -> Coasting
-            targetState = 'decelerating';
-        } else {
-            targetState = 'idle';
-        }
-
-        // --- Volume Crossfading ---
-        const fadeSpeed = 3.0 * delta; // Speed of transition
 
         // Idle Volume
         let targetIdleVol = (targetState === 'idle') ? 0.4 : 0.1;
