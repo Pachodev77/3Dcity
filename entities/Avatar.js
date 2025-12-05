@@ -197,6 +197,13 @@ export class Avatar {
             this.mixer.update(delta);
         }
 
+        // --- Physics Update (Gravity) ---
+        // Apply gravity if jumping or falling (not grounded)
+        if (this.model && (this.isJumping || !this.isGrounded)) {
+            this.jumpVelocity += this.gravity * delta;
+            this.model.position.y += this.jumpVelocity * delta;
+        }
+
         // Update chat bubble
         if (this.chatBubble) {
             this.chatBubble.update(delta, this.position, camera);
@@ -265,8 +272,15 @@ export class Avatar {
             .normalize();
 
         const moveThreshold = 0.1;
-        if (moveData.distance > moveThreshold) {
-            const speed = moveData.distance / 50 * moveSpeed;
+
+        // Calculate distance if missing (e.g. keyboard input)
+        let distance = moveData.distance;
+        if (distance === undefined && moveData.vector) {
+            distance = Math.sqrt(moveData.vector.x ** 2 + moveData.vector.y ** 2) * 50;
+        }
+
+        if (distance > moveThreshold) {
+            const speed = distance / 50 * moveSpeed;
             const moveVector = moveDirection.clone().multiplyScalar(speed * delta);
 
             // --- Avatar Collision Detection ---
@@ -330,11 +344,7 @@ export class Avatar {
     checkGroundCollision(collidableObjects) {
         if (!this.model) return;
 
-        // Apply jump physics
-        if (this.isJumping) {
-            this.jumpVelocity += this.gravity * 0.016; // Assuming ~60fps (delta ~0.016)
-            this.model.position.y += this.jumpVelocity * 0.016;
-        }
+        // Physics applied in update() method now for smoothness
 
         this.tempVector.copy(this.model.position);
         this.tempVector.y += 1;
