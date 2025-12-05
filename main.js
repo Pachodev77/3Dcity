@@ -442,8 +442,8 @@ async function loadPreviewAvatar(avatarName) {
         const fbx = await loadWithCache(`/avatars/${avatarName}.fbx`, loader);
         previewAvatar = fbx;
 
-        // Apply scaling - 3x larger than game for better preview
-        const previewScaleMultiplier = 3;
+        // Apply scaling - 2x larger than game for better preview
+        const previewScaleMultiplier = 2;
         if (avatarName === 'Remy@T-Pose') {
             previewAvatar.scale.set(
                 CONFIG.AVATAR.REMY_SCALE * previewScaleMultiplier,
@@ -470,6 +470,8 @@ async function loadPreviewAvatar(avatarName) {
         // Restore rotation to maintain continuity
         previewAvatar.rotation.y = currentRotation;
 
+        // Hide initially to prevent T-pose visibility
+        previewAvatar.visible = false;
         previewScene.add(previewAvatar);
 
         // Load and play idle animation
@@ -479,9 +481,14 @@ async function loadPreviewAvatar(avatarName) {
             if (idleAnim.animations && idleAnim.animations.length > 0) {
                 const action = previewMixer.clipAction(idleAnim.animations[0]);
                 action.play();
+
+                // Show avatar only after animation is ready
+                previewAvatar.visible = true;
             }
         } catch (error) {
             console.warn('Could not load idle animation for preview:', error);
+            // Show avatar anyway if animation fails to load
+            previewAvatar.visible = true;
         }
 
         // Update name display
