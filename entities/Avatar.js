@@ -321,7 +321,7 @@ export class Avatar {
         this.playAnimation(attackAnim, true, false);
 
         // Hit Detection
-        const attackRange = 2.5; // Meters
+        const attackRange = 3.0; // Meters (Increased for easier PvP)
         const attackAngle = Math.PI / 3; // 60 degrees cone
         const forward = new THREE.Vector3();
         this.model.getWorldDirection(forward);

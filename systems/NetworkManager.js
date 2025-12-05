@@ -17,7 +17,7 @@ export class NetworkManager {
         this.remoteVehicles = {}; // Map of vehicleId -> Vehicle
 
         this.lastUpdate = 0;
-        this.updateRate = 50; // Send updates every 50ms (20 times/sec)
+        this.updateRate = 20; // Send updates every 20ms (50 times/sec) for smoother PvP
 
         // Performance: Track last sent state to avoid spam
         this.lastSentPosition = new THREE.Vector3();
@@ -32,8 +32,8 @@ export class NetworkManager {
         // Throttling for vehicles and zombies
         this.lastVehicleUpdate = 0;
         this.lastZombieUpdate = 0;
-        this.vehicleUpdateRate = 100; // 10 times per second
-        this.zombieUpdateRate = 100; // 10 times per second
+        this.vehicleUpdateRate = 50; // 20 times per second
+        this.zombieUpdateRate = 50; // 20 times per second
 
         // Map tracking
         this.currentMap = 'burnin_rubber'; // Default map

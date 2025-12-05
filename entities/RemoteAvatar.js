@@ -89,7 +89,11 @@ export class RemoteAvatar {
         // Load remaining animations in background
         const remainingAnimations = {
             'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
+            'running': '/avatars/animations/Running.fbx',
+            'punching': '/avatars/animations/Punching.fbx',
+            'kick': '/avatars/animations/Kick.fbx',
+            'jump': '/avatars/animations/Jump.fbx',
+            'dying': '/avatars/animations/Dying.fbx'
         };
 
         const promises = Object.entries(remainingAnimations).map(async ([name, url]) => {
@@ -108,13 +112,21 @@ export class RemoteAvatar {
 
     setState(stateName, immediate = false) {
         if (!this.animations[stateName] || !this.mixer) {
-            console.warn(`Remote avatar animation "${stateName}" or mixer not ready`);
+            // console.warn(`Remote avatar animation "${stateName}" or mixer not ready`); // Reduce spam
             return false;
         }
 
         if (this.currentState === stateName && !immediate) return true;
 
         const newAction = this.mixer.clipAction(this.animations[stateName]);
+
+        // Fix looping for non-looping actions
+        if (['punching', 'kick', 'jump', 'dying'].includes(stateName)) {
+            newAction.setLoop(THREE.LoopOnce);
+            newAction.clampWhenFinished = true;
+        } else {
+            newAction.setLoop(THREE.LoopRepeat);
+        }
 
         if (this.currentAction && !immediate) {
             this.currentAction.fadeOut(0.2);
@@ -177,11 +189,15 @@ export class RemoteAvatar {
         // For production, use a proper snapshot interpolation buffer
         if (!this.targetPosition) this.targetPosition = new THREE.Vector3();
         this.targetPosition.set(data.x, data.y, data.z);
-        this.model.position.lerp(this.targetPosition, 0.3);
+
+        // Increased lerp factor for snappier movement (was 0.3)
+        // Ideally should be framerate independent using delta, but this is fixed lerp per update
+        this.model.position.lerp(this.targetPosition, 0.6);
 
         // Update rotation
         // Shortest path rotation interpolation could be added here
         this.model.rotation.y = data.rotation;
+
 
         // Update animation
         if (data.animation && data.animation !== this.currentState) {
