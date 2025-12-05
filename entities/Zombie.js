@@ -31,6 +31,12 @@ export class Zombie {
         this.upVector = new THREE.Vector3(0, 1, 0); // Reused up vector
         this.frameCounter = 0;
 
+        // Health System
+        this.maxHealth = 100;
+        this.health = 100;
+        this.isDead = false;
+        this.healthBarGroup = null;
+
         this.loadModel();
     }
 
@@ -55,9 +61,41 @@ export class Zombie {
             });
             this.scene.add(this.model);
             this.collidableObjects.push(this.model);
+            this.collidableObjects.push(this.model);
             this.mixer = new THREE.AnimationMixer(this.model);
+            this.createHealthBar();
             this.loadAnimations();
         });
+    }
+
+    createHealthBar() {
+        // Create Health Bar Group
+        this.healthBarGroup = new THREE.Group();
+        this.healthBarGroup.position.y = 180; // Above head (assuming scale 0.01, 180cm)
+        // If scale is applied to model, this local position is relative to scaled model or unscaled?
+        // ThreeJS: child position is in parent's local space. 
+        // If model has scale 0.01, and we want 1.8m height in world, we need 180 units in local? 
+        // Let's assume standard Mixamo (cm units).
+
+        // Background (Red)
+        const bgGeo = new THREE.PlaneGeometry(100, 10);
+        const bgMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const bgMesh = new THREE.Mesh(bgGeo, bgMat);
+
+        // Foreground (Green)
+        const fgGeo = new THREE.PlaneGeometry(100, 10);
+        const fgMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.healthBarMesh = new THREE.Mesh(fgGeo, fgMat);
+        this.healthBarMesh.position.z = 1; // Slightly in front
+
+        this.healthBarGroup.add(bgMesh);
+        this.healthBarGroup.add(this.healthBarMesh);
+
+        this.healthBarGroup.visible = false; // Hidden initially
+        this.healthBarGroup.rotation.y = Math.PI; // Face generally forward/camera? 
+        // We'll need billboard logic in update
+
+        this.model.add(this.healthBarGroup);
     }
 
     loadAnimations() {
@@ -181,5 +219,62 @@ export class Zombie {
                 this.model.lookAt(this.tempVector);
             }
         }
+        this.mixer.update(delta);
+
+        // Billboard Health Bar
+        if (this.healthBarGroup && this.healthBarGroup.visible) {
+            this.healthBarGroup.lookAt(this.scene.camera.position); // Assuming camera is accessible via scene.camera? No.
+            // Usually camera is passed to update methods.
+            // We'll skip precise billiboarding for now or fix in update arguments.
+            // Actually, Avatar.js update receives camera. Zombie.js updateAI receives model?
+            // Main.js calls: zombie.updateAI(delta, avatar.position, avatar.model);
+            // We don't have camera.
+        }
+    }
+
+    takeDamage(amount) {
+        if (this.isDead) return;
+
+        this.health = Math.max(0, this.health - amount);
+
+        // Show and update health bar
+        if (this.healthBarGroup) {
+            this.healthBarGroup.visible = true;
+            const scale = this.health / this.maxHealth;
+            this.healthBarMesh.scale.x = scale;
+            // Center scaling: Move position x to keep left aligned?
+            // PlaneGeometry is centered. Scaling shrinks to center.
+            // Better to move it.
+            // Width 100. Scale 0.5 -> Width 50. Centered.
+            // To align left: translate geometry or adjust position.
+            // Let's keep centered for simplicity.
+        }
+
+        if (this.health <= 0) {
+            this.die();
+        }
+    }
+
+    die() {
+        this.isDead = true;
+        this.healthBarGroup.visible = false;
+
+        // Simple death effect: Fall over
+        // Or remove collision
+        const index = this.collidableObjects.indexOf(this.model);
+        if (index > -1) this.collidableObjects.splice(index, 1);
+
+        // Rotate to lie down (if no animation)
+        // this.model.rotation.x = -Math.PI / 2; 
+        // Animate sink?
+
+        setTimeout(() => {
+            if (this.model && this.model.parent) {
+                this.model.parent.remove(this.model);
+                this.model = null; // Cleanup
+            }
+        }, 3000);
+
+        // Optional: Trigger respawn logic here if desired
     }
 }

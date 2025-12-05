@@ -38,7 +38,9 @@ export class Avatar {
         this.isDead = false;
 
         // Combat Combo
+        // Combat Combo
         this.comboCounter = 0;
+        this.targets = []; // Entities to attack
     }
 
     get position() {
@@ -318,7 +320,35 @@ export class Avatar {
         const attackAnim = Math.random() > 0.5 ? 'punching' : 'kick';
         this.playAnimation(attackAnim, true, false);
 
+        // Hit Detection
+        if (this.targets) {
+            const attackRange = 2.5; // Meters
+            const attackAngle = Math.PI / 3; // 60 degrees cone
+            const forward = new THREE.Vector3();
+            this.model.getWorldDirection(forward);
+
+            this.targets.forEach(target => {
+                if (!target.model || target.isDead) return;
+
+                const dist = this.model.position.distanceTo(target.model.position);
+                if (dist < attackRange) {
+                    const toTarget = new THREE.Vector3().subVectors(target.model.position, this.model.position).normalize();
+                    const angle = forward.angleTo(toTarget);
+
+                    if (angle < attackAngle) {
+                        // Hit confirmed
+                        const damage = attackAnim === 'kick' ? 25 : 15;
+                        if (target.takeDamage) target.takeDamage(damage);
+                    }
+                }
+            });
+        }
+
         // State reset handled by onAnimationFinished listener
+    }
+
+    setTargets(targets) {
+        this.targets = targets;
     }
 
     checkGroundCollision(collidableObjects) {

@@ -54,6 +54,7 @@ const musicPlayer = new MusicPlayer();
 // Entities
 const avatar = new Avatar(scene);
 const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+avatar.setTargets([zombie]);
 const vehicles = []; // Array of Vehicle instances
 
 
