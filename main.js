@@ -328,7 +328,6 @@ function spawnRemoteVehicle(data) {
 }
 
 // UI & Interaction
-const avatarSelector = document.getElementById('avatar-selector');
 const enterExitButton = document.getElementById('enter-exit-button');
 const cameraPositionButton = document.getElementById('camera-position-button');
 const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
@@ -343,17 +342,178 @@ spawnVehicleButton.addEventListener('click', () => {
     }, 1000);
 });
 
+// Avatar Selection Panel System
 const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
-avatarList.forEach(avatarName => {
-    const option = document.createElement('option');
-    option.value = avatarName;
-    option.innerText = avatarName;
-    avatarSelector.appendChild(option);
+let currentPreviewIndex = 0;
+let previewAvatar = null;
+let previewAnimationId = null;
+
+// Preview Scene Setup
+const previewCanvas = document.getElementById('avatar-preview-canvas');
+const previewScene = new THREE.Scene();
+previewScene.background = new THREE.Color(0x1a1a2e);
+
+const previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+previewCamera.position.set(0, 1.5, 3);
+previewCamera.lookAt(0, 1, 0);
+
+const previewRenderer = new THREE.WebGLRenderer({
+    canvas: previewCanvas,
+    alpha: false,
+    antialias: true
+});
+previewRenderer.setSize(300, 300);
+previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+// Preview Lighting
+const previewAmbient = new THREE.AmbientLight(0xffffff, 0.6);
+previewScene.add(previewAmbient);
+
+const previewDirectional = new THREE.DirectionalLight(0xffffff, 0.8);
+previewDirectional.position.set(2, 3, 2);
+previewScene.add(previewDirectional);
+
+const previewBackLight = new THREE.DirectionalLight(0x6699ff, 0.3);
+previewBackLight.position.set(-2, 2, -2);
+previewScene.add(previewBackLight);
+
+// Load avatar into preview
+async function loadPreviewAvatar(avatarName) {
+    // Remove existing preview avatar
+    if (previewAvatar) {
+        previewScene.remove(previewAvatar);
+        previewAvatar.traverse((child) => {
+            if (child.isMesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            if (mat.map) mat.map.dispose();
+                            mat.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+        previewAvatar = null;
+    }
+
+    // Load new avatar
+    const loader = new GLTFLoader();
+    try {
+        const gltf = await loadWithCache(`/models/${avatarName}.glb`, loader);
+        previewAvatar = gltf.scene;
+        previewAvatar.scale.set(1, 1, 1);
+        previewAvatar.position.set(0, 0, 0);
+        previewScene.add(previewAvatar);
+
+        // Update name display
+        document.getElementById('avatar-name-display').textContent = avatarName;
+    } catch (error) {
+        console.error(`Error loading preview avatar ${avatarName}:`, error);
+    }
+}
+
+// Preview animation loop
+const previewClock = new THREE.Clock();
+function animatePreview() {
+    previewAnimationId = requestAnimationFrame(animatePreview);
+
+    const delta = previewClock.getDelta();
+
+    // Rotate preview avatar
+    if (previewAvatar) {
+        previewAvatar.rotation.y += delta * 0.5;
+    }
+
+    previewRenderer.render(previewScene, previewCamera);
+}
+
+// Panel controls
+const avatarButton = document.getElementById('avatar-button');
+const avatarPanelOverlay = document.getElementById('avatar-panel-overlay');
+const avatarPrevBtn = document.getElementById('avatar-prev');
+const avatarNextBtn = document.getElementById('avatar-next');
+const avatarAcceptBtn = document.getElementById('avatar-accept-btn');
+const avatarCancelBtn = document.getElementById('avatar-cancel-btn');
+
+function openAvatarPanel() {
+    // Set current avatar as preview
+    currentPreviewIndex = avatarList.indexOf(avatar.name) || 0;
+
+    avatarPanelOverlay.classList.add('active');
+    loadPreviewAvatar(avatarList[currentPreviewIndex]);
+
+    // Resize preview canvas
+    const container = document.getElementById('avatar-preview-container');
+    const size = Math.min(container.clientWidth, container.clientHeight);
+    previewRenderer.setSize(container.clientWidth, container.clientHeight);
+    previewCamera.aspect = container.clientWidth / container.clientHeight;
+    previewCamera.updateProjectionMatrix();
+
+    // Start animation
+    previewClock.start();
+    animatePreview();
+}
+
+function closeAvatarPanel() {
+    avatarPanelOverlay.classList.remove('active');
+
+    // Stop animation
+    if (previewAnimationId) {
+        cancelAnimationFrame(previewAnimationId);
+        previewAnimationId = null;
+    }
+
+    // Clean up preview avatar
+    if (previewAvatar) {
+        previewScene.remove(previewAvatar);
+        previewAvatar.traverse((child) => {
+            if (child.isMesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            if (mat.map) mat.map.dispose();
+                            mat.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+        previewAvatar = null;
+    }
+}
+
+function navigateAvatar(direction) {
+    currentPreviewIndex = (currentPreviewIndex + direction + avatarList.length) % avatarList.length;
+    loadPreviewAvatar(avatarList[currentPreviewIndex]);
+}
+
+// Event listeners
+avatarButton.addEventListener('click', openAvatarPanel);
+
+avatarPrevBtn.addEventListener('click', () => navigateAvatar(-1));
+avatarNextBtn.addEventListener('click', () => navigateAvatar(1));
+
+avatarAcceptBtn.addEventListener('click', () => {
+    avatar.load(avatarList[currentPreviewIndex]);
+    closeAvatarPanel();
 });
 
-avatarSelector.addEventListener('change', (e) => {
-    // Reset loading for avatar switch if we wanted to show it, but for now just load
-    avatar.load(e.target.value);
+avatarCancelBtn.addEventListener('click', closeAvatarPanel);
+
+// Close on overlay click
+avatarPanelOverlay.addEventListener('click', (e) => {
+    if (e.target === avatarPanelOverlay) {
+        closeAvatarPanel();
+    }
 });
 
 document.getElementById('home-button').addEventListener('click', () => loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb'));

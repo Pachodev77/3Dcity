@@ -16,58 +16,184 @@
             display: block;
         }
 
-        #avatar-selector-container {
+        /* Avatar Selection Button */
+        #avatar-button {
             position: absolute;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 0;
-            border-radius: 0 0 4px 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            background-color: rgba(52, 152, 219, 0.8);
+            color: white;
+            border: none;
+            border-radius: 0 0 8px 8px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            font-weight: 600;
+            cursor: pointer;
             z-index: 100;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #avatar-button:hover {
+            background-color: rgba(41, 128, 185, 0.9);
+            transform: translateX(-50%) translateY(2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        #avatar-button:active {
+            transform: translateX(-50%) translateY(1px);
+        }
+
+        /* Avatar Panel Overlay */
+        #avatar-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9998;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #avatar-panel-overlay.active {
+            display: flex;
+        }
+
+        /* Avatar Panel Container */
+        #avatar-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.95));
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        #avatar-panel h2 {
+            margin: 0 0 20px 0;
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
             font-family: Arial, sans-serif;
         }
 
-        #avatar-selector-container label {
-            font-size: 14px;
-            color: #fff;
-            font-weight: 600;
-            white-space: nowrap;
-            margin: 0;
+        /* Preview Container */
+        #avatar-preview-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        #avatar-selector {
-            padding: 3px 6px;
-            border-radius: 3px;
-            border: 1px solid #ddd;
-            background-color: white;
-            font-size: 11px;
-            color: #333;
+        #avatar-preview-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Navigation Arrows */
+        .avatar-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(52, 152, 219, 0.8);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            width: 140px;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: right 4px center;
-            background-size: 8px;
-            padding-right: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        #avatar-selector:hover {
-            border-color: #aaa;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        .avatar-nav-arrow:hover {
+            background-color: rgba(41, 128, 185, 0.9);
+            transform: translateY(-50%) scale(1.1);
         }
 
-        #avatar-selector:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        .avatar-nav-arrow:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        #avatar-prev {
+            left: 10px;
+        }
+
+        #avatar-next {
+            right: 10px;
+        }
+
+        /* Avatar Name Display */
+        #avatar-name-display {
+            text-align: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Panel Buttons */
+        .avatar-panel-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .avatar-panel-buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #avatar-accept-btn {
+            background-color: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        #avatar-accept-btn:hover {
+            background-color: rgba(39, 174, 96, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        #avatar-cancel-btn {
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+
+        #avatar-cancel-btn:hover {
+            background-color: rgba(192, 57, 43, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .avatar-panel-buttons button:active {
+            transform: translateY(0);
         }
 
         #joystick-container-move {
@@ -778,9 +904,25 @@
         </div>
     </div>
     <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
-    <div id="avatar-selector-container">
-        <label for="avatar-selector">Choose an avatar:</label>
-        <select id="avatar-selector"></select>
+
+    <!-- Avatar Selection Button -->
+    <button id="avatar-button">👤 Seleccionar Avatar</button>
+
+    <!-- Avatar Selection Panel -->
+    <div id="avatar-panel-overlay">
+        <div id="avatar-panel">
+            <h2>Selecciona tu Avatar</h2>
+            <div id="avatar-preview-container">
+                <canvas id="avatar-preview-canvas"></canvas>
+                <button class="avatar-nav-arrow" id="avatar-prev">‹</button>
+                <button class="avatar-nav-arrow" id="avatar-next">›</button>
+            </div>
+            <div id="avatar-name-display">Ch02_nonPBR</div>
+            <div class="avatar-panel-buttons">
+                <button id="avatar-accept-btn">✓ Aceptar</button>
+                <button id="avatar-cancel-btn">✕ Cancelar</button>
+            </div>
+        </div>
     </div>
 
     <div id="map-selector-container"
