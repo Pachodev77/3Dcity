@@ -19,7 +19,7 @@ export class Avatar {
         this.isJumping = false;
         this.jumpVelocity = 0;
         this.gravity = -100; // Gravity acceleration
-        this.jumpForce = 35; // Increased jump velocity for better animation timing
+        this.jumpForce = 10; // Initial jump velocity
         this.isGrounded = true;
 
         // Attack mechanics
@@ -131,9 +131,9 @@ export class Avatar {
             'walking': '/avatars/animations/Walking.fbx',
             'running': '/avatars/animations/Running.fbx',
             'punching': '/avatars/animations/Punching.fbx',
-            'kick': '/avatars/animations/Kick.fbx',
+            'dying': '/avatars/animations/Dying.fbx',
             'jump': '/avatars/animations/Jump.fbx',
-            'dying': '/avatars/animations/Dying.fbx'
+            'kick': '/avatars/animations/Kick.fbx'
         };
 
         const promises = Object.entries(remainingAnims).map(async ([name, url]) => {
@@ -141,12 +141,6 @@ export class Avatar {
                 const anim = await loadWithCache(url, animLoader);
                 if (anim.animations && anim.animations.length > 0) {
                     this.animations[name] = anim.animations[0];
-
-                    // Configure loops
-                    if (['jump', 'punching', 'kick', 'dying'].includes(name)) {
-                        this.animations[name].loops = 1; // Used if we manually handle mixer
-                        // Note: Three.js AnimationAction handles looping
-                    }
                 }
             } catch (error) {
                 console.warn(`Could not load animation "${name}":`, error);
@@ -156,24 +150,20 @@ export class Avatar {
         await Promise.all(promises);
     }
 
-    playAnimation(name, immediate = false) {
+    playAnimation(name, immediate = false, loop = true) {
         if (!this.animations[name] || !this.mixer) {
-            // console.warn(`Animation "${name}" or mixer not ready`);
+            // Only warn if not one of the new animations potentially loading
+            if (name !== 'jump' && name !== 'kick' && name !== 'dying') {
+                console.warn(`Animation "${name}" or mixer not ready`);
+            }
             return false;
         }
 
         if (this.currentAction === name && !immediate) return true;
 
         const action = this.mixer.clipAction(this.animations[name]);
-
-        // Configure loop based on animation type
-        if (['jump', 'punching', 'kick', 'dying'].includes(name)) {
-            action.setLoop(THREE.LoopOnce);
-            action.clampWhenFinished = true;
-        } else {
-            action.setLoop(THREE.LoopRepeat);
-            action.clampWhenFinished = false;
-        }
+        action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce);
+        action.clampWhenFinished = !loop;
 
         if (this.animations[this.currentAction] && !immediate) {
             const previousAction = this.mixer.clipAction(this.animations[this.currentAction]);
@@ -195,13 +185,6 @@ export class Avatar {
     update(delta, camera) {
         if (this.mixer) {
             this.mixer.update(delta);
-        }
-
-        // --- Physics Update (Gravity) ---
-        // Apply gravity if jumping or falling (not grounded)
-        if (this.model && (this.isJumping || !this.isGrounded)) {
-            this.jumpVelocity += this.gravity * delta;
-            this.model.position.y += this.jumpVelocity * delta;
         }
 
         // Update chat bubble
@@ -272,15 +255,8 @@ export class Avatar {
             .normalize();
 
         const moveThreshold = 0.1;
-
-        // Calculate distance if missing (e.g. keyboard input)
-        let distance = moveData.distance;
-        if (distance === undefined && moveData.vector) {
-            distance = Math.sqrt(moveData.vector.x ** 2 + moveData.vector.y ** 2) * 50;
-        }
-
-        if (distance > moveThreshold) {
-            const speed = distance / 50 * moveSpeed;
+        if (moveData.distance > moveThreshold) {
+            const speed = moveData.distance / 50 * moveSpeed;
             const moveVector = moveDirection.clone().multiplyScalar(speed * delta);
 
             // --- Avatar Collision Detection ---
@@ -290,28 +266,33 @@ export class Avatar {
 
             const collisionThreshold = CONFIG.AVATAR.COLLISION_THRESHOLD;
             if (intersections.length > 0 && intersections[0].distance < collisionThreshold) {
-                this.playAnimation('idle');
+                if (!this.isJumping && !this.isAttacking && !this.isDead) this.playAnimation('idle');
                 if (this.model.userData) {
+                    this.model.userData.isMoving = false;
+                }
+            } else {
+                this.model.position.add(moveVector);
+                this.model.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
+                if (!this.isJumping && !this.isAttacking && !this.isDead) this.playAnimation('running');
+                if (this.model.userData) {
+                    this.model.userData.isMoving = true;
+                } else {
                     this.model.userData = { isMoving: true };
                 }
             }
         } else {
-            if (!this.isJumping && !this.isAttacking && !this.isDead) {
-                this.playAnimation('idle');
-            }
-            if (this.model.userData) this.model.userData.isMoving = false;
+            if (!this.isJumping && !this.isAttacking && !this.isDead) this.playAnimation('idle');
         }
     }
 
     // Jump method
     jump() {
-        if (!this.model || !this.isGrounded || this.isJumping || this.isDead || this.isAttacking) return;
+        if (!this.model || !this.isGrounded || this.isJumping || this.isAttacking || this.isDead) return;
 
         this.isJumping = true;
         this.isGrounded = false;
         this.jumpVelocity = this.jumpForce;
-
-        this.playAnimation('jump');
+        this.playAnimation('jump', true, false); // No loop
     }
 
     // Attack method
@@ -326,25 +307,25 @@ export class Avatar {
 
         // Randomize attack
         const attackAnim = Math.random() > 0.5 ? 'punching' : 'kick';
-        this.playAnimation(attackAnim);
+        this.playAnimation(attackAnim, true, false);
 
         // Reset attack state after animation
-        // Assuming ~1 second for attack anim duration if we don't listen to mixer finish event
         setTimeout(() => {
             this.isAttacking = false;
-            // Return to idle/move if not jumping.
-            // But main loop calls updateMovement which sets idle/run/walk.
-            // We just clear attacking flag so updateMovement takes over control again.
-            if (!this.isJumping && !this.model.userData?.isMoving) {
+            if (!this.isJumping && !this.isDead) { // Don't reset if jumped or died
                 this.playAnimation('idle');
             }
-        }, 1000); // 1.0s wait
+        }, this.attackCooldown);
     }
 
     checkGroundCollision(collidableObjects) {
         if (!this.model) return;
 
-        // Physics applied in update() method now for smoothness
+        // Apply jump physics
+        if (this.isJumping) {
+            this.jumpVelocity += this.gravity * 0.016; // Assuming ~60fps (delta ~0.016)
+            this.model.position.y += this.jumpVelocity * 0.016;
+        }
 
         this.tempVector.copy(this.model.position);
         this.tempVector.y += 1;
@@ -358,19 +339,9 @@ export class Avatar {
             // Always keep avatar on ground when not jumping or when landing
             if (!this.isJumping || (this.model.position.y <= adjustedY && this.jumpVelocity <= 0)) {
                 this.model.position.y = adjustedY;
-                if (this.isJumping) {
-                    // Lands
-                    this.isJumping = false;
-                    this.isGrounded = true;
-                    this.jumpVelocity = 0;
-
-                    // Resume appropriate animation
-                    if (this.model.userData && this.model.userData.isMoving) {
-                        this.playAnimation('running'); // Or walking, logic would handle next frame
-                    } else {
-                        this.playAnimation('idle');
-                    }
-                }
+                this.isJumping = false;
+                this.isGrounded = true;
+                this.jumpVelocity = 0;
             }
         } else {
             // Not on ground - start falling
@@ -445,11 +416,12 @@ export class Avatar {
     }
 
     die() {
+        if (this.isDead) return;
         this.isDead = true;
         console.log('Player died');
 
         // Play Dying Animation
-        this.playAnimation('dying');
+        this.playAnimation('dying', true, false);
 
         // Show death overlay
         const deathOverlay = document.getElementById('death-overlay');
@@ -458,13 +430,8 @@ export class Avatar {
         }
 
         // Disable movement or visibility
-        // Wait for anim to finish before hiding? Or keep visible lying down.
-        // User request: "pantalla blanca y you died".
-        // Usually we hide model or ragdoll. If we play dying anim, we should keep it visible.
-        // But previously I hid it.
-        // Let's keep it visible for the animation duration, then maybe hide?
-        // Or just keep it visible lying down.
-        if (this.model) this.model.visible = true;
+        // Keep visible so we see the animation
+        // if (this.model) this.model.visible = false; 
 
         // Respawn after delay
         setTimeout(() => this.respawn(), 5000);
