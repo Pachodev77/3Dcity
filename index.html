@@ -1,850 +1,439 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name='admaven-placement' content='BqjwGrjU9'>
-    <title>3D City Plan with Avatars</title>
+    <meta name="description"
+        content="3D City - Juego multijugador 3D gratuito. Conduce vehículos, chatea con jugadores, explora la ciudad. ¡Juega ahora en tu navegador!">
+    <meta name="keywords" content="juego 3D, multijugador, juego de navegador, juego gratis, ciudad 3D">
+    <meta property="og:title" content="3D City - Juego Multijugador en Navegador">
+    <meta property="og:description" content="Explora, Conduce, Conecta en tu navegador">
+    <meta property="og:image" content="/assets/screenshots/hero.png">
+    <title>3D City - Juego Multijugador 3D Gratis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9)),
+                url('/assets/screenshots/hero.png') center/cover;
+            position: relative;
             overflow: hidden;
         }
 
-        canvas {
-            display: block;
-        }
-
-        #avatar-selector-container {
+        .hero::before {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 0;
-            border-radius: 0 0 4px 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            z-index: 100;
-            font-family: Arial, sans-serif;
-        }
-
-        #avatar-selector-container label {
-            font-size: 14px;
-            color: #fff;
-            font-weight: 600;
-            white-space: nowrap;
-            margin: 0;
-        }
-
-        #avatar-selector {
-            padding: 3px 6px;
-            border-radius: 3px;
-            border: 1px solid #ddd;
-            background-color: white;
-            font-size: 11px;
-            color: #333;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 140px;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: right 4px center;
-            background-size: 8px;
-            padding-right: 20px;
-        }
-
-        #avatar-selector:hover {
-            border-color: #aaa;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-
-        #avatar-selector:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
-        }
-
-        #joystick-container-move {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 100px;
-            height: 100px;
-        }
-
-        #joystick-container-camera {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 100px;
-            height: 100px;
-        }
-
-        /* Base button styles */
-        .btn {
-            padding: 6px 12px;
-            background-color: rgba(52, 152, 219, 0.8);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: Arial, sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            min-width: 80px;
-            height: 30px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 2px;
-        }
-
-        .btn:hover {
-            background-color: rgba(41, 128, 185, 0.9);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Specific button styles */
-        #spawn-vehicle-button {
-            /* Position is now set inline to be above the left joystick */
-            width: 40px;
-            height: 40px;
-            min-width: 40px;
-            min-height: 40px;
-            border-radius: 50%;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-            padding: 0;
-            margin: 0;
-        }
-
-        #enter-exit-button {
-            position: absolute;
-            bottom: 45px;
-            left: 140px;
-            /* transform: translateX(-50%); Removed to position manually */
-            width: 50px;
-            height: 50px;
-            background-color: rgba(76, 175, 80, 0.8);
-            border: none;
-            border-radius: 50%;
-            display: none;
-            /* Initially hidden */
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 12px;
-            z-index: 101;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-        }
-
-        #enter-exit-button:hover {
-            background-color: rgba(68, 157, 72, 0.9);
-            transform: translate(-50%, -1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #enter-exit-button:active {
-            transform: translate(-50%, 1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        #camera-position-button {
-            position: absolute;
-            bottom: 120px;
-            right: 15px;
-            width: 40px;
-            height: 40px;
-            min-width: 40px;
-            min-height: 40px;
-            border-radius: 50%;
-            color: white;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-            padding: 0;
-            margin: 0;
-        }
-
-        #camera-position-button:hover {
-            background-color: rgba(41, 128, 185, 0.9) !important;
-            transform: scale(1.1);
-        }
-
-        #camera-position-button:active {
-            transform: scale(0.95);
-        }
-
-        /* Vehicle Control Buttons */
-        #accelerate-button {
-            position: absolute;
-            bottom: 85px;
-            right: 120px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: rgba(46, 204, 113, 0.8);
-            color: white;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-            z-index: 100;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #accelerate-button:hover {
-            background-color: rgba(39, 174, 96, 0.9);
-            transform: scale(1.1);
-        }
-
-        #accelerate-button:active {
-            background-color: rgba(39, 174, 96, 1);
-            transform: scale(0.95);
-        }
-
-        #brake-button {
-            position: absolute;
-            bottom: 15px;
-            right: 120px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: rgba(231, 76, 60, 0.8);
-            color: white;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-            z-index: 100;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #brake-button:hover {
-            background-color: rgba(192, 57, 43, 0.9);
-            transform: scale(1.1);
-        }
-
-        #brake-button:active {
-            background-color: rgba(192, 57, 43, 1);
-            transform: scale(0.95);
-        }
-
-        #damage-overlay {
-            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: red;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1000;
-            transition: opacity 0.5s ease-out;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(76, 175, 80, 0.1), transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
         }
 
-        #fullscreen-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            z-index: 100;
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
-        #fullscreen-button:hover {
-            background-color: rgba(0, 0, 0, 0.7);
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
         }
 
-        #fps-counter {
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: #0f0;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 100;
-            user-select: none;
-        }
-
-        /* Loading Screen Styles */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            background-image: url('assets/image.jpg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding-top: 15vh;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: opacity 0.5s ease-out;
-        }
-
-        #loading-content {
-            text-align: center;
-            width: 80%;
-            max-width: 600px;
-        }
-
-        h1.game-title {
-            font-size: 3rem;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            background: linear-gradient(45deg, #3498db, #9b59b6);
-            background-clip: text;
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
-        .progress-container {
-            width: 100%;
-            height: 20px;
-            background-color: #333;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            border: 1px solid #444;
-        }
-
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #3498db, #2ecc71);
-            transition: width 0.3s ease-out;
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-        }
-
-        #loading-text {
-            font-size: 1.2rem;
-            color: #aaa;
-            margin-bottom: 2rem;
-        }
-
-        /* Music Player Styles */
-        #music-toggle-btn {
-            position: absolute;
-            top: 20px;
-            left: 80px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: 2px solid #00ff88;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
-
-        #music-toggle-btn:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.9);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
-        }
-
-        #music-panel {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            width: 300px;
-            background: rgba(10, 10, 15, 0.95);
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 15px;
-            color: white;
-            z-index: 1000;
-            display: none;
-            /* Hidden by default */
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .music-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .music-header h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #00ff88;
-        }
-
-        #close-music-panel {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        #close-music-panel:hover {
-            color: white;
-        }
-
-        .music-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #current-track-info {
-            font-size: 14px;
-            text-align: center;
-            color: #ddd;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-            margin-bottom: 5px;
-        }
-
-        .control-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .control-buttons button {
-            background: none;
-            border: 1px solid #444;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .control-buttons button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #00ff88;
-            color: #00ff88;
-        }
-
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-        }
-
-        #volume-slider {
-            flex-grow: 1;
-            cursor: pointer;
-        }
-
-        #playlist-container {
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #333;
-            padding-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .playlist-item {
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .playlist-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .playlist-item.active {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
-            border-left: 3px solid #00ff88;
-        }
-
-        .playlist-empty {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 10px;
-        }
-
-        /* Scrollbar for playlist */
-        #playlist-container::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        #playlist-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        #playlist-container::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 3px;
-        }
-
-        /* Chat UI Styles */
-        #chat-toggle-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(46, 204, 113, 0.8);
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 24px;
-            z-index: 101;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        #chat-toggle-button:hover {
-            background-color: rgba(39, 174, 96, 0.9);
-            transform: scale(1.1);
-        }
-
-        #chat-toggle-button:active {
-            transform: scale(0.95);
-        }
-
-        #chat-container {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            width: 350px;
-            height: 400px;
-            background-color: rgba(0, 0, 0, 0.85);
-            border-radius: 12px;
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        #chat-header {
-            background-color: rgba(46, 204, 113, 0.9);
-            color: white;
-            padding: 12px 16px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 16px;
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        #chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #chat-messages::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        #chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
-
-        #chat-messages::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .chat-message {
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            color: white;
-            padding: 6px 10px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            word-wrap: break-word;
-            animation: messageSlideIn 0.3s ease;
-        }
-
-        @keyframes messageSlideIn {
+        @keyframes glow {
             from {
-                opacity: 0;
-                transform: translateX(-10px);
+                filter: drop-shadow(0 0 10px rgba(76, 175, 80, 0.5));
             }
 
             to {
-                opacity: 1;
-                transform: translateX(0);
+                filter: drop-shadow(0 0 20px rgba(76, 175, 80, 0.8));
             }
         }
 
-        .chat-message-name {
-            font-weight: bold;
+        .tagline {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin-bottom: 40px;
+            color: #b0b0b0;
+            font-weight: 300;
         }
 
-        .chat-system-message {
-            color: #95a5a6;
-            font-style: italic;
-            background-color: rgba(255, 255, 255, 0.05);
+        .play-button {
+            display: inline-block;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .play-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .play-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.6);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 20px;
+            background: #0f1419;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin-bottom: 60px;
+            color: #4CAF50;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .feature-description {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* How to Play Section */
+        .how-to-play {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .step-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            background: #0a0a0a;
             text-align: center;
         }
 
-        #chat-input-container {
-            display: flex;
-            padding: 12px;
-            gap: 8px;
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 0 0 12px 12px;
+        .footer-links {
+            margin-bottom: 20px;
         }
 
-        #chat-input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s ease;
+        .footer-links a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s ease;
         }
 
-        #chat-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        .footer-links a:hover {
+            color: #45a049;
+            text-decoration: underline;
         }
 
-        #chat-input:focus {
-            border-color: rgba(46, 204, 113, 0.8);
-            background-color: rgba(255, 255, 255, 0.15);
+        .copyright {
+            color: #666;
+            font-size: 0.9rem;
         }
 
-        #chat-send-button {
-            padding: 10px 16px;
-            background-color: rgba(46, 204, 113, 0.8);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
-        #chat-send-button:hover {
-            background-color: rgba(39, 174, 96, 0.9);
-            transform: translateY(-1px);
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(76, 175, 80, 0.3);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        #chat-send-button:active {
-            transform: translateY(1px);
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #4CAF50;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 40px 20px;
+            }
+
+            .play-button {
+                padding: 15px 40px;
+                font-size: 1.2rem;
+            }
+
+            .features,
+            .how-to-play {
+                padding: 60px 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="loading-screen">
-        <div id="loading-content">
-            <h1 class="game-title">3D City World</h1>
-            <div id="loading-status">
-                <div class="progress-container">
-                    <div id="progress-bar"></div>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando juego...</div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>3D CITY</h1>
+            <p class="tagline">Explora, Conduce, Conecta - Tu Mundo 3D Multijugador</p>
+            <a href="#" class="play-button" id="play-button">▶ JUGAR AHORA</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Características</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3 class="feature-title">Multijugador</h3>
+                    <p class="feature-description">Juega con amigos en tiempo real. Explora la ciudad junto a otros
+                        jugadores de todo el mundo.</p>
                 </div>
-                <div id="loading-text">Loading Assets... 0%</div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚗</div>
+                    <h3 class="feature-title">Vehículos</h3>
+                    <p class="feature-description">Conduce diferentes vehículos por la ciudad. Sube y baja cuando
+                        quieras.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3 class="feature-title">Chat</h3>
+                    <p class="feature-description">Comunícate con otros jugadores usando el chat en tiempo real.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎮</div>
+                    <h3 class="feature-title">Gratis</h3>
+                    <p class="feature-description">Sin descargas, sin instalación. Juega directamente en tu navegador,
+                        completamente gratis.</p>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="damage-overlay"></div>
+    </section>
 
-    <!-- Music Player UI -->
-    <button id="music-toggle-btn">🎵</button>
-
-    <div id="music-panel">
-        <div class="music-header">
-            <h3>Music Player</h3>
-            <button id="close-music-panel">×</button>
-        </div>
-        <div class="music-controls">
-            <div id="current-track-info">No track selected</div>
-            <div class="control-buttons">
-                <button id="prev-btn">⏮️</button>
-                <button id="play-pause-btn">▶️</button>
-                <button id="next-btn">⏭️</button>
+    <!-- How to Play Section -->
+    <section class="how-to-play">
+        <div class="container">
+            <h2 class="section-title">Cómo Jugar</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Haz Click en "Jugar Ahora"</h3>
+                    <p class="step-description">El juego se cargará automáticamente en tu navegador. No necesitas
+                        descargar nada.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Elige tu Avatar</h3>
+                    <p class="step-description">Selecciona tu personaje favorito del menú superior.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Explora y Diviértete</h3>
+                    <p class="step-description">Usa los joysticks para moverte y la cámara. Encuentra vehículos, chatea
+                        con jugadores y explora la ciudad.</p>
+                </div>
             </div>
-            <div class="volume-control">
-                <span>🔈</span>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
-                <span>🔊</span>
-            </div>
         </div>
-        <div id="playlist-container">
-            <div class="playlist-empty">Loading playlist...</div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="/privacy-policy.html" target="_blank">Política de Privacidad</a>
+            <a href="/terms-of-service.html" target="_blank">Términos de Servicio</a>
         </div>
-    </div>
-    <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
-    <div id="avatar-selector-container">
-        <label for="avatar-selector">Choose an avatar:</label>
-        <select id="avatar-selector"></select>
-    </div>
+        <p class="copyright">&copy; 2024 3D City. Todos los derechos reservados.</p>
+    </footer>
 
-    <div id="map-selector-container"
-        style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 1px; align-items: center; background-color: rgba(0, 0, 0, 0.5); padding: 0; border-radius: 0 0 4px 4px;">
-        <button id="home-button" class="btn"
-            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
-            title="Home">🏠</button>
-        <button id="city-button" class="btn"
-            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
-            title="City">🏙️</button>
-        <button id="circuit-button" class="btn"
-            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;"
-            title="Circuit">🏁</button>
-    </div>
+    <script>
+        // Play button functionality
+        document.getElementById('play-button').addEventListener('click', function (e) {
+            e.preventDefault();
 
-    <button id="spawn-vehicle-button" class="btn"
-        style="position: absolute; bottom: 120px; right: 75px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);"
-        title="Spawn Vehicle">🚗</button>
-    <div id="joystick-container-move"></div>
-    <button id="camera-position-button" class="btn"
-        style="position: absolute; bottom: 120px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);"
-        title="Change Camera View">1</button>
-    <button id="accelerate-button" title="Accelerate">⬆️</button>
-    <button id="brake-button" title="Brake / Reverse">⬇️</button>
-    <div id="joystick-container-camera"></div>
-    <div id="enter-exit-button">E</div>
+            // Show loading overlay
+            document.getElementById('loading-overlay').style.display = 'flex';
 
-    <!-- Chat UI -->
-    <button id="chat-toggle-button" title="Open Chat">💬</button>
-    <div id="chat-container">
-        <div id="chat-header">
-            💬 Live Chat
-        </div>
-        <div id="chat-messages"></div>
-        <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="150">
-            <button id="chat-send-button">Send</button>
-        </div>
-    </div>
+            // Redirect to game after brief delay
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 800);
+        });
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.138.0/examples/jsm/"
-            }
-        }
+        // Smooth scroll for internal links (if any)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
     </script>
-    <script src="/cache.js"></script>
-    <script type="module" src="main.js"></script>
-
-    <!-- Footer with Legal Links -->
-    <div
-        style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; font-family: Arial, sans-serif;">
-        <a href="/privacy-policy.html" target="_blank"
-            style="color: rgba(255,255,255,0.8); margin: 0 10px; font-size: 11px; text-decoration: none; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Privacy
-            Policy</a>
-        <span style="color: rgba(255,255,255,0.6);">|</span>
-        <a href="/terms-of-service.html" target="_blank"
-            style="color: rgba(255,255,255,0.8); margin: 0 10px; font-size: 11px; text-decoration: none; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Terms
-            of Service</a>
-    </div>
 </body>
 
 </html>
