@@ -318,16 +318,11 @@ export class Avatar {
 
         this.isAttacking = true;
 
-        // Reset combo if too much time passed (2 seconds)
-        if (now - this.lastAttackTime > 2000) {
-            this.comboCounter = 0;
-        }
         this.lastAttackTime = now;
 
-        // Sequential Combo: Punch -> Kick
-        const attackAnim = this.comboCounter % 2 === 0 ? 'punching' : 'kick';
+        // Randomize attack
+        const attackAnim = Math.random() > 0.5 ? 'punching' : 'kick';
         this.playAnimation(attackAnim, true, false);
-        this.comboCounter++;
 
         // State reset handled by onAnimationFinished listener
     }
