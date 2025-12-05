@@ -107,7 +107,7 @@ let nearbyVehicle = null; // Vehicle instance
 
 // Loading State
 const loadingState = {
-    totalAssets: 7, // 1 Map + 5 Vehicles + 1 Avatar
+    totalAssets: 13, // 1 Map + 5 Vehicles + 3 Avatars + 4 Animations
     loadedAssets: 0,
     progress: 0
 };
@@ -211,6 +211,20 @@ const VEHICLE_MODELS = [
 
 let vehicleTemplates = [];
 
+// Avatar Management - Preloading
+const AVATAR_MODELS = [
+    'Ch02_nonPBR',
+    'Ch13_nonPBR@T-Pose',
+    'Remy@T-Pose'
+];
+
+const ANIMATION_MODELS = [
+    '/avatars/animations/Idle.fbx',
+    '/avatars/animations/Walking.fbx',
+    '/avatars/animations/Running.fbx',
+    '/avatars/animations/Punching.fbx'
+];
+
 // Load all vehicle models
 async function loadVehicleModels() {
     const loader = new GLTFLoader();
@@ -244,6 +258,39 @@ async function loadVehicleModels() {
             updateLoadingProgress(); // Count errors as loaded to avoid getting stuck
         }
     }
+}
+
+// Preload all avatar models and animations
+async function preloadAvatarModels() {
+    const loader = new FBXLoader();
+
+    console.log('Preloading avatar models...');
+
+    // Preload all avatar models
+    for (const avatarName of AVATAR_MODELS) {
+        try {
+            await loadWithCache(`/avatars/${avatarName}.fbx`, loader);
+            console.log(`Preloaded avatar: ${avatarName}`);
+            updateLoadingProgress();
+        } catch (error) {
+            console.error(`Error preloading avatar ${avatarName}:`, error);
+            updateLoadingProgress(); // Count as loaded to avoid hanging
+        }
+    }
+
+    // Preload all animations
+    for (const animPath of ANIMATION_MODELS) {
+        try {
+            await loadWithCache(animPath, loader);
+            console.log(`Preloaded animation: ${animPath}`);
+            updateLoadingProgress();
+        } catch (error) {
+            console.error(`Error preloading animation ${animPath}:`, error);
+            updateLoadingProgress(); // Count as loaded to avoid hanging
+        }
+    }
+
+    console.log('All avatars and animations preloaded!');
 }
 
 // Spawn a random vehicle near the player (Networked)
@@ -607,24 +654,25 @@ enterExitButton.addEventListener('click', toggleVehicle);
 // Initial Setup - Load Burnin Rubber map by default
 loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
 
-// Load vehicle models and then load the avatar
-loadVehicleModels().then(() => {
-    console.log('All vehicle models loaded');
+// Preload all assets (vehicles and avatars) in parallel
+Promise.all([
+    loadVehicleModels(),
+    preloadAvatarModels()
+]).then(() => {
+    console.log('All vehicle and avatar models preloaded');
     spawnVehicleButton.disabled = false; // Enable the button once models are loaded
 
-    // Process pending spawns
+    // Process pending vehicle spawns
     if (pendingVehicleSpawns.length > 0) {
         console.log(`Processing ${pendingVehicleSpawns.length} pending vehicle spawns`);
         pendingVehicleSpawns.forEach(data => spawnRemoteVehicle(data));
         pendingVehicleSpawns = [];
     }
-}).catch(error => {
-    console.error('Error loading vehicle models:', error);
-});
 
-// Load the default avatar
-avatar.load(avatarList[0]).then(() => {
-    updateLoadingProgress(); // Avatar loaded
+    // Load the default avatar (now instant from cache)
+    return avatar.load(avatarList[0]);
+}).catch(error => {
+    console.error('Error loading models:', error);
 });
 
 // Animation Loop
