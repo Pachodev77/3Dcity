@@ -356,14 +356,7 @@ previewScene.background = new THREE.Color(0x1a1a2e);
 const previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 previewCamera.position.set(0, 1.5, 3);
 previewCamera.lookAt(0, 1, 0);
-
-const previewRenderer = new THREE.WebGLRenderer({
-    canvas: previewCanvas,
-    alpha: false,
-    antialias: true
-});
-previewRenderer.setSize(300, 300);
-previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+let previewRenderer = null; // Will be initialized when panel opens
 
 // Preview Lighting
 const previewAmbient = new THREE.AmbientLight(0xffffff, 0.6);
@@ -441,18 +434,30 @@ const avatarAcceptBtn = document.getElementById('avatar-accept-btn');
 const avatarCancelBtn = document.getElementById('avatar-cancel-btn');
 
 function openAvatarPanel() {
+    // Initialize preview renderer if not already created (lazy initialization)
+    if (!previewRenderer) {
+        const previewCanvas = document.getElementById('avatar-preview-canvas');
+        previewRenderer = new THREE.WebGLRenderer({
+            canvas: previewCanvas,
+            alpha: false,
+            antialias: true
+        });
+        console.log('Preview renderer initialized');
+    }
+
     // Set current avatar as preview
     currentPreviewIndex = avatarList.indexOf(avatar.name) || 0;
 
     avatarPanelOverlay.classList.add('active');
-    loadPreviewAvatar(avatarList[currentPreviewIndex]);
 
     // Resize preview canvas
     const container = document.getElementById('avatar-preview-container');
-    const size = Math.min(container.clientWidth, container.clientHeight);
     previewRenderer.setSize(container.clientWidth, container.clientHeight);
     previewCamera.aspect = container.clientWidth / container.clientHeight;
     previewCamera.updateProjectionMatrix();
+
+    // Load avatar after renderer is ready
+    loadPreviewAvatar(avatarList[currentPreviewIndex]);
 
     // Start animation
     previewClock.start();
