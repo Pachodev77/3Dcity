@@ -754,9 +754,13 @@ window.addEventListener('keydown', (e) => {
 });
 enterExitButton.addEventListener('click', toggleVehicle);
 
-window.addEventListener('player-hit', () => {
+// Make networkManager global for PvP access
+window.networkManager = networkManager;
+
+window.addEventListener('player-hit', (e) => {
     if (avatar) {
-        avatar.takeDamage(10);
+        const damage = e.detail && e.detail.amount ? e.detail.amount : 10;
+        avatar.takeDamage(damage);
         console.log('Player took damage! Health:', avatar.health);
     }
 });

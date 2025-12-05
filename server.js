@@ -161,6 +161,17 @@ io.on('connection', (socket) => {
         });
         io.emit('playerDisconnected', socket.id);
     });
+
+    // Handle player damage (PvP)
+    socket.on('playerDamage', (data) => {
+        // Broadcast to all clients so they can show effects/update health
+        // data should contain { targetId, damage }
+        io.emit('playerDamaged', {
+            targetId: data.targetId,
+            attackerId: socket.id,
+            damage: data.damage
+        });
+    });
 });
 
 // Health check endpoint

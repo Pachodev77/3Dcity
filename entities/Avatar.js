@@ -321,12 +321,13 @@ export class Avatar {
         this.playAnimation(attackAnim, true, false);
 
         // Hit Detection
-        if (this.targets) {
-            const attackRange = 2.5; // Meters
-            const attackAngle = Math.PI / 3; // 60 degrees cone
-            const forward = new THREE.Vector3();
-            this.model.getWorldDirection(forward);
+        const attackRange = 2.5; // Meters
+        const attackAngle = Math.PI / 3; // 60 degrees cone
+        const forward = new THREE.Vector3();
+        this.model.getWorldDirection(forward);
 
+        // Attack Zombies
+        if (this.targets) {
             this.targets.forEach(target => {
                 if (!target.model || target.isDead) return;
 
@@ -339,6 +340,25 @@ export class Avatar {
                         // Hit confirmed
                         const damage = attackAnim === 'kick' ? 25 : 15;
                         if (target.takeDamage) target.takeDamage(damage);
+                    }
+                }
+            });
+        }
+
+        // Attack Remote Players (PvP)
+        if (window.networkManager && window.networkManager.remotePlayers) {
+            Object.values(window.networkManager.remotePlayers).forEach(remotePlayer => {
+                if (!remotePlayer.model) return;
+
+                const dist = this.model.position.distanceTo(remotePlayer.model.position);
+                if (dist < attackRange) {
+                    const toTarget = new THREE.Vector3().subVectors(remotePlayer.model.position, this.model.position).normalize();
+                    const angle = forward.angleTo(toTarget);
+
+                    if (angle < attackAngle) {
+                        // PvP Hit confirmed
+                        const damage = attackAnim === 'kick' ? 15 : 10; // Lower damage for PvP?
+                        if (remotePlayer.takeDamage) remotePlayer.takeDamage(damage);
                     }
                 }
             });

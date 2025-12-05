@@ -214,4 +214,28 @@ export class RemoteAvatar {
         this.animations = {};
         this.currentAction = null;
     }
+
+    takeDamage(amount) {
+        // Called when WE attack this remote player
+        console.log(`Attacking remote player ${this.id} for ${amount} damage`);
+        if (window.networkManager) {
+            window.networkManager.sendPlayerDamage(this.id, amount);
+        }
+    }
+
+    onHit() {
+        // Called when network tells us this player was hit (by anyone)
+        // FLash Red
+        if (this.model) {
+            this.model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    const originalColor = child.material.color.getHex();
+                    child.material.color.setHex(0xff0000);
+                    setTimeout(() => {
+                        if (child.material) child.material.color.setHex(originalColor);
+                    }, 200);
+                }
+            });
+        }
+    }
 }

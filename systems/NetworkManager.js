@@ -124,6 +124,22 @@ export class NetworkManager {
             window.dispatchEvent(new CustomEvent('chat-message-received', { detail: data }));
         });
 
+        // PvP Events
+        this.socket.on('playerDamaged', (data) => {
+            // data: { targetId, attackerId, damage }
+
+            // Check if WE are the target
+            if (data.targetId === this.socket.id) {
+                console.log(`I was hit by ${data.attackerId} for ${data.damage} damage!`);
+                window.dispatchEvent(new CustomEvent('player-hit', { detail: { amount: data.damage } }));
+            }
+            // Check if a remote player we see is the target (visual feedback)
+            else if (this.remotePlayers[data.targetId]) {
+                const victim = this.remotePlayers[data.targetId];
+                if (victim.onHit) victim.onHit();
+            }
+        });
+
         // Map change events
         this.socket.on('playerChangedMap', (data) => {
             console.log('Player changed map:', data.id, 'to', data.map);
@@ -272,21 +288,6 @@ export class NetworkManager {
             x: position.x,
             y: position.y,
             z: position.z,
-            rotation: rotation
-        });
-        this.lastVehicleUpdate = now;
-    }
-
-    sendChatMessage(message) {
-        this.socket.emit('chatMessage', {
-            message: message
-        });
-    }
-
-    update(delta, camera) {
-        // Update animations of all remote players
-        Object.values(this.remotePlayers).forEach(player => {
-            player.update(delta, camera);
         });
         // Update zombies
         Object.values(this.remoteZombies).forEach(zombie => {
@@ -328,17 +329,18 @@ export class NetworkManager {
             city: 0,
             burnin_rubber: 0
         };
-        
+
         // Count local player
         if (this.currentMap) {
             counts[this.currentMap] = (counts[this.currentMap] || 0) + 1;
         }
-        
+
         // Count remote players
         Object.values(this.remotePlayers).forEach(player => {
             const map = player.map || 'burnin_rubber';
             counts[map] = (counts[map] || 0) + 1;
         });
-        
+
         return counts;
-    }}
+    }
+}
