@@ -408,17 +408,29 @@ export class Avatar {
         this.isDead = true;
         console.log('Player died');
 
+        // Show death overlay
+        const deathOverlay = document.getElementById('death-overlay');
+        if (deathOverlay) {
+            deathOverlay.classList.add('active');
+        }
+
         // Disable movement or visibility
         if (this.model) this.model.visible = false;
 
-        // Show death message (optional, for now just respawn)
-        setTimeout(() => this.respawn(), 3000);
+        // Respawn after delay
+        setTimeout(() => this.respawn(), 5000);
     }
 
     respawn() {
         this.isDead = false;
         this.health = this.maxHealth;
         this.updateHealthUI();
+
+        // Hide death overlay
+        const deathOverlay = document.getElementById('death-overlay');
+        if (deathOverlay) {
+            deathOverlay.classList.remove('active');
+        }
 
         if (this.model) {
             this.model.visible = true;
