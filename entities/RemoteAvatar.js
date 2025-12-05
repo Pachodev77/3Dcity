@@ -75,10 +75,10 @@ export class RemoteAvatar {
             const idleAnim = await loadFunc('/avatars/animations/Idle.fbx', loader);
             if (idleAnim.animations && idleAnim.animations.length > 0) {
                 this.animations['idle'] = idleAnim.animations[0];
-                // Play idle immediately
-                this.setState('idle');
-                // Show model now that idle is playing
-                if (this.model) {
+                // Play idle immediately (no fade)
+                const success = this.setState('idle', true);
+                // Show model only if idle is successfully playing
+                if (success && this.model) {
                     this.model.visible = true;
                 }
             }
@@ -106,18 +106,30 @@ export class RemoteAvatar {
         await Promise.all(promises);
     }
 
-    setState(stateName) {
-        if (this.currentState === stateName || !this.animations[stateName] || !this.mixer) return;
+    setState(stateName, immediate = false) {
+        if (!this.animations[stateName] || !this.mixer) {
+            console.warn(`Remote avatar animation "${stateName}" or mixer not ready`);
+            return false;
+        }
+
+        if (this.currentState === stateName && !immediate) return true;
 
         const newAction = this.mixer.clipAction(this.animations[stateName]);
 
-        if (this.currentAction) {
+        if (this.currentAction && !immediate) {
             this.currentAction.fadeOut(0.2);
         }
 
-        newAction.reset().fadeIn(0.2).play();
+        if (immediate) {
+            // For initial idle, play immediately without fade
+            newAction.reset().play();
+        } else {
+            newAction.reset().fadeIn(0.2).play();
+        }
+
         this.currentAction = newAction;
         this.currentState = stateName;
+        return true;
     }
 
     update(delta, camera) {

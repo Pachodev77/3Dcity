@@ -97,10 +97,10 @@ export class Avatar {
             const idleAnim = await loadWithCache('/avatars/animations/Idle.fbx', animLoader);
             if (idleAnim.animations && idleAnim.animations.length > 0) {
                 this.animations['idle'] = idleAnim.animations[0];
-                // Play idle immediately
-                this.playAnimation('idle');
-                // Show model now that idle is playing
-                if (this.model && this.visible) {
+                // Play idle immediately (no fade)
+                const success = this.playAnimation('idle', true);
+                // Show model only if idle is successfully playing
+                if (success && this.model && this.visible) {
                     this.model.visible = true;
                 }
             }
@@ -129,19 +129,32 @@ export class Avatar {
         await Promise.all(promises);
     }
 
-    playAnimation(name) {
-        if (this.currentAction === name) return;
-        if (this.animations[name] && this.mixer) {
-            const action = this.mixer.clipAction(this.animations[name]);
-            if (this.animations[this.currentAction]) {
-                const previousAction = this.mixer.clipAction(this.animations[this.currentAction]);
-                if (previousAction) {
-                    previousAction.fadeOut(0.5);
-                }
-            }
-            action.reset().fadeIn(0.5).play();
-            this.currentAction = name;
+    playAnimation(name, immediate = false) {
+        if (!this.animations[name] || !this.mixer) {
+            console.warn(`Animation "${name}" or mixer not ready`);
+            return false;
         }
+
+        if (this.currentAction === name && !immediate) return true;
+
+        const action = this.mixer.clipAction(this.animations[name]);
+
+        if (this.animations[this.currentAction] && !immediate) {
+            const previousAction = this.mixer.clipAction(this.animations[this.currentAction]);
+            if (previousAction) {
+                previousAction.fadeOut(0.5);
+            }
+        }
+
+        if (immediate) {
+            // For initial idle, play immediately without fade
+            action.reset().play();
+        } else {
+            action.reset().fadeIn(0.5).play();
+        }
+
+        this.currentAction = name;
+        return true;
     }
 
     update(delta, camera) {
