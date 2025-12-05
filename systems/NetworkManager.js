@@ -321,4 +321,24 @@ export class NetworkManager {
             }
         });
     }
-}
+
+    getPlayerCountsByMap() {
+        const counts = {
+            mansion: 0,
+            city: 0,
+            burnin_rubber: 0
+        };
+        
+        // Count local player
+        if (this.currentMap) {
+            counts[this.currentMap] = (counts[this.currentMap] || 0) + 1;
+        }
+        
+        // Count remote players
+        Object.values(this.remotePlayers).forEach(player => {
+            const map = player.map || 'burnin_rubber';
+            counts[map] = (counts[map] || 0) + 1;
+        });
+        
+        return counts;
+    }}

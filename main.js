@@ -586,6 +586,75 @@ function closeAvatarPanel() {
     }
 }
 
+// Map Selector Panel
+const mapSelectorButton = document.getElementById('map-selector-button');
+const mapPanelOverlay = document.getElementById('map-panel-overlay');
+const mapPanelClose = document.getElementById('map-panel-close');
+const mapCards = document.querySelectorAll('.map-card');
+
+// Open map panel
+mapSelectorButton.addEventListener('click', () => {
+    mapPanelOverlay.classList.add('active');
+    updateMapPlayerCounts();
+    updateCurrentMapIndicator();
+});
+
+// Close map panel
+mapPanelClose.addEventListener('click', () => {
+    mapPanelOverlay.classList.remove('active');
+});
+
+// Close on overlay click
+mapPanelOverlay.addEventListener('click', (e) => {
+    if (e.target === mapPanelOverlay) {
+        mapPanelOverlay.classList.remove('active');
+    }
+});
+
+// Map card click handlers
+mapCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const mapName = card.dataset.map;
+        let mapUrl = '';
+
+        if (mapName === 'mansion') {
+            mapUrl = '/maps/mansion_map_-_unlimited_gun_for_hire.glb';
+        } else if (mapName === 'city') {
+            mapUrl = '/maps/city 3/source/town4new.glb';
+        } else if (mapName === 'burnin_rubber') {
+            mapUrl = '/maps/burnin_rubber_crash_n_burn_city.glb';
+        }
+
+        if (mapUrl) {
+            loadMap(mapUrl);
+            mapPanelOverlay.classList.remove('active');
+        }
+    });
+});
+
+// Update player counts on map cards
+function updateMapPlayerCounts() {
+    const playerCounts = networkManager.getPlayerCountsByMap();
+
+    mapCards.forEach(card => {
+        const mapName = card.dataset.map;
+        const count = playerCounts[mapName] || 0;
+        const badge = card.querySelector('.map-player-count');
+        badge.textContent = `${count} player${count !== 1 ? 's' : ''}`;
+    });
+}
+
+// Update current map indicator
+function updateCurrentMapIndicator() {
+    mapCards.forEach(card => {
+        if (card.dataset.map === currentMapName) {
+            card.classList.add('current-map');
+        } else {
+            card.classList.remove('current-map');
+        }
+    });
+}
+
 function navigateAvatar(direction) {
     currentPreviewIndex = (currentPreviewIndex + direction + avatarList.length) % avatarList.length;
     loadPreviewAvatar(avatarList[currentPreviewIndex]);
