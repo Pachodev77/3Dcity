@@ -97,6 +97,7 @@ export class Avatar {
 
             // Load Animations
             this.mixer = new THREE.AnimationMixer(this.model);
+            this.mixer.addEventListener('finished', (e) => this.onAnimationFinished(e));
             await this.loadAnimations();
 
         } catch (error) {
@@ -183,6 +184,16 @@ export class Avatar {
 
         this.currentAction = name;
         return true;
+    }
+
+    onAnimationFinished(e) {
+        const action = e.action;
+        const clip = action.getClip();
+
+        if (clip === this.animations['punching'] || clip === this.animations['kick']) {
+            this.isAttacking = false;
+            // Flow will be picked up by updateMovement in the next frame
+        }
     }
 
     update(delta, camera) {
@@ -318,13 +329,7 @@ export class Avatar {
         this.playAnimation(attackAnim, true, false);
         this.comboCounter++;
 
-        // Reset attack state after animation
-        setTimeout(() => {
-            this.isAttacking = false;
-            if (!this.isJumping && !this.isDead) { // Don't reset if jumped or died
-                this.playAnimation('idle');
-            }
-        }, this.attackCooldown);
+        // State reset handled by onAnimationFinished listener
     }
 
     checkGroundCollision(collidableObjects) {
