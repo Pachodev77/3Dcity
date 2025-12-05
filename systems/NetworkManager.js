@@ -288,6 +288,28 @@ export class NetworkManager {
             x: position.x,
             y: position.y,
             z: position.z,
+            rotation: rotation
+        });
+        this.lastVehicleUpdate = now;
+    }
+
+    sendChatMessage(message) {
+        this.socket.emit('chatMessage', {
+            message: message
+        });
+    }
+
+    sendPlayerDamage(targetId, damage) {
+        this.socket.emit('playerDamage', {
+            targetId: targetId,
+            damage: damage
+        });
+    }
+
+    update(delta, camera) {
+        // Update animations of all remote players
+        Object.values(this.remotePlayers).forEach(player => {
+            player.update(delta, camera);
         });
         // Update zombies
         Object.values(this.remoteZombies).forEach(zombie => {
