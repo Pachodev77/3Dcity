@@ -45,6 +45,14 @@ export class Vehicle {
         this.audioState = 'off'; // off, starting, idle, accelerating, decelerating
     }
 
+    get position() {
+        return this.mesh.position;
+    }
+
+    get rotation() {
+        return this.mesh.rotation;
+    }
+
     setAudioListener(listener) {
         this.audioListener = listener;
         this.loadSounds();
