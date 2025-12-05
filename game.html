@@ -908,15 +908,73 @@
             transform: translateY(1px);
         }
 
-        /* Top Left Controls Container */
-        #top-left-controls {
+        /* Health Bar */
+        #health-container {
             position: absolute;
             top: 20px;
             left: 20px;
             display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(20, 20, 30, 0.6);
+            padding: 8px 15px;
+            border-radius: 25px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            pointer-events: auto;
+        }
+
+        .health-icon {
+            font-size: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .health-bar-bg {
+            width: 150px;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        #health-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Top Left Controls Container */
+        #top-left-controls {
+            position: absolute;
+            top: 80px;
+            /* Moved down to accommodate health bar */
+            left: 20px;
+            display: flex;
             gap: 15px;
             z-index: 1000;
+            pointer-events: auto;
         }
+
 
         /* Unified Control Button Style */
         .control-btn-unified {
@@ -999,12 +1057,24 @@
     </div>
     <div id="damage-overlay"></div>
 
-    <!-- Unified Top Left Controls -->
-    <div id="top-left-controls">
-        <button id="chat-toggle-button" class="control-btn-unified" title="Open Chat">💬</button>
-        <button id="music-toggle-btn" class="control-btn-unified" title="Music Player">🎵</button>
-        <button id="avatar-button" class="control-btn-unified" title="Select Avatar">👤</button>
-        <button id="map-selector-button" class="control-btn-unified" title="Select Map">🗺️</button>
+    <!-- Top Left UI Container -->
+    <div id="ui-top-left-container" style="position: absolute; top: 0; left: 0; z-index: 1000;">
+        <!-- Health Bar UI -->
+        <div id="health-container">
+            <div class="health-icon">❤️</div>
+            <div class="health-bar-bg">
+                <div id="health-bar-fill"></div>
+            </div>
+            <div id="health-text" style="color: white; font-size: 12px; font-weight: bold; margin-left: 5px;">100%</div>
+        </div>
+
+        <!-- Unified Top Left Controls -->
+        <div id="top-left-controls">
+            <button id="chat-toggle-button" class="control-btn-unified" title="Open Chat">💬</button>
+            <button id="music-toggle-btn" class="control-btn-unified" title="Music Player">🎵</button>
+            <button id="avatar-button" class="control-btn-unified" title="Select Avatar">👤</button>
+            <button id="map-selector-button" class="control-btn-unified" title="Select Map">🗺️</button>
+        </div>
     </div>
 
     <div id="music-panel">

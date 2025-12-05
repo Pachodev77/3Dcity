@@ -31,6 +31,11 @@ export class Avatar {
         this.raycaster = new THREE.Raycaster();
         this.tempVector = new THREE.Vector3();
         this.tempDirection = new THREE.Vector3();
+
+        // Health System
+        this.maxHealth = 100;
+        this.health = this.maxHealth;
+        this.isDead = false;
     }
 
     get position() {
@@ -358,6 +363,67 @@ export class Avatar {
                 }
             });
             this.scene.remove(this.model);
+        }
+    }
+
+    takeDamage(amount) {
+        if (this.isDead) return;
+
+        this.health = Math.max(0, this.health - amount);
+        this.updateHealthUI();
+
+        // Visual feedback
+        const damageOverlay = document.getElementById('damage-overlay');
+        if (damageOverlay) {
+            damageOverlay.style.opacity = '0.5';
+            setTimeout(() => {
+                damageOverlay.style.opacity = '0';
+            }, 200);
+        }
+
+        if (this.health <= 0) {
+            this.die();
+        }
+    }
+
+    updateHealthUI() {
+        const fill = document.getElementById('health-bar-fill');
+        const text = document.getElementById('health-text');
+
+        if (fill && text) {
+            const percentage = (this.health / this.maxHealth) * 100;
+            fill.style.width = `${percentage}%`;
+            text.textContent = `${Math.ceil(percentage)}%`;
+
+            // Color change based on health
+            if (percentage < 30) {
+                fill.style.background = 'linear-gradient(90deg, #c0392b, #7f0000)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+            }
+        }
+    }
+
+    die() {
+        this.isDead = true;
+        console.log('Player died');
+
+        // Disable movement or visibility
+        if (this.model) this.model.visible = false;
+
+        // Show death message (optional, for now just respawn)
+        setTimeout(() => this.respawn(), 3000);
+    }
+
+    respawn() {
+        this.isDead = false;
+        this.health = this.maxHealth;
+        this.updateHealthUI();
+
+        if (this.model) {
+            this.model.visible = true;
+            this.model.position.set(0, 0, 0); // Reset position to spawn
+            // Or use a spawn point variable if available
         }
     }
 }

@@ -753,6 +753,13 @@ window.addEventListener('keydown', (e) => {
 });
 enterExitButton.addEventListener('click', toggleVehicle);
 
+window.addEventListener('player-hit', () => {
+    if (avatar) {
+        avatar.takeDamage(10);
+        console.log('Player took damage! Health:', avatar.health);
+    }
+});
+
 // Initial Setup - Load Burnin Rubber map by default
 loadMap('/maps/burnin_rubber_crash_n_burn_city.glb');
 
