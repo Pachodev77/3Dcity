@@ -92,7 +92,30 @@ export class Avatar {
             'punching': '/avatars/animations/Punching.fbx' // Attack animation
         };
 
-        const promises = Object.entries(animationsToLoad).map(async ([name, url]) => {
+        // Load idle first to prevent T-pose
+        try {
+            const idleAnim = await loadWithCache('/avatars/animations/Idle.fbx', animLoader);
+            if (idleAnim.animations && idleAnim.animations.length > 0) {
+                this.animations['idle'] = idleAnim.animations[0];
+                // Play idle immediately
+                this.playAnimation('idle');
+                // Show model now that idle is playing
+                if (this.model && this.visible) {
+                    this.model.visible = true;
+                }
+            }
+        } catch (error) {
+            console.warn('Could not load idle animation:', error);
+        }
+
+        // Load remaining animations in background
+        const remainingAnims = {
+            'walking': '/avatars/animations/Walking.fbx',
+            'running': '/avatars/animations/Running.fbx',
+            'punching': '/avatars/animations/Punching.fbx'
+        };
+
+        const promises = Object.entries(remainingAnims).map(async ([name, url]) => {
             try {
                 const anim = await loadWithCache(url, animLoader);
                 if (anim.animations && anim.animations.length > 0) {
@@ -104,12 +127,6 @@ export class Avatar {
         });
 
         await Promise.all(promises);
-
-        // Start idle animation
-        this.playAnimation('idle');
-        if (this.model && this.visible) {
-            this.model.visible = true;
-        }
     }
 
     playAnimation(name) {

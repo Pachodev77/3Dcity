@@ -62,45 +62,48 @@ export class RemoteAvatar {
         });
     }
 
-    loadAnimations() {
+    async loadAnimations() {
         const loader = new FBXLoader();
-        const animationsToLoad = {
-            'idle': '/avatars/animations/Idle.fbx',
-            'walking': '/avatars/animations/Walking.fbx',
-            'running': '/avatars/animations/Running.fbx'
-        };
-
         const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
             return new Promise((resolve, reject) => {
                 loader.load(path, resolve, undefined, reject);
             });
         };
 
-        let loadedCount = 0;
-        Object.entries(animationsToLoad).forEach(([name, url]) => {
-            loadFunc(url, loader).then((object) => {
-                if (object.animations && object.animations.length > 0) {
-                    this.animations[name] = object.animations[0];
-
-                    // If idle animation is loaded, play it and show the model immediately
-                    if (name === 'idle') {
-                        this.setState('idle');
-                        if (this.model) this.model.visible = true;
-                    }
-
-                    loadedCount++;
-                    if (loadedCount === Object.keys(animationsToLoad).length) {
-                        // Ensure state is correct if we missed the immediate check or switched state
-                        if (this.currentState === 'idle') {
-                            this.setState('idle');
-                        }
-                    }
+        // Load idle animation first to prevent T-pose
+        try {
+            const idleAnim = await loadFunc('/avatars/animations/Idle.fbx', loader);
+            if (idleAnim.animations && idleAnim.animations.length > 0) {
+                this.animations['idle'] = idleAnim.animations[0];
+                // Play idle immediately
+                this.setState('idle');
+                // Show model now that idle is playing
+                if (this.model) {
+                    this.model.visible = true;
                 }
-            }).catch((error) => {
+            }
+        } catch (error) {
+            console.warn('Could not load remote avatar idle animation:', error);
+        }
+
+        // Load remaining animations in background
+        const remainingAnimations = {
+            'walking': '/avatars/animations/Walking.fbx',
+            'running': '/avatars/animations/Running.fbx'
+        };
+
+        const promises = Object.entries(remainingAnimations).map(async ([name, url]) => {
+            try {
+                const anim = await loadFunc(url, loader);
+                if (anim.animations && anim.animations.length > 0) {
+                    this.animations[name] = anim.animations[0];
+                }
+            } catch (error) {
                 console.warn(`Could not load remote avatar animation "${name}":`, error);
-                loadedCount++;
-            });
+            }
         });
+
+        await Promise.all(promises);
     }
 
     setState(stateName) {
