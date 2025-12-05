@@ -420,29 +420,16 @@ previewScene.add(previewBackLight);
 
 // Load avatar into preview
 async function loadPreviewAvatar(avatarName) {
-    // Remove existing preview avatar
+    // Store current rotation if exists
+    const currentRotation = previewAvatar ? previewAvatar.rotation.y : 0;
+
+    // Remove existing preview avatar (but don't dispose - it's from cache)
     if (previewAvatar) {
         previewScene.remove(previewAvatar);
-        previewAvatar.traverse((child) => {
-            if (child.isMesh) {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(mat => {
-                            if (mat.map) mat.map.dispose();
-                            mat.dispose();
-                        });
-                    } else {
-                        if (child.material.map) child.material.map.dispose();
-                        child.material.dispose();
-                    }
-                }
-            }
-        });
         previewAvatar = null;
     }
 
-    // Load new avatar using FBXLoader (same as main Avatar class)
+    // Load new avatar using FBXLoader (from cache - should be instant)
     const loader = new FBXLoader();
     try {
         const fbx = await loadWithCache(`/avatars/${avatarName}.fbx`, loader);
@@ -455,7 +442,18 @@ async function loadPreviewAvatar(avatarName) {
             previewAvatar.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
         }
 
-        previewAvatar.position.set(0, 0, 0);
+        // Calculate bounding box to center the avatar properly
+        const box = new THREE.Box3().setFromObject(previewAvatar);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        // Position avatar so it's centered and standing on the ground
+        // Move to origin, then offset by negative center to truly center it
+        previewAvatar.position.set(-center.x, -box.min.y, -center.z);
+
+        // Restore rotation to maintain continuity
+        previewAvatar.rotation.y = currentRotation;
+
         previewScene.add(previewAvatar);
 
         // Update name display
@@ -528,25 +526,9 @@ function closeAvatarPanel() {
         previewAnimationId = null;
     }
 
-    // Clean up preview avatar
+    // Remove preview avatar from scene (but don't dispose - it's from cache)
     if (previewAvatar) {
         previewScene.remove(previewAvatar);
-        previewAvatar.traverse((child) => {
-            if (child.isMesh) {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(mat => {
-                            if (mat.map) mat.map.dispose();
-                            mat.dispose();
-                        });
-                    } else {
-                        if (child.material.map) child.material.map.dispose();
-                        child.material.dispose();
-                    }
-                }
-            }
-        });
         previewAvatar = null;
     }
 }
