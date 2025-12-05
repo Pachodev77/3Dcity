@@ -80,16 +80,21 @@ export class Zombie {
 
         // Foreground (Green)
         const fgGeo = new THREE.PlaneGeometry(100, 10);
+        // Translate geometry so the pivot point is at the left edge (0,0) instead of center
+        fgGeo.translate(50, 0, 0);
         const fgMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.healthBarMesh = new THREE.Mesh(fgGeo, fgMat);
+
+        // Position the mesh at the left edge of the background (-50)
+        // Since geometry starts at 0 and goes to 100, placing it at -50 makes it cover -50 to 50.
         this.healthBarMesh.position.z = 1; // Slightly in front
+        this.healthBarMesh.position.x = -50;
 
         this.healthBarGroup.add(bgMesh);
         this.healthBarGroup.add(this.healthBarMesh);
 
         this.healthBarGroup.visible = false; // Hidden initially
-        this.healthBarGroup.rotation.y = Math.PI; // Face generally forward/camera? 
-        // We'll need billboard logic in update
+        // Billboard logic is in update
 
         this.model.add(this.healthBarGroup);
     }
@@ -97,12 +102,18 @@ export class Zombie {
     loadAnimations() {
         const animLoader = new FBXLoader();
         const animFiles = [
-            'walking', 'zombie attack', 'zombie running'
+            'walking', 'zombie attack', 'zombie running', 'zombie agonizing'
         ];
         const animationsToLoad = {};
         animFiles.forEach(name => {
             animationsToLoad[name] = `/avatars/zombi/animations/${name}.fbx`;
         });
+
+        // Mapping 'zombie agonizing' to a simpler key usually helps, but we can stick to the file name or map it.
+        // Let's use the file name keys for consistency with current code logic, 
+        // but maybe map 'zombie agonizing' to 'death' state for clarity if we want, 
+        // strictly speaking the current code uses the key 'zombie agonizing' if we don't alias it.
+        // The current loop uses the raw name from the list.
 
         let loadedCount = 0;
         const totalAnims = Object.keys(animationsToLoad).length;
@@ -138,6 +149,12 @@ export class Zombie {
 
         newAction.reset().fadeIn(0.5).play();
 
+        // Special handling for death animation to not loop
+        if (name === 'zombie agonizing') {
+            newAction.setLoop(THREE.LoopOnce);
+            newAction.clampWhenFinished = true;
+        }
+
         this.currentState = name;
     }
 
@@ -152,7 +169,7 @@ export class Zombie {
     }
 
     updateAI(delta, playerPosition, playerAvatar, camera) {
-        if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
+        if (!this.model || !this.mixer || !playerPosition || !playerAvatar || this.isDead) return;
 
         this.frameCounter++;
 
@@ -222,7 +239,6 @@ export class Zombie {
         }
 
         // Billboard Health Bar
-        // Billboard Health Bar
         if (this.healthBarGroup && this.healthBarGroup.visible && camera) {
             this.healthBarGroup.lookAt(camera.position);
         }
@@ -236,14 +252,7 @@ export class Zombie {
         // Show and update health bar
         if (this.healthBarGroup) {
             this.healthBarGroup.visible = true;
-            const scale = this.health / this.maxHealth;
-            this.healthBarMesh.scale.x = scale;
-            // Center scaling: Move position x to keep left aligned?
-            // PlaneGeometry is centered. Scaling shrinks to center.
-            // Better to move it.
-            // Width 100. Scale 0.5 -> Width 50. Centered.
-            // To align left: translate geometry or adjust position.
-            // Let's keep centered for simplicity.
+            this.healthBarMesh.scale.x = this.health / this.maxHealth;
         }
 
         if (this.health <= 0) {
@@ -255,22 +264,20 @@ export class Zombie {
         this.isDead = true;
         this.healthBarGroup.visible = false;
 
-        // Simple death effect: Fall over
-        // Or remove collision
+        // Remove from collision immediately so player doesn't bump into dying zombie
         const index = this.collidableObjects.indexOf(this.model);
         if (index > -1) this.collidableObjects.splice(index, 1);
 
-        // Rotate to lie down (if no animation)
-        // this.model.rotation.x = -Math.PI / 2; 
-        // Animate sink?
+        // Play death animation
+        this.setState('zombie agonizing');
 
+        // Remove after animation finishes (approx 3.5s for this animation usually, safe buffer 4s)
         setTimeout(() => {
             if (this.model && this.model.parent) {
                 this.model.parent.remove(this.model);
-                this.model = null; // Cleanup
             }
-        }, 3000);
-
-        // Optional: Trigger respawn logic here if desired
+            this.model = null;
+            // Optional: Respawn logic
+        }, 4000);
     }
 }
