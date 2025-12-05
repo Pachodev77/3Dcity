@@ -8,8 +8,14 @@ import { CONFIG } from '../config.js';
 export class NetworkManager {
     constructor(scene) {
         this.scene = scene;
-        // Connect to dedicated Render server
-        this.socket = io('https://threedcity-multiplayer.onrender.com', {
+        this.scene = scene;
+        // Connect to Dedicated Server or Localhost based on environment
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const serverUrl = isLocal ? 'http://localhost:3001' : 'https://threedcity-multiplayer.onrender.com';
+
+        console.log(`[NetworkManager] Connecting to ${serverUrl} (Local: ${isLocal})`);
+
+        this.socket = io(serverUrl, {
             transports: ['websocket', 'polling']
         });
         this.remotePlayers = {}; // Map of id -> RemoteAvatar
