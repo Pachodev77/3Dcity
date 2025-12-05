@@ -35,6 +35,9 @@ export class NetworkManager {
         this.vehicleUpdateRate = 100; // 10 times per second
         this.zombieUpdateRate = 100; // 10 times per second
 
+        // Map tracking
+        this.currentMap = 'burnin_rubber'; // Default map
+
         this.setupSocketEvents();
     }
 
@@ -114,13 +117,26 @@ export class NetworkManager {
             // Dispatch event for ChatUI to handle
             window.dispatchEvent(new CustomEvent('chat-message-received', { detail: data }));
         });
+
+        // Map change events
+        this.socket.on('playerChangedMap', (data) => {
+            console.log('Player changed map:', data.id, 'to', data.map);
+            if (this.remotePlayers[data.id]) {
+                this.remotePlayers[data.id].map = data.map;
+                this.updateRemotePlayerVisibility();
+            }
+        });
     }
 
     addRemotePlayer(id, data) {
         if (this.remotePlayers[id]) return;
-        console.log('Adding remote player:', id);
+        console.log('Adding remote player:', id, 'on map:', data.map || 'burnin_rubber');
         const remoteAvatar = new RemoteAvatar(this.scene, id, data);
+        remoteAvatar.map = data.map || 'burnin_rubber'; // Store map
         this.remotePlayers[id] = remoteAvatar;
+
+        // Set initial visibility based on map
+        this.updateRemotePlayerVisibility();
     }
 
     removeRemotePlayer(id) {
@@ -192,7 +208,8 @@ export class NetworkManager {
                     z: position.z,
                     rotation: rotation.y,
                     animation: animation,
-                    avatarType: avatarType
+                    avatarType: avatarType,
+                    map: this.currentMap // Include current map
                 });
 
                 // Update last sent state
@@ -268,6 +285,34 @@ export class NetworkManager {
         // Update zombies
         Object.values(this.remoteZombies).forEach(zombie => {
             zombie.update(delta);
+        });
+    }
+
+    // Map management methods
+    changeMap(mapName) {
+        this.currentMap = mapName;
+        console.log('Changed to map:', mapName);
+        this.socket.emit('mapChange', { map: mapName });
+
+        // Update visibility of all remote players
+        this.updateRemotePlayerVisibility();
+    }
+
+    updateRemotePlayerVisibility() {
+        Object.entries(this.remotePlayers).forEach(([id, player]) => {
+            const shouldBeVisible = player.map === this.currentMap;
+            if (player.model) {
+                player.model.visible = shouldBeVisible;
+                console.log(`Player ${id} on map ${player.map}, current map ${this.currentMap}, visible: ${shouldBeVisible}`);
+            }
+        });
+
+        Object.entries(this.remoteZombies).forEach(([id, zombie]) => {
+            const player = this.remotePlayers[id];
+            const shouldBeVisible = player && player.map === this.currentMap;
+            if (zombie.model) {
+                zombie.model.visible = shouldBeVisible;
+            }
         });
     }
 }

@@ -101,6 +101,7 @@ window.addEventListener('chat-message-received', (e) => {
 
 // Game State
 let currentMap = null;
+let currentMapName = 'burnin_rubber'; // Track current map name
 let isInVehicle = false;
 let currentVehicle = null; // Vehicle instance
 let nearbyVehicle = null; // Vehicle instance
@@ -142,6 +143,18 @@ function updateLoadingProgress() {
 
 // Map Loading
 function loadMap(mapUrl) {
+    // Extract map name from URL
+    let mapName = 'unknown';
+    if (mapUrl.includes('mansion')) mapName = 'mansion';
+    else if (mapUrl.includes('burnin_rubber')) mapName = 'burnin_rubber';
+    else if (mapUrl.includes('town4new')) mapName = 'city';
+
+    currentMapName = mapName;
+    console.log('Loading map:', mapName);
+
+    // Notify server of map change
+    networkManager.changeMap(mapName);
+
     if (currentMap) {
         // Cleanup
         currentMap.traverse((child) => {

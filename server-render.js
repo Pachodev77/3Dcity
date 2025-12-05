@@ -68,6 +68,7 @@ io.on('connection', (socket) => {
         rotation: 0,
         animation: 'idle',
         avatarType: 'Ch02_nonPBR', // Default avatar
+        map: 'burnin_rubber', // Default map
         zombie: { // Each player has a zombie
             x: 0,
             y: 0,
@@ -99,6 +100,9 @@ io.on('connection', (socket) => {
             players[socket.id].animation = movementData.animation;
             if (movementData.avatarType) {
                 players[socket.id].avatarType = movementData.avatarType;
+            }
+            if (movementData.map) {
+                players[socket.id].map = movementData.map;
             }
 
             // Broadcast the update to all other players
@@ -162,6 +166,20 @@ io.on('connection', (socket) => {
             message: data.message,
             timestamp: Date.now()
         });
+    });
+
+    // Handle map change
+    socket.on('mapChange', (data) => {
+        if (players[socket.id]) {
+            console.log(`Player ${socket.id} changed map to:`, data.map);
+            players[socket.id].map = data.map;
+
+            // Broadcast to all other players
+            socket.broadcast.emit('playerChangedMap', {
+                id: socket.id,
+                map: data.map
+            });
+        }
     });
 
     // Handle disconnect
