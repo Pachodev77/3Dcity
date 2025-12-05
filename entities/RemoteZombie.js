@@ -57,6 +57,9 @@ export class RemoteZombie {
                 child.castShadow = false;
                 child.receiveShadow = false;
             }
+            if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
+                this.hips = child;
+            }
         });
 
         this.mixer = new THREE.AnimationMixer(this.model);
@@ -148,6 +151,10 @@ export class RemoteZombie {
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
+            if (this.hips) {
+                this.hips.position.x = 0;
+                this.hips.position.z = 0;
+            }
         }
     }
 

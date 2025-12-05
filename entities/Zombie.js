@@ -216,6 +216,10 @@ export class Zombie {
             }
         }
         this.mixer.update(delta);
+        if (this.hips) {
+            this.hips.position.x = 0;
+            this.hips.position.z = 0;
+        }
 
         // Billboard Health Bar
         // Billboard Health Bar
