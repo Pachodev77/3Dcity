@@ -16,36 +16,7 @@
             display: block;
         }
 
-        /* Avatar Selection Button */
-        #avatar-button {
-            position: absolute;
-            top: 20px;
-            left: 90px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: 2px solid #3498db;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
-        }
 
-        #avatar-button:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.9);
-            box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
-        }
-
-        #avatar-button:active {
-            transform: scale(0.95);
-        }
 
         /* Avatar Panel Overlay */
         #avatar-panel-overlay {
@@ -512,31 +483,7 @@
         }
 
         /* Music Player Styles */
-        #music-toggle-btn {
-            position: absolute;
-            top: 20px;
-            left: 55px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: 2px solid #00ff88;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
 
-        #music-toggle-btn:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.9);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
-        }
 
         #music-panel {
             position: absolute;
@@ -693,34 +640,7 @@
         }
 
         /* Chat UI Styles */
-        #chat-toggle-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 25px;
-            height: 25px;
-            background-color: rgba(46, 204, 113, 0.8);
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 12px;
-            z-index: 101;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
 
-        #chat-toggle-button:hover {
-            background-color: rgba(39, 174, 96, 0.9);
-            transform: scale(1.1);
-        }
-
-        #chat-toggle-button:active {
-            transform: scale(0.95);
-        }
 
         #chat-container {
             position: absolute;
@@ -864,36 +784,7 @@
             transform: translateY(1px);
         }
 
-        /* Map Selector Button */
-        #map-selector-button {
-            position: absolute;
-            top: 20px;
-            left: 115px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: 2px solid #f39c12;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
-        }
 
-        #map-selector-button:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.9);
-            box-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
-        }
-
-        #map-selector-button:active {
-            transform: scale(0.95);
-        }
 
         /* Map Panel Overlay */
         #map-panel-overlay {
@@ -1016,6 +907,81 @@
         #map-panel-close:active {
             transform: translateY(1px);
         }
+
+        /* Top Left Controls Container */
+        #top-left-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        /* Unified Control Button Style */
+        .control-btn-unified {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn-unified::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 50%;
+        }
+
+        .control-btn-unified:hover {
+            transform: translateY(-3px) scale(1.05);
+            background: rgba(30, 30, 40, 0.85);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-btn-unified:active {
+            transform: translateY(1px) scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Specific Glows for each button type on hover */
+        #chat-toggle-button:hover {
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+            border-color: #2ecc71;
+        }
+
+        #music-toggle-btn:hover {
+            box-shadow: 0 0 20px rgba(155, 89, 182, 0.4);
+            border-color: #9b59b6;
+        }
+
+        #avatar-button:hover {
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+            border-color: #3498db;
+        }
+
+        #map-selector-button:hover {
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+            border-color: #f39c12;
+        }
     </style>
 </head>
 
@@ -1033,8 +999,13 @@
     </div>
     <div id="damage-overlay"></div>
 
-    <!-- Music Player UI -->
-    <button id="music-toggle-btn">🎵</button>
+    <!-- Unified Top Left Controls -->
+    <div id="top-left-controls">
+        <button id="chat-toggle-button" class="control-btn-unified" title="Open Chat">💬</button>
+        <button id="music-toggle-btn" class="control-btn-unified" title="Music Player">🎵</button>
+        <button id="avatar-button" class="control-btn-unified" title="Select Avatar">👤</button>
+        <button id="map-selector-button" class="control-btn-unified" title="Select Map">🗺️</button>
+    </div>
 
     <div id="music-panel">
         <div class="music-header">
@@ -1060,8 +1031,7 @@
     </div>
     <button id="fullscreen-button" title="Toggle Fullscreen">⛶</button>
 
-    <!-- Avatar Selection Button -->
-    <button id="avatar-button" title="Select Avatar">👤</button>
+
 
     <!-- Avatar Selection Panel -->
     <div id="avatar-panel-overlay">
@@ -1080,8 +1050,7 @@
         </div>
     </div>
 
-    <!-- Map Selector Button -->
-    <button id="map-selector-button" title="Select Map">🗺️</button>
+
 
     <!-- Map Panel Overlay -->
     <div id="map-panel-overlay">
@@ -1125,8 +1094,7 @@
     <div id="joystick-container-camera"></div>
     <div id="enter-exit-button">E</div>
 
-    <!-- Chat UI -->
-    <button id="chat-toggle-button" title="Open Chat">💬</button>
+
     <div id="chat-container">
         <div id="chat-header">
             💬 Live Chat
