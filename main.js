@@ -26,8 +26,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.PERFORMANCE.MAX_PIXEL_RATIO));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.enabled = false;
 document.body.appendChild(renderer.domElement);
 
 // Lighting
@@ -36,14 +35,13 @@ scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 10, 7.5);
-directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set(CONFIG.PERFORMANCE.SHADOW_MAP_SIZE, CONFIG.PERFORMANCE.SHADOW_MAP_SIZE);
+directionalLight.castShadow = false;
 scene.add(directionalLight);
 
 // Ground
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide }));
 ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
+ground.receiveShadow = false;
 scene.add(ground);
 
 // Collision Systems

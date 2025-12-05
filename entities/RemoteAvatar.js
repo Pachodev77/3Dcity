@@ -48,8 +48,8 @@ export class RemoteAvatar {
 
             this.model.traverse((child) => {
                 if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
                 }
             });
 

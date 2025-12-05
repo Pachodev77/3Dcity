@@ -66,8 +66,8 @@ export class Avatar {
             this.model.position.set(0, 0, 5);
             this.model.traverse((child) => {
                 if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
                 }
             });
             this.model.visible = false; // Hide initially to prevent T-Pose
