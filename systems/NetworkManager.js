@@ -80,6 +80,12 @@ export class NetworkManager {
 
         this.socket.on('playerMoved', (playerInfo) => {
             if (this.remotePlayers[playerInfo.id]) {
+                // Update map if it changed
+                if (playerInfo.map && this.remotePlayers[playerInfo.id].map !== playerInfo.map) {
+                    console.log(`Player ${playerInfo.id} map updated from ${this.remotePlayers[playerInfo.id].map} to ${playerInfo.map}`);
+                    this.remotePlayers[playerInfo.id].map = playerInfo.map;
+                    this.updateRemotePlayerVisibility();
+                }
                 this.remotePlayers[playerInfo.id].updateState(playerInfo);
             }
         });
