@@ -680,9 +680,7 @@ avatarPanelOverlay.addEventListener('click', (e) => {
     }
 });
 
-document.getElementById('home-button').addEventListener('click', () => loadMap('/maps/mansion_map_-_unlimited_gun_for_hire.glb'));
-document.getElementById('city-button').addEventListener('click', () => loadMap('/maps/city 3/source/town4new.glb'));
-document.getElementById('circuit-button').addEventListener('click', () => loadMap('/maps/burnin_rubber_crash_n_burn_city.glb'));
+
 
 // Camera position states
 const CAMERA_POSITIONS = [
