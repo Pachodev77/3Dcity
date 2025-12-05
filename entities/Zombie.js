@@ -71,11 +71,7 @@ export class Zombie {
     createHealthBar() {
         // Create Health Bar Group
         this.healthBarGroup = new THREE.Group();
-        this.healthBarGroup.position.y = 180; // Above head (assuming scale 0.01, 180cm)
-        // If scale is applied to model, this local position is relative to scaled model or unscaled?
-        // ThreeJS: child position is in parent's local space. 
-        // If model has scale 0.01, and we want 1.8m height in world, we need 180 units in local? 
-        // Let's assume standard Mixamo (cm units).
+        this.healthBarGroup.position.y = 200; // Increased height for visibility
 
         // Background (Red)
         const bgGeo = new THREE.PlaneGeometry(100, 10);
@@ -155,7 +151,7 @@ export class Zombie {
         }
     }
 
-    updateAI(delta, playerPosition, playerAvatar) {
+    updateAI(delta, playerPosition, playerAvatar, camera) {
         if (!this.model || !this.mixer || !playerPosition || !playerAvatar) return;
 
         this.frameCounter++;
@@ -222,13 +218,9 @@ export class Zombie {
         this.mixer.update(delta);
 
         // Billboard Health Bar
-        if (this.healthBarGroup && this.healthBarGroup.visible) {
-            this.healthBarGroup.lookAt(this.scene.camera.position); // Assuming camera is accessible via scene.camera? No.
-            // Usually camera is passed to update methods.
-            // We'll skip precise billiboarding for now or fix in update arguments.
-            // Actually, Avatar.js update receives camera. Zombie.js updateAI receives model?
-            // Main.js calls: zombie.updateAI(delta, avatar.position, avatar.model);
-            // We don't have camera.
+        // Billboard Health Bar
+        if (this.healthBarGroup && this.healthBarGroup.visible && camera) {
+            this.healthBarGroup.lookAt(camera.position);
         }
     }
 

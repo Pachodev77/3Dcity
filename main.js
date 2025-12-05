@@ -845,7 +845,7 @@ function animate() {
     // Throttled AI & Checks
     if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
         if (avatar.model) {
-            zombie.updateAI(delta, avatar.position, avatar.model);
+            zombie.updateAI(delta, avatar.position, avatar.model, camera);
         }
 
         // Proximity Check
