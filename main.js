@@ -38,15 +38,9 @@ directionalLight.position.set(5, 10, 7.5);
 directionalLight.castShadow = false;
 scene.add(directionalLight);
 
-// Ground
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide }));
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = false;
-scene.add(ground);
-
-// Collision Systems
-const collidableObjects = [ground];
-const groundCollidableObjects = [ground];
+// Collision Systems - Arrays vacíos ya que el suelo vendrá del mapa
+const collidableObjects = [];
+const groundCollidableObjects = [];
 
 // Systems
 const inputManager = new InputManager();
