@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { CONFIG } from './config.js';
 import { Avatar } from './entities/Avatar.js';
 import { Vehicle } from './entities/Vehicle.js';
@@ -394,12 +395,19 @@ async function loadPreviewAvatar(avatarName) {
         previewAvatar = null;
     }
 
-    // Load new avatar
-    const loader = new GLTFLoader();
+    // Load new avatar using FBXLoader (same as main Avatar class)
+    const loader = new FBXLoader();
     try {
-        const gltf = await loadWithCache(`/models/${avatarName}.glb`, loader);
-        previewAvatar = gltf.scene;
-        previewAvatar.scale.set(1, 1, 1);
+        const fbx = await loadWithCache(`/avatars/${avatarName}.fbx`, loader);
+        previewAvatar = fbx;
+
+        // Apply same scaling as main Avatar class
+        if (avatarName === 'Remy@T-Pose') {
+            previewAvatar.scale.set(CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE);
+        } else {
+            previewAvatar.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
+        }
+
         previewAvatar.position.set(0, 0, 0);
         previewScene.add(previewAvatar);
 
