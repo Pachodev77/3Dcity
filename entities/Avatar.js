@@ -36,6 +36,9 @@ export class Avatar {
         this.maxHealth = 100;
         this.health = this.maxHealth;
         this.isDead = false;
+
+        // Combat Combo
+        this.comboCounter = 0;
     }
 
     get position() {
@@ -303,11 +306,17 @@ export class Avatar {
         if (now - this.lastAttackTime < this.attackCooldown) return;
 
         this.isAttacking = true;
+
+        // Reset combo if too much time passed (2 seconds)
+        if (now - this.lastAttackTime > 2000) {
+            this.comboCounter = 0;
+        }
         this.lastAttackTime = now;
 
-        // Randomize attack
-        const attackAnim = Math.random() > 0.5 ? 'punching' : 'kick';
+        // Sequential Combo: Punch -> Kick
+        const attackAnim = this.comboCounter % 2 === 0 ? 'punching' : 'kick';
         this.playAnimation(attackAnim, true, false);
+        this.comboCounter++;
 
         // Reset attack state after animation
         setTimeout(() => {

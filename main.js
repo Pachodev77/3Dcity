@@ -865,7 +865,7 @@ function animate() {
     }
 
     // Input & Movement
-    const moveInput = inputManager.getMoveInput();
+    const moveInput = inputManager.getMoveInput(isInVehicle);
     const cameraInput = inputManager.getCameraInput();
 
     // Don't process movement if chat is focused

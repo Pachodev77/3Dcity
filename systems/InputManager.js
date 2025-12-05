@@ -113,17 +113,19 @@ export class InputManager {
         }
     }
 
-    getMoveInput() {
+    getMoveInput(isInVehicle = false) {
         // Combine joystick input with button input for vehicles
         const input = { ...this.moveData };
 
-        // If buttons are pressed, override the y-axis (forward/backward)
-        if (this.isButton1Pressed) {
-            input.vector = { ...input.vector, y: 1 }; // Forward
-            input.distance = 1;
-        } else if (this.isButton2Pressed) {
-            input.vector = { ...input.vector, y: -1 }; // Backward/Brake
-            input.distance = 1;
+        // If buttons are pressed, override the y-axis (forward/backward) ONLY if in vehicle
+        if (isInVehicle) {
+            if (this.isButton1Pressed) {
+                input.vector = { ...input.vector, y: 1 }; // Forward
+                input.distance = 1;
+            } else if (this.isButton2Pressed) {
+                input.vector = { ...input.vector, y: -1 }; // Backward/Brake
+                input.distance = 1;
+            }
         }
 
         return input;
