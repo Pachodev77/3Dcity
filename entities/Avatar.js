@@ -155,31 +155,22 @@ export class Avatar {
     }
 
     playAnimation(name, immediate = false, loop = true) {
-        if (!this.animations[name] || !this.mixer) {
-            // Only warn if not one of the new animations potentially loading
-            if (name !== 'jump' && name !== 'kick' && name !== 'dying') {
-                console.warn(`Animation "${name}" or mixer not ready`);
-            }
-            return false;
-        }
-
+        if (!this.animations[name] || !this.mixer) return false;
         if (this.currentAction === name && !immediate) return true;
 
-        const action = this.mixer.clipAction(this.animations[name]);
-        action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce);
-        action.clampWhenFinished = !loop;
+        const newAction = this.mixer.clipAction(this.animations[name]);
+        newAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce);
+        newAction.clampWhenFinished = !loop;
 
-        if (this.animations[this.currentAction] && !immediate) {
-            const previousAction = this.mixer.clipAction(this.animations[this.currentAction]);
-            if (previousAction) {
-                previousAction.fadeOut(0.2); // Faster fade for responsiveness
-            }
-        }
+        const prevAction = this.currentAction ? this.mixer.clipAction(this.animations[this.currentAction]) : null;
 
-        if (immediate) {
-            action.reset().play();
+        if (prevAction && !immediate) {
+            newAction.reset();
+            newAction.play();
+            prevAction.crossFadeTo(newAction, 0.2, true);
         } else {
-            action.reset().fadeIn(0.2).play();
+            newAction.reset().play();
+            if (prevAction) prevAction.stop();
         }
 
         this.currentAction = name;
@@ -255,6 +246,9 @@ export class Avatar {
     // Revised move method
     updateMovement(delta, moveData, camera, collidableObjects) {
         if (!this.model) return;
+
+        // Prevent movement inputs during attack or death
+        if (this.isAttacking || this.isDead) return;
 
         const moveSpeed = CONFIG.AVATAR.MOVE_SPEED;
         camera.getWorldDirection(this.tempDirection);
