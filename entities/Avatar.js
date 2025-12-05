@@ -442,6 +442,8 @@ export class Avatar {
 
     respawn() {
         this.isDead = false;
+        this.isAttacking = false;
+        this.comboCounter = 0;
         this.health = this.maxHealth;
         this.updateHealthUI();
 
@@ -454,7 +456,9 @@ export class Avatar {
         if (this.model) {
             this.model.visible = true;
             this.model.position.set(0, 0, 0); // Reset position to spawn
-            // Or use a spawn point variable if available
+
+            // Force Idle Animation
+            this.playAnimation('idle', true);
         }
     }
 }
