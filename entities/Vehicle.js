@@ -31,17 +31,169 @@ export class Vehicle {
         this.targetPitch = 0;
         this.targetRoll = 0;
         this.frameCounter = 0;
+
+        // Audio System
+        this.audioListener = null;
+        this.ignitionSound = null;
+        this.idleSound = null;
+        this.accelSound = null;
+        this.decelSound = null;
+        this.skidSound = null;
+        this.audioLoaded = false;
+
+        // Audio State
+        this.audioState = 'off'; // off, starting, idle, accelerating, decelerating
     }
 
-    get position() {
-        return this.mesh.position;
+    setAudioListener(listener) {
+        this.audioListener = listener;
+        this.loadSounds();
     }
 
-    get rotation() {
-        return this.mesh.rotation;
+    async loadSounds() {
+        if (!this.audioListener) return;
+
+        const audioLoader = new THREE.AudioLoader();
+        const loadSound = (path, loop = false, volume = 0.5) => {
+            return new Promise((resolve) => {
+                audioLoader.load(path, (buffer) => {
+                    const sound = new THREE.PositionalAudio(this.audioListener);
+                    sound.setBuffer(buffer);
+                    sound.setLoop(loop);
+                    sound.setRefDistance(5);
+                    sound.setRolloffFactor(1);
+                    sound.setVolume(volume);
+                    this.mesh.add(sound);
+                    resolve(sound);
+                }, undefined, (err) => {
+                    console.warn(`Failed to load sound: ${path}`, err);
+                    resolve(null);
+                });
+            });
+        };
+
+        try {
+            const [ignition, idle, accel, decel, skid] = await Promise.all([
+                loadSound('/sounds/car-ignition.wav', false, 0.8),
+                loadSound('/sounds/car-engine-idle.mp3', true, 0.3),
+                loadSound('/sounds/car-acelerating.mp3', true, 0.5),
+                loadSound('/sounds/car-desacelerating.mp3', true, 0.4),
+                loadSound('/sounds/car-skid.mp3', false, 0.6)
+            ]);
+
+            this.ignitionSound = ignition;
+            this.idleSound = idle;
+            this.accelSound = accel;
+            this.decelSound = decel;
+            this.skidSound = skid;
+            this.audioLoaded = true;
+
+        } catch (error) {
+            console.error('Error in loadSounds:', error);
+        }
+    }
+
+    startEngine() {
+        if (!this.audioLoaded) return;
+
+        // 1. Play Ignition
+        if (this.ignitionSound) {
+            if (this.ignitionSound.isPlaying) this.ignitionSound.stop();
+            this.ignitionSound.play();
+            this.audioState = 'starting';
+
+            // 2. Start Idle loop immediately (or after short delay)
+            if (this.idleSound) {
+                this.idleSound.play();
+                this.idleSound.setVolume(0.3); // Base volume
+            }
+
+            // Start other loops muted so we can crossfade
+            if (this.accelSound) {
+                this.accelSound.play();
+                this.accelSound.setVolume(0);
+            }
+            if (this.decelSound) {
+                this.decelSound.play();
+                this.decelSound.setVolume(0);
+            }
+        }
+    }
+
+    stopEngine() {
+        if (!this.audioLoaded) return;
+
+        [this.ignitionSound, this.idleSound, this.accelSound, this.decelSound, this.skidSound].forEach(s => {
+            if (s && s.isPlaying) s.stop();
+        });
+        this.audioState = 'off';
+    }
+
+    updateAudio(delta, input) {
+        if (!this.audioLoaded || this.audioState === 'off') return;
+
+        const speed = Math.abs(this.speed);
+        const maxSpeed = this.maxSpeed;
+        const forwardInput = input.y; // >0 accel, <0 brake/reverse
+
+        // --- State Logic ---
+        let targetState = 'idle';
+
+        if (forwardInput > 0.1) {
+            targetState = 'accelerating';
+        } else if (speed > 2 && forwardInput < 0.1 && forwardInput > -0.1) {
+            // Moving but not pressing gas/brake -> Coasting
+            targetState = 'decelerating';
+        } else {
+            targetState = 'idle';
+        }
+
+        // --- Volume Crossfading ---
+        const fadeSpeed = 3.0 * delta; // Speed of transition
+
+        // Idle Volume
+        let targetIdleVol = (targetState === 'idle') ? 0.4 : 0.1;
+        if (this.idleSound) {
+            const current = this.idleSound.getVolume();
+            this.idleSound.setVolume(THREE.MathUtils.lerp(current, targetIdleVol, fadeSpeed));
+        }
+
+        // Accel Volume
+        let targetAccelVol = (targetState === 'accelerating') ? 0.6 : 0.0;
+        if (this.accelSound) {
+            const current = this.accelSound.getVolume();
+            this.accelSound.setVolume(THREE.MathUtils.lerp(current, targetAccelVol, fadeSpeed));
+
+            // Pitch modulation for accel
+            const pitch = 0.8 + (speed / maxSpeed) * 0.8;
+            this.accelSound.setPlaybackRate(pitch);
+        }
+
+        // Decel Volume
+        let targetDecelVol = (targetState === 'decelerating') ? 0.5 : 0.0;
+        if (this.decelSound) {
+            const current = this.decelSound.getVolume();
+            this.decelSound.setVolume(THREE.MathUtils.lerp(current, targetDecelVol, fadeSpeed));
+            // Pitch modulation for decel (inverse or lower)
+            const pitch = 1.0 - (speed / maxSpeed) * 0.2;
+            this.decelSound.setPlaybackRate(pitch);
+        }
+
+        // --- Skid Logic ---
+        // Play skid if braking hard while moving fast
+        const isBrakingHard = (speed > 10 && forwardInput < -0.5);
+        const isTurningSharp = (speed > 15 && Math.abs(input.x) > 0.8);
+
+        if ((isBrakingHard || isTurningSharp) && this.skidSound && !this.skidSound.isPlaying) {
+            this.skidSound.play();
+            this.skidSound.setPlaybackRate(0.8 + Math.random() * 0.4);
+        }
     }
 
     update(delta, input, collidableObjects, groundCollidableObjects) {
+        // Update Audio System every frame
+        this.updateAudio(delta, input);
+
         if (!this.isOccupied) return;
 
         this.frameCounter++;
@@ -49,6 +201,7 @@ export class Vehicle {
         const forward = input.y;
         const turn = -input.x;
         const maxReverseSpeed = -this.maxSpeed * CONFIG.VEHICLE.MAX_REVERSE_SPEED_RATIO;
+        const wasMovingFast = Math.abs(this.speed) > 5;
 
         // Acceleration/deceleration
         if (forward > 0) { // Accelerating forward
@@ -60,6 +213,8 @@ export class Vehicle {
             if (this.speed < 0) this.speed += this.friction * delta;
             if (Math.abs(this.speed) < 0.1) this.speed = 0; // Stop friction from flipping direction
         }
+        this.speed = Math.max(maxReverseSpeed, Math.min(this.speed, this.maxSpeed));
+
         this.speed = Math.max(maxReverseSpeed, Math.min(this.speed, this.maxSpeed));
 
         // Steering
