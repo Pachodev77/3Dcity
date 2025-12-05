@@ -395,6 +395,7 @@ const avatarList = ['Ch02_nonPBR', 'Ch13_nonPBR@T-Pose', 'Remy@T-Pose'];
 let currentPreviewIndex = 0;
 let previewAvatar = null;
 let previewAnimationId = null;
+let previewMixer = null; // Animation mixer for preview
 
 // Preview Scene Setup
 const previewCanvas = document.getElementById('avatar-preview-canvas');
@@ -429,17 +430,32 @@ async function loadPreviewAvatar(avatarName) {
         previewAvatar = null;
     }
 
+    // Stop previous mixer
+    if (previewMixer) {
+        previewMixer.stopAllAction();
+        previewMixer = null;
+    }
+
     // Load new avatar using FBXLoader (from cache - should be instant)
     const loader = new FBXLoader();
     try {
         const fbx = await loadWithCache(`/avatars/${avatarName}.fbx`, loader);
         previewAvatar = fbx;
 
-        // Apply same scaling as main Avatar class
+        // Apply scaling - 3x larger than game for better preview
+        const previewScaleMultiplier = 3;
         if (avatarName === 'Remy@T-Pose') {
-            previewAvatar.scale.set(CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE, CONFIG.AVATAR.REMY_SCALE);
+            previewAvatar.scale.set(
+                CONFIG.AVATAR.REMY_SCALE * previewScaleMultiplier,
+                CONFIG.AVATAR.REMY_SCALE * previewScaleMultiplier,
+                CONFIG.AVATAR.REMY_SCALE * previewScaleMultiplier
+            );
         } else {
-            previewAvatar.scale.set(CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE, CONFIG.AVATAR.DEFAULT_SCALE);
+            previewAvatar.scale.set(
+                CONFIG.AVATAR.DEFAULT_SCALE * previewScaleMultiplier,
+                CONFIG.AVATAR.DEFAULT_SCALE * previewScaleMultiplier,
+                CONFIG.AVATAR.DEFAULT_SCALE * previewScaleMultiplier
+            );
         }
 
         // Calculate bounding box to center the avatar properly
@@ -456,6 +472,18 @@ async function loadPreviewAvatar(avatarName) {
 
         previewScene.add(previewAvatar);
 
+        // Load and play idle animation
+        previewMixer = new THREE.AnimationMixer(previewAvatar);
+        try {
+            const idleAnim = await loadWithCache('/avatars/animations/Idle.fbx', loader);
+            if (idleAnim.animations && idleAnim.animations.length > 0) {
+                const action = previewMixer.clipAction(idleAnim.animations[0]);
+                action.play();
+            }
+        } catch (error) {
+            console.warn('Could not load idle animation for preview:', error);
+        }
+
         // Update name display
         document.getElementById('avatar-name-display').textContent = avatarName;
     } catch (error) {
@@ -469,6 +497,11 @@ function animatePreview() {
     previewAnimationId = requestAnimationFrame(animatePreview);
 
     const delta = previewClock.getDelta();
+
+    // Update animation mixer
+    if (previewMixer) {
+        previewMixer.update(delta);
+    }
 
     // Rotate preview avatar
     if (previewAvatar) {
