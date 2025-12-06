@@ -53,10 +53,6 @@ const inputManager = new InputManager();
 const cameraController = new CameraController(camera);
 const networkManager = new NetworkManager(scene);
 
-// Business System (Markers)
-const businessSystem = new BusinessSystem(scene, camera);
-businessSystem.init();
-businessSystem.setTarget(avatar);
 const musicPlayer = new MusicPlayer();
 
 // ... (existing code) ...
@@ -65,6 +61,11 @@ const musicPlayer = new MusicPlayer();
 const avatar = new Avatar(scene);
 const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
 avatar.setTargets([zombie]);
+
+// Business System (Markers) - Initialize after avatar
+const businessSystem = new BusinessSystem(scene, camera);
+businessSystem.init();
+businessSystem.setTarget(avatar);
 const vehicles = []; // Array of Vehicle instances
 
 
