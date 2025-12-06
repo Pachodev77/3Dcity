@@ -170,6 +170,8 @@ export class CameraController {
         */
 
         // --- 5. Handle Ground Collision ---
+        // Ground Collision removed as per user request
+        /*
         const finalGroundRayOrigin = finalCameraPosition.clone().setY(this.followPosition.y + 20);
         this.raycaster.set(finalGroundRayOrigin, new THREE.Vector3(0, -1, 0));
         const finalGroundIntersects = this.raycaster.intersectObjects(groundCollidableObjects, true);
@@ -182,6 +184,7 @@ export class CameraController {
         if (finalCameraPosition.y < finalGroundY) {
             finalCameraPosition.y = finalGroundY;
         }
+        */
 
         // --- 6. Apply Final Position ---
         const lerpFactor = CONFIG.AVATAR.CAMERA_LERP;
