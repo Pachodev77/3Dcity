@@ -104,9 +104,66 @@ export class Vehicle {
     startEngine() {
         if (!this.audioLoaded) return;
 
+        // 1. Play Ignition
+        if (this.ignitionSound) {
+            if (this.ignitionSound.isPlaying) this.ignitionSound.stop();
+            this.ignitionSound.play();
+            this.audioState = 'starting';
+
+            // 2. Schedule Idle to start AFTER ignition (approx 1s)
+            setTimeout(() => {
+                if (this.audioState === 'starting' && this.idleSound) {
+                    this.idleSound.play();
+                    this.idleSound.setVolume(0.3);
+                    this.audioState = 'idle';
+                }
+            }, 1000);
+
+            // Start other loops muted
+            if (this.accelSound) {
+                this.accelSound.play();
+                this.accelSound.setVolume(0);
+            }
+            if (this.decelSound) {
+                this.decelSound.play();
+                this.decelSound.setVolume(0);
+            }
+        }
+    }
+
+    stopEngine() {
+        if (!this.audioLoaded) return;
+
+        [this.ignitionSound, this.idleSound, this.accelSound, this.decelSound, this.skidSound].forEach(s => {
+            if (s && s.isPlaying) s.stop();
+        });
+        this.audioState = 'off';
+    }
+
+    updateAudio(delta, input) {
+        if (!this.audioLoaded || this.audioState === 'off' || this.audioState === 'starting') return;
+
+        const speed = Math.abs(this.speed);
+        const maxSpeed = this.maxSpeed;
+        const forwardInput = input.y; // >0 accel, <0 brake/reverse
+
+        // --- State Logic ---
+        let targetState = 'idle';
+
+        if (forwardInput > 0.1) {
+            targetState = 'accelerating';
+        } else if (speed > 1.0) {
+            // Coasting
+            targetState = 'decelerating';
+        } else {
+            targetState = 'idle';
+        }
+
+        // --- Volume Crossfading ---
+        const fadeSpeed = 3.0 * delta;
 
         // Idle Volume
-        let targetIdleVol = (targetState === 'idle') ? 0.4 : 0.1;
+        let targetIdleVol = (targetState === 'idle') ? 0.4 : 0.0;
         if (this.idleSound) {
             const current = this.idleSound.getVolume();
             this.idleSound.setVolume(THREE.MathUtils.lerp(current, targetIdleVol, fadeSpeed));
@@ -118,7 +175,6 @@ export class Vehicle {
             const current = this.accelSound.getVolume();
             this.accelSound.setVolume(THREE.MathUtils.lerp(current, targetAccelVol, fadeSpeed));
 
-            // Pitch modulation for accel
             const pitch = 0.8 + (speed / maxSpeed) * 0.8;
             this.accelSound.setPlaybackRate(pitch);
         }
@@ -128,7 +184,7 @@ export class Vehicle {
         if (this.decelSound) {
             const current = this.decelSound.getVolume();
             this.decelSound.setVolume(THREE.MathUtils.lerp(current, targetDecelVol, fadeSpeed));
-            // Pitch modulation for decel (inverse or lower)
+
             const pitch = 1.0 - (speed / maxSpeed) * 0.2;
             this.decelSound.setPlaybackRate(pitch);
         }
