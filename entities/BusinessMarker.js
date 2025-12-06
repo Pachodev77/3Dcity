@@ -1,4 +1,4 @@
-ahora todo tiene mucho lag ayudame a hacer que los cristales no causentimport * as THREE from 'three';
+import * as THREE from 'three';
 
 export class BusinessMarker {
     constructor(scene, id, position) {

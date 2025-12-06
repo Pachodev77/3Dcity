@@ -31,29 +31,59 @@ export class InteriorManager {
     }
 
     createUI() {
-        // Create prompt UI
-        this.promptElement = document.createElement('div');
-        this.promptElement.id = 'interior-prompt';
-        this.promptElement.style.cssText = `
+        // Create button UI positioned above left joystick
+        this.buttonElement = document.createElement('button');
+        this.buttonElement.id = 'interior-button';
+        this.buttonElement.style.cssText = `
             position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            bottom: 200px;
+            left: 120px;
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 200, 255, 0.8);
+            border: 3px solid white;
+            border-radius: 50%;
             color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
             font-family: Arial, sans-serif;
-            font-size: 18px;
+            font-size: 14px;
+            font-weight: bold;
             display: none;
             z-index: 1000;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
         `;
-        this.promptElement.innerHTML = 'Press <strong>E</strong> to enter';
-        document.body.appendChild(this.promptElement);
+        this.buttonElement.innerHTML = 'ENTER';
+
+        // Add hover/active effects
+        this.buttonElement.addEventListener('mousedown', () => {
+            this.buttonElement.style.transform = 'scale(0.95)';
+        });
+        this.buttonElement.addEventListener('mouseup', () => {
+            this.buttonElement.style.transform = 'scale(1)';
+        });
+
+        // Handle click
+        this.buttonElement.addEventListener('click', () => {
+            if (!this.isInInterior) {
+                // Trigger enter event (will be handled by main.js)
+                window.dispatchEvent(new CustomEvent('interior-enter'));
+            } else {
+                // Trigger exit event
+                window.dispatchEvent(new CustomEvent('interior-exit'));
+            }
+        });
+
+        document.body.appendChild(this.buttonElement);
     }
 
     showPrompt(show) {
-        this.promptElement.style.display = show ? 'block' : 'none';
+        this.buttonElement.style.display = show ? 'block' : 'none';
+    }
+
+    updateButtonText(isInside) {
+        this.buttonElement.innerHTML = isInside ? 'EXIT' : 'ENTER';
+        this.buttonElement.style.background = isInside ? 'rgba(255, 100, 100, 0.8)' : 'rgba(0, 200, 255, 0.8)';
     }
 
     enterInterior(interiorId) {
@@ -75,6 +105,7 @@ export class InteriorManager {
         this.currentInterior = interior;
         this.isInInterior = true;
 
+        this.updateButtonText(true);
         this.hidePrompt();
     }
 
@@ -90,6 +121,8 @@ export class InteriorManager {
         // Switch back to main scene
         this.currentInterior = null;
         this.isInInterior = false;
+
+        this.updateButtonText(false);
     }
 
     hidePrompt() {
@@ -107,8 +140,8 @@ export class InteriorManager {
     dispose() {
         this.interiors.forEach(interior => interior.dispose());
         this.interiors.clear();
-        if (this.promptElement) {
-            this.promptElement.remove();
+        if (this.buttonElement) {
+            this.buttonElement.remove();
         }
     }
 }

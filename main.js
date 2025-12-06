@@ -86,14 +86,25 @@ businessSystem.setInteractionCallback((event, markerId) => {
     }
 });
 
-// Handle E key for entering/exiting interiors
+// Handle button clicks for entering/exiting interiors
+window.addEventListener('interior-enter', () => {
+    if (!interiorManager.isInInterior && businessSystem.nearestMarker) {
+        interiorManager.enterInterior(businessSystem.nearestMarker.id);
+    }
+});
+
+window.addEventListener('interior-exit', () => {
+    if (interiorManager.isInInterior) {
+        interiorManager.exitInterior();
+    }
+});
+
+// Keep E key as alternative for desktop users
 window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'e') {
         if (!interiorManager.isInInterior && businessSystem.nearestMarker) {
-            // Enter interior
             interiorManager.enterInterior(businessSystem.nearestMarker.id);
         } else if (interiorManager.isInInterior) {
-            // Exit interior
             interiorManager.exitInterior();
         }
     }
