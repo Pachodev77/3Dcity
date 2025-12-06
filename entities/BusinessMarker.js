@@ -14,15 +14,20 @@ export class BusinessMarker {
     }
 
     createMesh() {
-        // Use simpler geometry - ConeGeometry for better performance
+        // Use simpler geometry - ConeGeometry
         const geometry = new THREE.ConeGeometry(0.3, 1.0, 6);
         const material = new THREE.MeshBasicMaterial({
-            color: 0x00ffff
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.7
+            // No emissive/specular - no glow
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.copy(this.position);
         this.mesh.position.y += 0.5;
+
+        // No light - removed for performance and no glow
 
         this.scene.add(this.mesh);
     }
@@ -61,10 +66,10 @@ export class BusinessMarker {
 
     update(delta) {
         if (this.mesh) {
-            // Slower rotation for better performance
+            // Slower rotation
             this.mesh.rotation.y += delta * 0.5;
 
-            // Simpler bobbing motion
+            // Simpler bobbing
             if (Math.floor(this.frame * 10) % 2 === 0) {
                 this.frame += delta * 2;
                 const bobOffset = Math.sin(this.frame) * 0.2;

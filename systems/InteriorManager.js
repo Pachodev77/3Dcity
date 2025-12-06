@@ -106,7 +106,7 @@ export class InteriorManager {
         this.isInInterior = true;
 
         this.updateButtonText(true);
-        this.hidePrompt();
+        // Keep button visible for exit (don't hide it)
     }
 
     exitInterior() {
