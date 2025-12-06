@@ -56,6 +56,7 @@ const networkManager = new NetworkManager(scene);
 // Business System (Markers)
 const businessSystem = new BusinessSystem(scene, camera);
 businessSystem.init();
+businessSystem.setTarget(avatar);
 const musicPlayer = new MusicPlayer();
 
 // ... (existing code) ...
