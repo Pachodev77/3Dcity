@@ -23,6 +23,7 @@ export class CameraController {
         this.tempQuaternion = new THREE.Quaternion();
 
         this.raycaster = new THREE.Raycaster();
+        this.currentLookAt = null; // For smoothed lookAt
     }
 
     updateVehicleCamera(delta, vehicle, input, collidableObjects, groundCollidableObjects) {
@@ -191,10 +192,25 @@ export class CameraController {
         }
         */
 
-        // --- 6. Apply Final Position ---
-        const lerpFactor = CONFIG.AVATAR.CAMERA_LERP;
-        this.camera.position.lerp(finalCameraPosition, lerpFactor);
-        this.camera.lookAt(this.followPosition);
+        // Initialize smoothed lookAt if not exists (checked here or in constructor)
+        if (!this.currentLookAt) {
+            this.currentLookAt = new THREE.Vector3().copy(this.followPosition);
+        }
+
+        // --- 6. Apply Final Position (Time-Based Damping) ---
+        // Use exponential decay for smoother, framerate-independent movement
+        // dampFactor ~ 4.0 gives a smooth follow. Higher is faster/tighter.
+        const dampFactor = 5.0;
+        const alpha = 1.0 - Math.exp(-dampFactor * delta);
+
+        this.camera.position.lerp(finalCameraPosition, alpha);
+
+        // --- 7. Smoothed LookAt ---
+        // Also damp the lookAt target to prevent jittery rotation
+        const lookAtAlpha = 1.0 - Math.exp(-dampFactor * 2.0 * delta); // Rotate faster than move
+        this.currentLookAt.lerp(this.followPosition, lookAtAlpha);
+
+        this.camera.lookAt(this.currentLookAt);
     }
 
     update(delta, target, input, isInVehicle, collidableObjects, groundCollidableObjects, frameCount) {
