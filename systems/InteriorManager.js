@@ -31,21 +31,21 @@ export class InteriorManager {
     }
 
     createUI() {
-        // Create button UI positioned above left joystick
+        // Create button UI positioned directly above left joystick (smaller size)
         this.buttonElement = document.createElement('button');
         this.buttonElement.id = 'interior-button';
         this.buttonElement.style.cssText = `
             position: fixed;
-            bottom: 200px;
-            left: 120px;
-            width: 80px;
-            height: 80px;
+            bottom: 180px;
+            left: 80px;
+            width: 50px;
+            height: 50px;
             background: rgba(0, 200, 255, 0.8);
             border: 3px solid white;
             border-radius: 50%;
             color: white;
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             display: none;
             z-index: 1000;
