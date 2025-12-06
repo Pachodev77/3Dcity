@@ -82,7 +82,10 @@ businessSystem.setInteractionCallback((event, markerId) => {
     if (event === 'enter') {
         interiorManager.showPrompt(true);
     } else if (event === 'exit') {
-        interiorManager.showPrompt(false);
+        // Only hide button if not inside an interior
+        if (!interiorManager.isInInterior) {
+            interiorManager.showPrompt(false);
+        }
     }
 });
 
