@@ -155,16 +155,19 @@ export class CameraController {
         this.desiredCameraPosition.copy(this.followPosition).add(cameraOffset);
 
         // --- 4. Handle Wall Collisions ---
+        // Collision logic removed as per user request
+        let finalCameraPosition = this.desiredCameraPosition.clone();
+        /*
         const wallRayOrigin = this.followPosition.clone().add(new THREE.Vector3(0, 0.5, 0));
         this.direction.copy(this.desiredCameraPosition).sub(wallRayOrigin).normalize();
         const lineOfSightDistance = wallRayOrigin.distanceTo(this.desiredCameraPosition);
         this.raycaster.set(wallRayOrigin, this.direction);
         const wallIntersections = this.raycaster.intersectObjects(collidableObjects, true);
 
-        let finalCameraPosition = this.desiredCameraPosition.clone();
         if (wallIntersections.length > 0 && wallIntersections[0].distance < lineOfSightDistance) {
             finalCameraPosition.copy(wallRayOrigin).add(this.direction.multiplyScalar(wallIntersections[0].distance - 0.2));
         }
+        */
 
         // --- 5. Handle Ground Collision ---
         const finalGroundRayOrigin = finalCameraPosition.clone().setY(this.followPosition.y + 20);
