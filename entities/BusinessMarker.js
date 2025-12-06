@@ -33,11 +33,6 @@ export class BusinessMarker {
         // Make it smaller and elongated (thin and tall)
         this.mesh.scale.set(0.3, 0.8, 0.3);
 
-        // Add a point light to make it glow self-sufficiently
-        const light = new THREE.PointLight(0x00ffff, 1, 3);
-        light.position.set(0, 0, 0);
-        this.mesh.add(light);
-
         this.scene.add(this.mesh);
     }
 
