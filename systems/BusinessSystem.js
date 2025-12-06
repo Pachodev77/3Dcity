@@ -6,7 +6,7 @@ export class BusinessSystem {
         this.scene = scene;
         this.camera = camera;
         this.markers = [];
-        this.nextId = 1;
+        this.nextId = 11; // Start from 11 since we have 10 permanent markers
 
         // "Burnin Rubber" Map Specific Locations
         this.locations = [
@@ -27,6 +27,11 @@ export class BusinessSystem {
         // Debug Mode for placement
         this.placementMode = true;
         this.target = null;
+
+        // Proximity detection
+        this.proximityDistance = 3.0; // Distance to trigger interaction
+        this.nearestMarker = null;
+        this.onInteractionCallback = null;
     }
 
     setTarget(target) {
@@ -69,12 +74,7 @@ export class BusinessSystem {
 
         if (this.target && this.target.position) {
             // Use target (avatar) position
-            // Clone check just in case position is weird, but it should be Vector3
             position = this.target.position.clone();
-
-            // Adjust Y to be at ground level? 
-            // The crystal floats +1.5 above this position.
-            // If the avatar pivot is at feet (usually is), then this is perfect.
         } else {
             console.warn('[BusinessSystem] No target set for placement. Using camera fallback.');
             // Fallback: Place marker 5 units in front of camera
@@ -86,8 +86,39 @@ export class BusinessSystem {
         this.addMarker(position);
     }
 
+    setInteractionCallback(callback) {
+        this.onInteractionCallback = callback;
+    }
+
     update(delta) {
         this.markers.forEach(marker => marker.update(delta));
+
+        // Check proximity to markers
+        if (this.target && this.target.position) {
+            let closestMarker = null;
+            let closestDistance = Infinity;
+
+            this.markers.forEach(marker => {
+                const distance = this.target.position.distanceTo(marker.position);
+                if (distance < this.proximityDistance && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestMarker = marker;
+                }
+            });
+
+            // Update nearest marker
+            const previousNearest = this.nearestMarker;
+            this.nearestMarker = closestMarker;
+
+            // Notify callback of changes
+            if (this.onInteractionCallback) {
+                if (closestMarker && closestMarker !== previousNearest) {
+                    this.onInteractionCallback('enter', closestMarker.id);
+                } else if (!closestMarker && previousNearest) {
+                    this.onInteractionCallback('exit', previousNearest.id);
+                }
+            }
+        }
     }
 
     exportLocations() {

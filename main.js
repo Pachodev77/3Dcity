@@ -9,6 +9,7 @@ import { CameraController } from './systems/CameraController.js';
 import { InputManager } from './systems/InputManager.js';
 import { NetworkManager } from './systems/NetworkManager.js';
 import { BusinessSystem } from './systems/BusinessSystem.js';
+import { InteriorManager } from './systems/InteriorManager.js';
 import { ChatBubble } from './systems/ChatBubble.js';
 import { ChatUI } from './systems/ChatUI.js';
 import { MusicPlayer } from './systems/MusicPlayer.js';
@@ -66,6 +67,38 @@ avatar.setTargets([zombie]);
 const businessSystem = new BusinessSystem(scene, camera);
 businessSystem.init();
 businessSystem.setTarget(avatar);
+
+// Interior Manager - Create independent interior spaces for each marker
+const interiorManager = new InteriorManager(renderer, camera, avatar);
+interiorManager.setMainScene(scene);
+
+// Create 10 interior spaces (one for each business marker)
+for (let i = 1; i <= 10; i++) {
+    interiorManager.createInterior(i, `Business ${i}`);
+}
+
+// Handle proximity interactions
+businessSystem.setInteractionCallback((event, markerId) => {
+    if (event === 'enter') {
+        interiorManager.showPrompt(true);
+    } else if (event === 'exit') {
+        interiorManager.showPrompt(false);
+    }
+});
+
+// Handle E key for entering/exiting interiors
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'e') {
+        if (!interiorManager.isInInterior && businessSystem.nearestMarker) {
+            // Enter interior
+            interiorManager.enterInterior(businessSystem.nearestMarker.id);
+        } else if (interiorManager.isInInterior) {
+            // Exit interior
+            interiorManager.exitInterior();
+        }
+    }
+});
+
 const vehicles = []; // Array of Vehicle instances
 
 
@@ -923,8 +956,9 @@ function animate() {
     } else {
         enterExitButton.style.display = 'none';
     }
-
-    renderer.render(scene, camera);
+    // Render the active scene (main world or interior)
+    const activeScene = interiorManager.getCurrentScene();
+    renderer.render(activeScene, camera);
 }
 
 // Handle Resize
