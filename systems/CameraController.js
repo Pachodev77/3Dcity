@@ -115,7 +115,11 @@ export class CameraController {
         const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving;
 
         // --- 2. Determine Target Follow Position ---
+        // Simplified to follow target directly (no ground snapping)
         const targetPosition = target.position.clone();
+        this.followPosition.set(targetPosition.x, targetPosition.y + 0.5, targetPosition.z);
+
+        /*
         const groundRayOrigin = new THREE.Vector3(targetPosition.x, targetPosition.y + 10, targetPosition.z);
         this.raycaster.set(groundRayOrigin, new THREE.Vector3(0, -1, 0));
         const groundIntersects = this.raycaster.intersectObjects(groundCollidableObjects, true);
@@ -125,6 +129,7 @@ export class CameraController {
             targetGroundY = groundIntersects[0].point.y;
         }
         this.followPosition.set(targetPosition.x, targetGroundY + 0.5, targetPosition.z);
+        */
 
         if (shouldAutoFollow) {
             const targetForward = new THREE.Vector3(0, 0, -1);
