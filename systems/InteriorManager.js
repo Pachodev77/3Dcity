@@ -66,10 +66,8 @@ export class InteriorManager {
         // Handle click
         this.buttonElement.addEventListener('click', () => {
             if (!this.isInInterior) {
-                // Trigger enter event (will be handled by main.js)
                 window.dispatchEvent(new CustomEvent('interior-enter'));
             } else {
-                // Trigger exit event
                 window.dispatchEvent(new CustomEvent('interior-exit'));
             }
         });
@@ -101,12 +99,17 @@ export class InteriorManager {
         this.avatar.model.position.copy(spawnPos);
         this.avatar.model.rotation.y = 0;
 
+        // Remove avatar from main scene and add to interior scene
+        if (this.mainScene && this.avatar.model) {
+            this.mainScene.remove(this.avatar.model);
+            interior.scene.add(this.avatar.model);
+        }
+
         // Switch scene
         this.currentInterior = interior;
         this.isInInterior = true;
 
         this.updateButtonText(true);
-        // Button stays visible inside interior (don't hide it)
     }
 
     exitInterior() {
@@ -118,12 +121,18 @@ export class InteriorManager {
         this.avatar.model.position.copy(this.mainWorldPosition);
         this.avatar.model.rotation.copy(this.mainWorldRotation);
 
+        // Remove avatar from interior scene and add back to main scene
+        if (this.currentInterior && this.avatar.model) {
+            this.currentInterior.scene.remove(this.avatar.model);
+            this.mainScene.add(this.avatar.model);
+        }
+
         // Switch back to main scene
         this.currentInterior = null;
         this.isInInterior = false;
 
         this.updateButtonText(false);
-        this.hidePrompt(); // Hide button when exiting
+        this.hidePrompt();
     }
 
     hidePrompt() {
