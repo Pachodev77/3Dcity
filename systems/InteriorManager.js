@@ -106,7 +106,7 @@ export class InteriorManager {
         this.isInInterior = true;
 
         this.updateButtonText(true);
-        // Keep button visible for exit (don't hide it)
+        // Button stays visible inside interior (don't hide it)
     }
 
     exitInterior() {
@@ -123,6 +123,7 @@ export class InteriorManager {
         this.isInInterior = false;
 
         this.updateButtonText(false);
+        this.hidePrompt(); // Hide button when exiting
     }
 
     hidePrompt() {

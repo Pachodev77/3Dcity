@@ -14,20 +14,29 @@ export class BusinessMarker {
     }
 
     createMesh() {
-        // Use simpler geometry - ConeGeometry
-        const geometry = new THREE.ConeGeometry(0.3, 1.0, 6);
-        const material = new THREE.MeshBasicMaterial({
+        // Create a crystal shape (Octahedron)
+        const geometry = new THREE.OctahedronGeometry(0.5, 0);
+        const material = new THREE.MeshPhongMaterial({
             color: 0x00ffff,
+            emissive: 0x0044aa,
+            specular: 0xffffff,
+            shininess: 30,
             transparent: true,
-            opacity: 0.7
-            // No emissive/specular - no glow
+            opacity: 0.8,
+            flatShading: true
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.copy(this.position);
-        this.mesh.position.y += 0.5;
+        this.mesh.position.y += 0.5; // Lower to ground (reduced from 1.5)
 
-        // No light - removed for performance and no glow
+        // Make it smaller and elongated (thin and tall)
+        this.mesh.scale.set(0.3, 0.8, 0.3);
+
+        // Add a point light to make it glow self-sufficiently
+        const light = new THREE.PointLight(0x00ffff, 1, 3);
+        light.position.set(0, 0, 0);
+        this.mesh.add(light);
 
         this.scene.add(this.mesh);
     }
@@ -36,48 +45,43 @@ export class BusinessMarker {
         // Create a canvas for the number
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 128;
-        canvas.height = 128;
+        canvas.width = 256;
+        canvas.height = 256;
 
         // Draw number
-        context.fillStyle = 'rgba(0, 0, 0, 0)';
-        context.fillRect(0, 0, 128, 128);
+        context.fillStyle = 'rgba(0, 0, 0, 0)'; // Transparent bg
+        context.fillRect(0, 0, 256, 256);
 
-        context.font = 'bold 80px Arial';
+        context.font = 'bold 150px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillStyle = '#ffffff';
         context.strokeStyle = '#000000';
-        context.lineWidth = 4;
+        context.lineWidth = 8;
 
-        context.strokeText(this.id.toString(), 64, 64);
-        context.fillText(this.id.toString(), 64, 64);
+        context.strokeText(this.id.toString(), 128, 128);
+        context.fillText(this.id.toString(), 128, 128);
 
         const texture = new THREE.CanvasTexture(canvas);
         const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
         this.textSprite = new THREE.Sprite(spriteMaterial);
 
         this.textSprite.position.copy(this.position);
-        this.textSprite.position.y += 1.2;
-        this.textSprite.scale.set(1.2, 1.2, 1.2);
+        this.textSprite.position.y += 1.2; // Adjusted for lower crystal
+        this.textSprite.scale.set(1.5, 1.5, 1.5);
 
         this.scene.add(this.textSprite);
     }
 
     update(delta) {
         if (this.mesh) {
-            // Slower rotation
-            this.mesh.rotation.y += delta * 0.5;
+            // Rotate crystal (Equator only - Y axis)
+            this.mesh.rotation.y += delta;
 
-            // Simpler bobbing
-            if (Math.floor(this.frame * 10) % 2 === 0) {
-                this.frame += delta * 2;
-                const bobOffset = Math.sin(this.frame) * 0.2;
-                this.mesh.position.y = this.position.y + 0.5 + bobOffset;
-                this.textSprite.position.y = this.position.y + 1.2 + bobOffset;
-            } else {
-                this.frame += delta * 2;
-            }
+            // Bobbing motion
+            this.frame += delta * 2;
+            this.mesh.position.y = this.position.y + 0.5 + Math.sin(this.frame) * 0.2;
+            this.textSprite.position.y = this.position.y + 1.2 + Math.sin(this.frame) * 0.2;
         }
     }
 
