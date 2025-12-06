@@ -8,9 +8,18 @@ export class BusinessSystem {
         this.markers = [];
         this.nextId = 1;
 
-        // "Burnin Rubber" Map Specific Locations (Empty initially, user will populate)
+        // "Burnin Rubber" Map Specific Locations
         this.locations = [
-            // Example: { id: 1, x: 10, y: 0, z: 10 }
+            { id: 1, x: -65.27, y: 5.06, z: 7.40 },
+            { id: 2, x: -74.68, y: 5.06, z: 8.66 },
+            { id: 3, x: -85.60, y: 5.06, z: 8.63 },
+            { id: 4, x: -90.19, y: 5.06, z: 8.86 },
+            { id: 5, x: -98.78, y: 5.06, z: 7.44 },
+            { id: 6, x: -116.72, y: 5.06, z: 10.94 },
+            { id: 7, x: -124.83, y: 5.06, z: -2.43 },
+            { id: 8, x: -104.58, y: 5.06, z: -6.38 },
+            { id: 9, x: -94.35, y: 5.06, z: -9.96 },
+            { id: 10, x: -82.12, y: 4.60, z: -32.37 }
         ];
 
         this.initialized = false;
