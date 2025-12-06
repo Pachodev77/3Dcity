@@ -8,6 +8,7 @@ import { Zombie } from './entities/Zombie.js';
 import { CameraController } from './systems/CameraController.js';
 import { InputManager } from './systems/InputManager.js';
 import { NetworkManager } from './systems/NetworkManager.js';
+import { BusinessSystem } from './systems/BusinessSystem.js';
 import { ChatBubble } from './systems/ChatBubble.js';
 import { ChatUI } from './systems/ChatUI.js';
 import { MusicPlayer } from './systems/MusicPlayer.js';
@@ -51,6 +52,10 @@ const groundCollidableObjects = [];
 const inputManager = new InputManager();
 const cameraController = new CameraController(camera);
 const networkManager = new NetworkManager(scene);
+
+// Business System (Markers)
+const businessSystem = new BusinessSystem(scene, camera);
+businessSystem.init();
 const musicPlayer = new MusicPlayer();
 
 // ... (existing code) ...
@@ -824,6 +829,7 @@ function animate() {
     avatar.update(delta, camera);
     zombie.updateAnimation(delta);
     networkManager.update(delta, camera);
+    businessSystem.update(delta);
 
     // Network Update
     if (avatar.model) {
