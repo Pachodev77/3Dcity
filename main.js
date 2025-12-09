@@ -78,6 +78,8 @@ for (let i = 1; i <= 10; i++) {
     let modelPath = null;
     if (i === 1) {
         modelPath = '/assets/scenes/supermarket.glb';
+    } else if (i === 2) {
+        modelPath = '/assets/scenes/club.glb';
     }
     interiorManager.createInterior(i, `Business ${i}`, modelPath);
 }
