@@ -99,7 +99,8 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 5) {
         options.modelPath = '/scenes/stadium.glb';
         options.modelScale = 2;
-        options.spawnPosition = new THREE.Vector3(0, 0.2, 0);
+        options.modelPosition = new THREE.Vector3(0, 10.0, 0); // Raise model
+        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 6) {
         options.modelPath = '/scenes/farm.glb';
         options.modelScale = 1;
