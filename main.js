@@ -73,8 +73,13 @@ const interiorManager = new InteriorManager(renderer, camera, avatar);
 interiorManager.setMainScene(scene);
 
 // Create 10 interior spaces (one for each business marker)
+// Create 10 interior spaces (one for each business marker)
 for (let i = 1; i <= 10; i++) {
-    interiorManager.createInterior(i, `Business ${i}`);
+    let modelPath = null;
+    if (i === 1) {
+        modelPath = '/assets/scenes/supermarket.glb';
+    }
+    interiorManager.createInterior(i, `Business ${i}`, modelPath);
 }
 
 // Handle proximity interactions

@@ -1,9 +1,10 @@
-import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class Interior {
-    constructor(id, name) {
+    constructor(id, name, modelPath = null) {
         this.id = id;
         this.name = name;
+        this.modelPath = modelPath;
         this.scene = new THREE.Scene();
         this.objects = [];
         this.ground = null;
@@ -24,19 +25,52 @@ export class Interior {
         this.scene.add(directionalLight);
 
         // Create ground plane (small interior space)
-        const groundGeometry = new THREE.PlaneGeometry(20, 20);
-        const groundMaterial = new THREE.MeshStandardMaterial({
-            color: 0x808080,
-            roughness: 0.8,
-            metalness: 0.2
-        });
-        this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.ground.rotation.x = -Math.PI / 2;
-        this.ground.position.y = 0;
-        this.scene.add(this.ground);
+        if (!this.modelPath) {
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x808080,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            this.ground.rotation.x = -Math.PI / 2;
+            this.ground.position.y = 0;
+            this.scene.add(this.ground);
 
-        // Add walls (simple box room)
-        this.createWalls();
+            // Add walls (simple box room)
+            this.createWalls();
+        } else {
+            this.loadModel();
+        }
+    }
+
+    loadModel() {
+        console.log(`Loading interior model for ${this.name}: ${this.modelPath}`);
+        const loader = new GLTFLoader();
+
+        // Use global loadWithCache if available, otherwise fallback
+        const loadFunc = window.loadWithCache ? window.loadWithCache : (path, loader) => {
+            return new Promise((resolve, reject) => {
+                loader.load(path, resolve, undefined, reject);
+            });
+        };
+
+        loadFunc(this.modelPath, loader).then((gltf) => {
+            const model = gltf.scene;
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            this.scene.add(model);
+            this.objects.push(model);
+            console.log(`Loaded interior model: ${this.modelPath}`);
+        }).catch((error) => {
+            console.error(`Error loading interior model ${this.modelPath}:`, error);
+            // Fallback to procedural on error
+            this.createWalls();
+        });
     }
 
     createWalls() {
