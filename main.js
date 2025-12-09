@@ -79,8 +79,9 @@ for (let i = 1; i <= 10; i++) {
     const options = {};
     if (i === 1) {
         options.modelPath = '/scenes/supermarket.glb';
-        options.spawnPosition = new THREE.Vector3(0, 50.0, 0); // Spawn higher to avoid floor clipping
         options.modelScale = 1;
+        options.spawnPosition = new THREE.Vector3(0, 5.0, 0); // Spawn higher to avoid floor clipping
+        options.modelPosition = new THREE.Vector3(0, -10.0, 0);
     } else if (i === 2) {
         options.modelPath = '/scenes/club.glb';
         options.modelScale = 1;
@@ -102,7 +103,8 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 6) {
         options.modelPath = '/scenes/farm.glb';
         options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, 20.0, 0); // Safe height for farm
+        options.spawnPosition = new THREE.Vector3(0, 0.0, 0); // Safe height for farm
+        options.modelPosition = new THREE.Vector3(0, -5.0, 0);
     }
     interiorManager.createInterior(i, `Business ${i}`, options);
 }
