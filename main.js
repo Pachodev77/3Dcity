@@ -89,7 +89,7 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
-        options.modelPosition = new THREE.Vector3(0, -2.2, 0); // Lower model to align floor
+        options.modelPosition = new THREE.Vector3(0, -2.1, 0); // Lower model to align floor
         options.spawnPosition = new THREE.Vector3(0, 2.0, 0);
     } else if (i === 4) {
         options.modelPath = '/scenes/night.glb';
