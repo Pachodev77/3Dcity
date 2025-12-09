@@ -81,7 +81,7 @@ for (let i = 1; i <= 10; i++) {
         options.modelPath = '/scenes/supermarket.glb';
         options.modelScale = 1;
         options.spawnPosition = new THREE.Vector3(0, 5.0, 0); // Spawn higher to avoid floor clipping
-        options.modelPosition = new THREE.Vector3(0, -10.0, 0);
+        options.modelPosition = new THREE.Vector3(0, -20.0, 0);
     } else if (i === 2) {
         options.modelPath = '/scenes/club.glb';
         options.modelScale = 1;
@@ -89,7 +89,7 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
-        options.modelPosition = new THREE.Vector3(0, -2.0, 0); // Lower model to align floor
+        options.modelPosition = new THREE.Vector3(0, -2.5, 0); // Lower model to align floor
         options.spawnPosition = new THREE.Vector3(0, 2.0, 0);
     } else if (i === 4) {
         options.modelPath = '/scenes/night.glb';
@@ -98,13 +98,13 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 5) {
         options.modelPath = '/scenes/stadium.glb';
         options.modelScale = 2;
-        options.modelPosition = new THREE.Vector3(0, 20.5, 0); // Raise model
+        options.modelPosition = new THREE.Vector3(0, 20.2, 0); // Raise model
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 6) {
         options.modelPath = '/scenes/farm.glb';
         options.modelScale = 1;
         options.spawnPosition = new THREE.Vector3(0, 0.0, 0); // Safe height for farm
-        options.modelPosition = new THREE.Vector3(0, -5.0, 0);
+        options.modelPosition = new THREE.Vector3(0, -10.0, 0);
     }
     interiorManager.createInterior(i, `Business ${i}`, options);
 }
