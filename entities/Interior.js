@@ -33,19 +33,24 @@ export class Interior {
         this.scene.add(directionalLight);
 
         // Create ground plane (small interior space)
-        if (!this.modelPath) {
-            const groundGeometry = new THREE.PlaneGeometry(20, 20);
-            const groundMaterial = new THREE.MeshStandardMaterial({
-                color: 0x808080,
-                roughness: 0.8,
-                metalness: 0.2
-            });
-            this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            this.ground.rotation.x = -Math.PI / 2;
-            this.ground.position.y = 0;
-            this.scene.add(this.ground);
+        // Always create a safety ground plane
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundMaterial = new THREE.MeshStandardMaterial({
+            color: 0x808080,
+            roughness: 0.8,
+            metalness: 0.2,
+            visible: !this.modelPath // Only visible if no model (procedural room)
+        });
 
-            // Add walls (simple box room)
+        this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        this.ground.rotation.x = -Math.PI / 2;
+        this.ground.position.y = 0;
+        this.ground.userData = { isGround: true };
+        this.scene.add(this.ground);
+        this.objects.push(this.ground); // Ensure collision works immediately
+
+        // Create procedural walls only if no model
+        if (!this.modelPath) {
             this.createWalls();
         } else {
             this.loadModel();

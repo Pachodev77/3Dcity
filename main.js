@@ -975,7 +975,10 @@ function animate() {
     if (isInVehicle && currentVehicle && !isChatFocused) {
         currentVehicle.update(delta, moveInput.vector, collidableObjects, groundCollidableObjects);
     } else if (avatar.model && !isChatFocused) {
-        avatar.updateMovement(delta, moveInput, camera, collidableObjects);
+        const currentCollidableObjects = interiorManager.isInInterior
+            ? interiorManager.getCurrentCollidables()
+            : collidableObjects;
+        avatar.updateMovement(delta, moveInput, camera, currentCollidableObjects);
 
         // Handle jump and attack when on foot
         if (inputManager.isJumpPressed()) {

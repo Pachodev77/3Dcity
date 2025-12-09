@@ -143,6 +143,13 @@ export class InteriorManager {
         return this.isInInterior ? this.currentInterior.scene : this.mainScene;
     }
 
+    getCurrentCollidables() {
+        if (this.isInInterior && this.currentInterior) {
+            return this.currentInterior.objects;
+        }
+        return [];
+    }
+
     update() {
         // This method can be used for any per-frame interior logic
     }
