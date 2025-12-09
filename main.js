@@ -79,7 +79,7 @@ for (let i = 1; i <= 10; i++) {
     const options = {};
     if (i === 1) {
         options.modelPath = '/scenes/supermarket.glb';
-        options.spawnPosition = new THREE.Vector3(0, 10.0, 0); // Spawn higher to avoid floor clipping
+        options.spawnPosition = new THREE.Vector3(0, 20.0, 0); // Spawn higher to avoid floor clipping
         options.modelScale = 1;
     } else if (i === 2) {
         options.modelPath = '/scenes/club.glb';
