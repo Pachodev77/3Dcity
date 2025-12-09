@@ -97,7 +97,7 @@ for (let i = 1; i <= 10; i++) {
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 5) {
         options.modelPath = '/scenes/stadium.glb';
-        options.modelScale = 1;
+        options.modelScale = 2;
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     }
     interiorManager.createInterior(i, `Business ${i}`, options);
