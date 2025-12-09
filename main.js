@@ -81,6 +81,12 @@ for (let i = 1; i <= 10; i++) {
         options.modelPath = '/scenes/supermarket.glb';
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0); // Spawn higher to avoid floor clipping
         options.modelScale = 1;
+    } else if (i === 2) {
+        options.modelPath = '/scenes/club.glb';
+        options.modelScale = 1;
+        // Default spawn is (0,0,5) in Interior.js unless overridden, 
+        // we can set strict interior spawn if needed, e.g.
+        // options.spawnPosition = new THREE.Vector3(0, 0, 0); 
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
