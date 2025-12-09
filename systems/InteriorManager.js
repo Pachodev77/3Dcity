@@ -35,9 +35,9 @@ export class InteriorManager {
         this.buttonElement = document.createElement('button');
         this.buttonElement.id = 'interior-button';
         this.buttonElement.style.cssText = `
-            position: fixed;
-            bottom: 150px;
-            left: 50px;
+            position: fixed !important;
+            bottom: 110px !important;
+            left: 20px !important;
             width: 50px;
             height: 50px;
             background: rgba(0, 200, 255, 0.8);
@@ -48,7 +48,7 @@ export class InteriorManager {
             font-size: 11px;
             font-weight: bold;
             display: none;
-            z-index: 1000;
+            z-index: 2000 !important;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             transition: all 0.2s;
