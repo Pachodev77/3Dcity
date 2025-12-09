@@ -7,6 +7,7 @@ export class Interior {
         this.name = name;
         this.modelPath = options.modelPath || null;
         this.spawnPosition = options.spawnPosition || new THREE.Vector3(0, 0, 5);
+        this.modelPosition = options.modelPosition || new THREE.Vector3(0, 0, 0);
         this.modelScale = options.modelScale || 1;
         this.scene = new THREE.Scene();
         this.objects = [];
@@ -75,6 +76,9 @@ export class Interior {
             if (this.modelScale !== 1) {
                 model.scale.set(this.modelScale, this.modelScale, this.modelScale);
             }
+
+            // Apply position offset (to fix models with bad origins)
+            model.position.copy(this.modelPosition);
 
             model.traverse((child) => {
                 if (child.isMesh) {
