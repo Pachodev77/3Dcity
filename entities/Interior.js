@@ -2,10 +2,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class Interior {
-    constructor(id, name, modelPath = null) {
+    constructor(id, name, options = {}) {
         this.id = id;
         this.name = name;
-        this.modelPath = modelPath;
+        this.modelPath = options.modelPath || null;
+        this.spawnPosition = options.spawnPosition || new THREE.Vector3(0, 0, 5);
+        this.modelScale = options.modelScale || 1;
         this.scene = new THREE.Scene();
         this.objects = [];
         this.ground = null;
@@ -18,11 +20,16 @@ export class Interior {
         this.scene.background = new THREE.Color(0xcccccc);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(ambientLight);
+
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+        hemisphereLight.position.set(0, 20, 0);
+        this.scene.add(hemisphereLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(5, 10, 5);
+        directionalLight.castShadow = true;
         this.scene.add(directionalLight);
 
         // Create ground plane (small interior space)
@@ -58,10 +65,22 @@ export class Interior {
 
         loadFunc(this.modelPath, loader).then((gltf) => {
             const model = gltf.scene;
+
+            // Apply scale
+            if (this.modelScale !== 1) {
+                model.scale.set(this.modelScale, this.modelScale, this.modelScale);
+            }
+
             model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
+
+                    // Ensure materials handle lighting better
+                    if (child.material) {
+                        child.material.envMapIntensity = 1.0;
+                        child.material.needsUpdate = true;
+                    }
                 }
             });
             this.scene.add(model);
@@ -125,8 +144,8 @@ export class Interior {
     }
 
     getSpawnPosition() {
-        // Spawn player in center of room
-        return new THREE.Vector3(0, 0, 5);
+        // Return configured spawn position (cloned to avoid modification)
+        return this.spawnPosition.clone();
     }
 
     addObject(object) {

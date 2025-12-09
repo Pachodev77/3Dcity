@@ -75,13 +75,19 @@ interiorManager.setMainScene(scene);
 // Create 10 interior spaces (one for each business marker)
 // Create 10 interior spaces (one for each business marker)
 for (let i = 1; i <= 10; i++) {
-    let modelPath = null;
+    const options = {};
     if (i === 1) {
-        modelPath = '/scenes/supermarket.glb';
+        options.modelPath = '/scenes/supermarket.glb';
+        options.spawnPosition = new THREE.Vector3(0, 0, 0); // Spawn in center
+        options.modelScale = 1;
     } else if (i === 2) {
-        modelPath = '/scenes/club.glb';
+        options.modelPath = '/scenes/club.glb';
+        options.modelScale = 1;
+        // Default spawn is (0,0,5) in Interior.js unless overridden, 
+        // we can set strict interior spawn if needed, e.g.
+        // options.spawnPosition = new THREE.Vector3(0, 0, 0); 
     }
-    interiorManager.createInterior(i, `Business ${i}`, modelPath);
+    interiorManager.createInterior(i, `Business ${i}`, options);
 }
 
 // Handle proximity interactions

@@ -24,8 +24,8 @@ export class InteriorManager {
         this.mainScene = scene;
     }
 
-    createInterior(id, name, modelPath = null) {
-        const interior = new Interior(id, name, modelPath);
+    createInterior(id, name, options = {}) {
+        const interior = new Interior(id, name, options);
         this.interiors.set(id, interior);
         return interior;
     }
