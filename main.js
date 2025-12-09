@@ -84,7 +84,7 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 2) {
         options.modelPath = '/scenes/club.glb';
         options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, -1.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 0, 0);
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
