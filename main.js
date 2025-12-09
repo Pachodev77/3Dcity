@@ -90,7 +90,7 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 5.0, 0);
     } else if (i === 4) {
         options.modelPath = '/scenes/night.glb';
         options.modelScale = 1;
