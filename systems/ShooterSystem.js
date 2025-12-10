@@ -133,84 +133,72 @@ export class ShooterSystem {
         const now = Date.now();
         if (now - this.lastFireTime < this.fireRate) return;
 
-        // Find the root entity from the mesh
+        // Find the root entity
         let entity = intersection.object;
-        while (entity.parent && !entity.userData.isEntityRoot) {
-            entity = entity.parent;
-            if (entity.userData.avatarName || entity.userData.zombieId) {
-                break; // Found it
+        let targetId = null;
+        let isZombie = false;
+
+        // Traverse up to find the entity root
+        while (entity) {
+            if (entity.userData.isEntityRoot) {
+                if (entity.userData.remotePlayerId) {
+                    targetId = entity.userData.remotePlayerId;
+                } else if (entity.userData.zombieId) {
+                    targetId = entity.userData.zombieId;
+                    isZombie = true;
+                }
+                break;
             }
+            // Fallback for zombies or players without isEntityRoot set yet (e.g. legacy)
+            if (entity.userData.zombieId) {
+                targetId = entity.userData.zombieId;
+                isZombie = true;
+                break;
+            }
+            if (entity.parent === this.scene) break; // Stop at scene root
+            entity = entity.parent;
         }
 
-        // Fire!
-        this.fire(entity, intersection.point);
-        this.lastFireTime = now;
+        // If we found a target, fire!
+        if (targetId) {
+            this.fire(targetId, isZombie, intersection.point);
+            this.lastFireTime = now;
+        }
     }
 
-    fire(targetEntity, hitPoint) {
+    fire(targetId, isZombie, hitPoint) {
         // Visual
         this.triggerMuzzleFlash();
 
-        // Audio (if available, otherwise silent)
-        // ...
-
-        // Logic
         if (window.networkManager) {
-            let targetId = null;
-
-            // 1. Try to find Zombie ID
-            if (targetEntity.userData.zombieId) {
-                targetId = targetEntity.userData.zombieId;
-                // Check if it's a remote zombie
+            if (isZombie) {
                 const zombieInstance = window.networkManager.remoteZombies[targetId];
                 if (zombieInstance && zombieInstance.takeDamage) {
                     zombieInstance.takeDamage(this.damage);
-                } else if (!zombieInstance) {
-                    // Local zombie?
-                    if (window.zombie && window.zombie.model === targetEntity) {
-                        window.zombie.takeDamage(this.damage);
-                    }
+                } else if (!zombieInstance && window.zombie && window.zombie.model && window.zombie.model.userData.zombieId === targetId) {
+                    // Local zombie check (though usually local zombie has different logic)
+                    window.zombie.takeDamage(this.damage);
                 }
-            }
-            // 2. Try to find Remote Player ID
-            else {
-                const remotePlayers = window.networkManager.remotePlayers;
+            } else {
+                // It is a remote player
+                const playerInstance = window.networkManager.remotePlayers[targetId];
 
-                // Helper to check if object or parents match a player model
-                for (const [id, player] of Object.entries(remotePlayers)) {
-                    // Check if hit object is part of this player's model
-                    let current = targetEntity;
-                    while (current) {
-                        if (current === player.model) {
-                            targetId = id;
-                            break;
-                        }
-                        current = current.parent;
-                    }
-                    if (targetId) break;
+                // Visual feedback
+                if (playerInstance && playerInstance.onHit) {
+                    playerInstance.onHit();
                 }
 
-                if (targetId) {
-                    const playerInstance = remotePlayers[targetId];
-
-                    // Trigger visual feedback locally immediately
-                    if (playerInstance && playerInstance.onHit) {
-                        playerInstance.onHit();
-                    }
-
-                    // EXPLICIT TUNNELING (PvP Workaround)
-                    // We directly emit 'zombieUpdate' with isPvP flag to behave exactly like PvP system
-                    if (window.networkManager.socket) {
-                        console.log(`[ShooterSystem] Emitting Tunneled Damage to ${targetId}`);
-                        window.networkManager.socket.emit('zombieUpdate', {
-                            isPvP: true,
-                            attackerId: window.networkManager.socket.id,
-                            targetId: targetId,
-                            damage: this.damage,
-                            // Dummy values to satisfy potential server schema
-                            x: 0, y: 0, z: 0, rotation: 0, state: 'idle'
-                        });
-                    }
+                // EXPLICIT TUNNELING (PvP Workaround)
+                // Use the exact same mechanism as the melee PvP
+                if (window.networkManager.socket) {
+                    console.log(`[ShooterSystem] Emitting Tunneled Damage to Player ${targetId}`);
+                    window.networkManager.socket.emit('zombieUpdate', {
+                        isPvP: true,
+                        attackerId: window.networkManager.socket.id,
+                        targetId: targetId,
+                        damage: this.damage,
+                        x: 0, y: 0, z: 0, rotation: 0, state: 'idle'
+                    });
                 }
             }
 

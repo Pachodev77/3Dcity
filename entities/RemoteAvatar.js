@@ -53,6 +53,10 @@ export class RemoteAvatar {
                 }
             });
 
+            // Mark as entity root for ShooterSystem raycasting
+            this.model.userData.isEntityRoot = true;
+            this.model.userData.remotePlayerId = this.id;
+
             this.model.visible = false; // Hide initially to prevent T-Pose
             this.scene.add(this.model);
             this.mixer = new THREE.AnimationMixer(this.model);
