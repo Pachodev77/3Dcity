@@ -156,34 +156,18 @@ export class ShooterSystem {
 
         // Logic
         if (window.networkManager) {
-            // Find ID
             let targetId = null;
-            let isZombie = false;
 
-            // Check if user data helps
-            // Assuming RemoteAvatar/Zombie structure. We might need to iterate valid targets to map mesh to ID if user data isn't set perfectly
-            // But let's assume we can get it or passed it.
-
-            // Simplification: We need the ID.
-            // Let's rely on finding the entity instance in the managers.
-
-            // Try to find matching ID in manager lists based on object uuid if possible? 
-            // Better: Ensure entities have userData.id
-
+            // 1. Try to find Zombie ID
             if (targetEntity.userData.zombieId) {
                 targetId = targetEntity.userData.zombieId;
-                isZombie = true;
-                //  console.log('Shooting Zombie:', targetId);
-
-                // Apply damage
-                // Note: RemoteZombie logic handles damage? Usually we send attack to server.
-                // Using PvP/Zombie Update tunnel
-                // Zombie doesn't have a direct 'takeDamage' from networkManager usually, the client simulation does?
-                // Let's use the local 'takeDamage' if available, which should tunnel.
-
-                //  We need to find the JS instance.
+                // Check if it's a remote zombie
                 const zombieInstance = window.networkManager.remoteZombies[targetId];
                 if (zombieInstance && zombieInstance.takeDamage) {
+                    // If RemoteZombie has takeDamage, use it (assumed to handle network if implemented)
+                    // If not, we might need a specific packet. 
+                    // But standard logic usually handles local vs remote differently. 
+                    // For now, let's execute local damage if available (visuals)
                     zombieInstance.takeDamage(this.damage);
                 } else if (!zombieInstance) {
                     // Local zombie?
@@ -191,28 +175,47 @@ export class ShooterSystem {
                         window.zombie.takeDamage(this.damage);
                     }
                 }
-
-            } else {
-                // Player?
-                // We need to match model to remote player
+            }
+            // 2. Try to find Remote Player ID
+            else {
+                // Method A: Check userData directly (if we added it to RemoteAvatar models)
+                // Method B: Search via NetworkManager (as before, but robust)
                 const remotePlayers = window.networkManager.remotePlayers;
+
+                // Helper to check if object or parents match a player model
                 for (const [id, player] of Object.entries(remotePlayers)) {
-                    if (player.model === targetEntity || player.model === targetEntity.parent) {
-                        targetId = id;
-                        break;
+                    // Check if hit object is part of this player's model
+                    let current = targetEntity;
+                    while (current) {
+                        if (current === player.model) {
+                            targetId = id;
+                            break;
+                        }
+                        current = current.parent;
                     }
+                    if (targetId) break;
                 }
 
                 if (targetId) {
-                    //  console.log('Shooting Player:', targetId);
+                    // Replicate Avatar.js attack logic:
+                    // Avatar.js calls: if (remotePlayer.takeDamage) remotePlayer.takeDamage(damage);
+                    // RemoteAvatar.js takeDamage calls: window.networkManager.sendPlayerDamage(this.id, amount);
+
                     const playerInstance = remotePlayers[targetId];
-                    if (playerInstance && playerInstance.takeDamage) {
-                        playerInstance.takeDamage(this.damage);
+
+                    // Trigger visual feedback locally immediately (screen flash logic in main.js listens to 'player-hit' only if WE are hit usually, 
+                    // but onHit() on RemoteAvatar causes red flash on model).
+                    if (playerInstance && playerInstance.onHit) {
+                        playerInstance.onHit();
                     }
+
+                    // Send to network (Critical for health update)
+                    console.log(`[ShooterSystem] Hit RemotePlayer ${targetId} for ${this.damage}`);
+                    window.networkManager.sendPlayerDamage(targetId, this.damage);
                 }
             }
 
-            // Show Damage Number
+            // Show Damage Number (Local visual only)
             this.showFloatingText(hitPoint, this.damage);
         }
     }
