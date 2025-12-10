@@ -115,7 +115,12 @@ export class CameraController {
         }
 
         if (input.y !== 0) {
-            this.angleVOffset -= input.y * cameraRotationSpeed * delta;
+            // Invert pitch for FPS mode
+            if (this.mode === 'FPS') {
+                this.angleVOffset += input.y * cameraRotationSpeed * delta;
+            } else {
+                this.angleVOffset -= input.y * cameraRotationSpeed * delta;
+            }
             // Different limits for FPS
             if (this.mode === 'FPS') {
                 this.angleVOffset = Math.max(-1.0, Math.min(1.0, this.angleVOffset)); // More freedom in FPS
