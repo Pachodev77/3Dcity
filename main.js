@@ -79,9 +79,9 @@ interiorManager.setMainScene(scene);
 for (let i = 1; i <= 10; i++) {
     const options = {};
     if (i === 1) {
-        options.modelPath = '/scenes/supermarket.glb';
+        options.modelPath = '/scenes/camp.glb';
         options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, 5.0, 0); // Spawn higher to avoid floor clipping
+        options.spawnPosition = new THREE.Vector3(0, 5.0, 0);
         options.modelPosition = new THREE.Vector3(0, -20.0, 0);
     } else if (i === 2) {
         options.modelPath = '/scenes/club.glb';
@@ -90,22 +90,42 @@ for (let i = 1; i <= 10; i++) {
     } else if (i === 3) {
         options.modelPath = '/scenes/oddity.glb';
         options.modelScale = 1;
-        options.modelPosition = new THREE.Vector3(0, -2.1, 0); // Lower model to align floor
+        options.modelPosition = new THREE.Vector3(0, -2.1, 0);
         options.spawnPosition = new THREE.Vector3(0, 2.0, 0);
     } else if (i === 4) {
         options.modelPath = '/scenes/night.glb';
         options.modelScale = 1;
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 5) {
-        options.modelPath = '/scenes/stadium.glb';
-        options.modelScale = 2;
-        options.modelPosition = new THREE.Vector3(0, 20.3, 0); // Raise model
+        options.modelPath = '/scenes/simpsons.glb'; // Swapped Stadium for Simpsons
+        options.modelScale = 1;
+        options.modelPosition = new THREE.Vector3(0, 30.0, 0);
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 6) {
         options.modelPath = '/scenes/farm.glb';
         options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, 0.0, 0); // Safe height for farm
+        options.spawnPosition = new THREE.Vector3(0, 0.0, 0);
         options.modelPosition = new THREE.Vector3(0, -10.0, 0);
+    } else if (i === 7) {
+        options.modelPath = '/scenes/shop.glb';
+        options.modelScale = 1;
+        options.modelPosition = new THREE.Vector3(0, 50.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
+    } else if (i === 8) {
+        options.modelPath = '/scenes/cathedral.glb';
+        options.modelScale = 1;
+        options.modelPosition = new THREE.Vector3(0, 70.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
+    } else if (i === 9) {
+        options.modelPath = '/scenes/futuristic.glb';
+        options.modelScale = 1;
+        options.modelPosition = new THREE.Vector3(0, 90.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
+    } else if (i === 10) {
+        options.modelPath = '/scenes/arab.glb';
+        options.modelScale = 1;
+        options.modelPosition = new THREE.Vector3(0, 110.0, 0);
+        options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     }
     interiorManager.createInterior(i, `Business ${i}`, options);
 }
