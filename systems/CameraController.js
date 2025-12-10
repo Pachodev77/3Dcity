@@ -130,11 +130,10 @@ export class CameraController {
             this.lastManualRotationTime = Date.now();
         }
 
-        // FPS Mode Logic
         if (this.mode === 'FPS') {
-            // Position: Lock to head
-            // Assuming Avatar origin is at feet, head is around Y+1.6
-            const headPos = target.position.clone().add(new THREE.Vector3(0, 1.6, 0));
+            // Position: Lock to head (lowered to 1.0)
+            // Assuming Avatar origin is at feet
+            const headPos = target.position.clone().add(new THREE.Vector3(0, 1.0, 0));
             this.camera.position.copy(headPos);
 
             // Rotation: Controlled directly by angles. NO looking at target (because we are the target)
