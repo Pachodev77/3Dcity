@@ -113,17 +113,17 @@ for (let i = 1; i <= 10; i++) {
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 8) {
         options.modelPath = '/scenes/cathedral.glb';
-        options.modelScale = 1;
+        options.modelScale = 10;
         options.modelPosition = new THREE.Vector3(0, 0, 0); // Fixed: Reset to 0
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 9) {
         options.modelPath = '/scenes/futuristic.glb';
-        options.modelScale = 1;
+        options.modelScale = 10;
         options.modelPosition = new THREE.Vector3(0, 0, 0); // Fixed: Reset to 0
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 10) {
         options.modelPath = '/scenes/arab.glb';
-        options.modelScale = 1;
+        options.modelScale = 10;
         options.modelPosition = new THREE.Vector3(0, 0, 0); // Fixed: Reset to 0
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     }
