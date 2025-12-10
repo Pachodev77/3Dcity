@@ -416,6 +416,68 @@
             user-select: none;
         }
 
+        /* FPS Shooter UI */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2000;
+            display: none;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 255, 0, 0.8);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #crosshair::before {
+            top: 9px;
+            left: 0;
+            width: 20px;
+            height: 2px;
+        }
+
+        #crosshair::after {
+            top: 0;
+            left: 9px;
+            width: 2px;
+            height: 20px;
+        }
+
+        #fps-toggle-button {
+            position: absolute;
+            bottom: 200px;
+            /* Above camera button */
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 140, 0, 0.8);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        #fps-toggle-button:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 165, 0, 0.9);
+        }
+
         /* Loading Screen Styles */
         #loading-screen {
             position: fixed;
@@ -1238,7 +1300,11 @@
         }
     </script>
     <script src="/cache.js"></script>
-    <script type="module" src="main.js"></script>
+    <div id="crosshair"></div>
+    <button id="fps-toggle-button">FPS</button>
+
+    <!-- Game Scripts -->
+    <script type="module" src="/main.js"></script>
 </body>
 
 </html>

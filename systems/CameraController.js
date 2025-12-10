@@ -4,6 +4,7 @@ import { CONFIG } from '../config.js';
 export class CameraController {
     constructor(camera) {
         this.camera = camera;
+        this.mode = 'TPS'; // 'TPS' or 'FPS'
 
         // Avatar camera state
         this.angleH = 0;
@@ -24,6 +25,13 @@ export class CameraController {
 
         this.raycaster = new THREE.Raycaster();
         this.currentLookAt = null; // For smoothed lookAt
+    }
+
+    setMode(mode) {
+        this.mode = mode;
+        if (mode === 'FPS') {
+            this.angleVOffset = 0; // Reset vertical look
+        }
     }
 
     updateVehicleCamera(delta, vehicle, input, collidableObjects, groundCollidableObjects) {
@@ -108,9 +116,44 @@ export class CameraController {
 
         if (input.y !== 0) {
             this.angleVOffset -= input.y * cameraRotationSpeed * delta;
-            this.angleVOffset = Math.max(-0.8, Math.min(0.2, this.angleVOffset));
+            // Different limits for FPS
+            if (this.mode === 'FPS') {
+                this.angleVOffset = Math.max(-1.0, Math.min(1.0, this.angleVOffset)); // More freedom in FPS
+            } else {
+                this.angleVOffset = Math.max(-0.8, Math.min(0.2, this.angleVOffset));
+            }
             this.lastManualRotationTime = Date.now();
         }
+
+        // FPS Mode Logic
+        if (this.mode === 'FPS') {
+            // Position: Lock to head
+            // Assuming Avatar origin is at feet, head is around Y+1.6
+            const headPos = target.position.clone().add(new THREE.Vector3(0, 1.6, 0));
+            this.camera.position.copy(headPos);
+
+            // Rotation: Controlled directly by angles. NO looking at target (because we are the target)
+            // We need to set rotation from angleH and angleVOffset
+            // angleH is Y-axis (Yaw), angleVOffset is X-axis (Pitch)
+
+            // Important: In FPS, camera rotation dictates character rotation usually?
+            // Or character rotation dictates camera?
+            // Simplification: Camera looks where angleH says. Character mesh should probably update Y rotation to match camera Y.
+            // But here we just set camera.
+
+            // Convert angles to Quaternion or Euler
+            // Camera starts looking down -Z. 
+            // Yaw (H) Rotation around Y.
+            // Pitch (V) Rotation around local X.
+
+            const qH = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.angleH);
+            const qV = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.angleVOffset);
+
+            this.camera.quaternion.copy(qH).multiply(qV);
+
+            return; // Skip TPS logic
+        }
+
 
         const timeSinceLastRotation = Date.now() - (this.lastManualRotationTime || 0);
         const shouldAutoFollow = timeSinceLastRotation > 1000 && target.userData?.isMoving;

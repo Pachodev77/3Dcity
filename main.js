@@ -13,6 +13,7 @@ import { InteriorManager } from './systems/InteriorManager.js';
 import { ChatBubble } from './systems/ChatBubble.js';
 import { ChatUI } from './systems/ChatUI.js';
 import { MusicPlayer } from './systems/MusicPlayer.js';
+import { ShooterSystem } from './systems/ShooterSystem.js';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -55,8 +56,23 @@ const groundCollidableObjects = [];
 const inputManager = new InputManager();
 const cameraController = new CameraController(camera);
 const networkManager = new NetworkManager(scene);
+window.networkManager = networkManager; // Expose for other systems
 
 const musicPlayer = new MusicPlayer();
+const shooterSystem = new ShooterSystem(scene, camera, avatar);
+
+const fpsToggleButton = document.getElementById('fps-toggle-button');
+if (fpsToggleButton) {
+    fpsToggleButton.addEventListener('click', () => {
+        const isFps = shooterSystem.toggleMode();
+        cameraController.setMode(isFps ? 'FPS' : 'TPS');
+
+        // Hide avatar in FPS mode
+        if (avatar.model) {
+            avatar.model.visible = !isFps;
+        }
+    });
+}
 
 // ... (existing code) ...
 
@@ -932,6 +948,7 @@ function animate() {
     zombie.updateAnimation(delta);
     networkManager.update(delta, camera);
     businessSystem.update(delta);
+    shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies);
 
     // Network Update
     if (avatar.model) {
