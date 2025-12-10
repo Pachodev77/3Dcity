@@ -23,6 +23,7 @@ scene.fog = new THREE.FogExp2(0xcccccc, 0.02); // Thick fog density
 // Camera Setup
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 5, 10);
+scene.add(camera); // Essential for children of camera (weapon) to be rendered
 
 // Audio Listener
 const listener = new THREE.AudioListener();

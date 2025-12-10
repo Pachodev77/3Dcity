@@ -35,20 +35,20 @@ export class ShooterSystem {
 
         // Main Body (Gun)
         const bodyGeo = new THREE.BoxGeometry(0.1, 0.15, 0.6);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 });
+        const bodyMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         body.position.set(0.2, -0.2, -0.3); // Relative to camera
 
         // Barrel
         const barrelGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4);
-        const barrelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
+        const barrelMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
         const barrel = new THREE.Mesh(barrelGeo, barrelMat);
         barrel.rotation.x = Math.PI / 2;
         barrel.position.set(0.2, -0.15, -0.7);
 
         // Grip
         const gripGeo = new THREE.BoxGeometry(0.08, 0.2, 0.1);
-        const gripMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
+        const gripMat = new THREE.MeshBasicMaterial({ color: 0x5d4037 });
         const grip = new THREE.Mesh(gripGeo, gripMat);
         grip.rotation.x = Math.PI / 6;
         grip.position.set(0.2, -0.3, -0.2);
