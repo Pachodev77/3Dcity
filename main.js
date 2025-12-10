@@ -103,9 +103,9 @@ for (let i = 1; i <= 10; i++) {
         options.spawnPosition = new THREE.Vector3(0, 1.0, 0);
     } else if (i === 6) {
         options.modelPath = '/scenes/farm.glb';
-        options.modelScale = 1;
-        options.spawnPosition = new THREE.Vector3(0, 0.0, 0);
-        options.modelPosition = new THREE.Vector3(0, -10.0, 0);
+        options.modelScale = 5;
+        options.spawnPosition = new THREE.Vector3(0, 5.0, 0);
+        options.modelPosition = new THREE.Vector3(0, 0.0, 0);
     } else if (i === 7) {
         options.modelPath = '/scenes/shop.glb';
         options.modelScale = 1;
