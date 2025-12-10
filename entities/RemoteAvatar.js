@@ -244,18 +244,7 @@ export class RemoteAvatar {
     }
 
     onHit() {
-        // Called when network tells us this player was hit (by anyone)
-        // FLash Red
-        if (this.model) {
-            this.model.traverse((child) => {
-                if (child.isMesh && child.material) {
-                    const originalColor = child.material.color.getHex();
-                    child.material.color.setHex(0xff0000);
-                    setTimeout(() => {
-                        if (child.material) child.material.color.setHex(originalColor);
-                    }, 200);
-                }
-            });
-        }
+        // Visual feedback removed as per user request
+        // The victim will see the flash on their own screen via their local Avatar.js logic
     }
 }
