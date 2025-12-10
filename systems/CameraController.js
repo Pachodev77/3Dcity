@@ -131,9 +131,9 @@ export class CameraController {
         }
 
         if (this.mode === 'FPS') {
-            // Position: Lock to head (lowered to 1.0)
+            // Position: Lock to head (lowered to 0.7)
             // Assuming Avatar origin is at feet
-            const headPos = target.position.clone().add(new THREE.Vector3(0, 1.0, 0));
+            const headPos = target.position.clone().add(new THREE.Vector3(0, 0.7, 0));
             this.camera.position.copy(headPos);
 
             // Rotation: Controlled directly by angles. NO looking at target (because we are the target)
