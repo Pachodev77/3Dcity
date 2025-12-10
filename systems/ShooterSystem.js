@@ -124,17 +124,17 @@ export class ShooterSystem {
             // Check distance
             if (intersects[0].distance < this.range) {
                 // Determine what we hit
-                this.handleHit(intersects[0].object);
+                this.handleHit(intersects[0]);
             }
         }
     }
 
-    handleHit(hitObject) {
+    handleHit(intersection) {
         const now = Date.now();
         if (now - this.lastFireTime < this.fireRate) return;
 
         // Find the root entity from the mesh
-        let entity = hitObject;
+        let entity = intersection.object;
         while (entity.parent && !entity.userData.isEntityRoot) {
             entity = entity.parent;
             if (entity.userData.avatarName || entity.userData.zombieId) {
@@ -143,7 +143,7 @@ export class ShooterSystem {
         }
 
         // Fire!
-        this.fire(entity, hitObject.point);
+        this.fire(entity, intersection.point);
         this.lastFireTime = now;
     }
 
