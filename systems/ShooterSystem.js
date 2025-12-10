@@ -164,10 +164,6 @@ export class ShooterSystem {
                 // Check if it's a remote zombie
                 const zombieInstance = window.networkManager.remoteZombies[targetId];
                 if (zombieInstance && zombieInstance.takeDamage) {
-                    // If RemoteZombie has takeDamage, use it (assumed to handle network if implemented)
-                    // If not, we might need a specific packet. 
-                    // But standard logic usually handles local vs remote differently. 
-                    // For now, let's execute local damage if available (visuals)
                     zombieInstance.takeDamage(this.damage);
                 } else if (!zombieInstance) {
                     // Local zombie?
@@ -178,8 +174,6 @@ export class ShooterSystem {
             }
             // 2. Try to find Remote Player ID
             else {
-                // Method A: Check userData directly (if we added it to RemoteAvatar models)
-                // Method B: Search via NetworkManager (as before, but robust)
                 const remotePlayers = window.networkManager.remotePlayers;
 
                 // Helper to check if object or parents match a player model
@@ -197,21 +191,26 @@ export class ShooterSystem {
                 }
 
                 if (targetId) {
-                    // Replicate Avatar.js attack logic:
-                    // Avatar.js calls: if (remotePlayer.takeDamage) remotePlayer.takeDamage(damage);
-                    // RemoteAvatar.js takeDamage calls: window.networkManager.sendPlayerDamage(this.id, amount);
-
                     const playerInstance = remotePlayers[targetId];
 
-                    // Trigger visual feedback locally immediately (screen flash logic in main.js listens to 'player-hit' only if WE are hit usually, 
-                    // but onHit() on RemoteAvatar causes red flash on model).
+                    // Trigger visual feedback locally immediately
                     if (playerInstance && playerInstance.onHit) {
                         playerInstance.onHit();
                     }
 
-                    // Send to network (Critical for health update)
-                    console.log(`[ShooterSystem] Hit RemotePlayer ${targetId} for ${this.damage}`);
-                    window.networkManager.sendPlayerDamage(targetId, this.damage);
+                    // EXPLICIT TUNNELING (PvP Workaround)
+                    // We directly emit 'zombieUpdate' with isPvP flag to behave exactly like PvP system
+                    if (window.networkManager.socket) {
+                        console.log(`[ShooterSystem] Emitting Tunneled Damage to ${targetId}`);
+                        window.networkManager.socket.emit('zombieUpdate', {
+                            isPvP: true,
+                            attackerId: window.networkManager.socket.id,
+                            targetId: targetId,
+                            damage: this.damage,
+                            // Dummy values to satisfy potential server schema
+                            x: 0, y: 0, z: 0, rotation: 0, state: 'idle'
+                        });
+                    }
                 }
             }
 
