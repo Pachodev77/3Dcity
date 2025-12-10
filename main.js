@@ -59,6 +59,15 @@ const networkManager = new NetworkManager(scene);
 window.networkManager = networkManager; // Expose for other systems
 
 const musicPlayer = new MusicPlayer();
+// ShooterSystem init moved below Avatar creation
+
+// ... (existing code) ...
+
+// Entities
+const avatar = new Avatar(scene);
+const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+avatar.setTargets([zombie]);
+
 const shooterSystem = new ShooterSystem(scene, camera, avatar);
 
 const fpsToggleButton = document.getElementById('fps-toggle-button');
@@ -73,13 +82,6 @@ if (fpsToggleButton) {
         }
     });
 }
-
-// ... (existing code) ...
-
-// Entities
-const avatar = new Avatar(scene);
-const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
-avatar.setTargets([zombie]);
 
 // Business System (Markers) - Initialize after avatar
 const businessSystem = new BusinessSystem(scene, camera);
