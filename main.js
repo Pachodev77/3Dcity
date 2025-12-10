@@ -964,8 +964,12 @@ function animate() {
     }
 
     // Avatar Physics (Run every frame)
+    // Avatar Physics (Run every frame)
     if (avatar.model) {
-        avatar.checkGroundCollision(collidableObjects);
+        const currentCollidableObjects = interiorManager.isInInterior
+            ? interiorManager.getCurrentCollidables()
+            : collidableObjects;
+        avatar.checkGroundCollision(currentCollidableObjects);
     }
 
     // Input & Movement
