@@ -98,6 +98,7 @@ export class Interior {
         }).catch((error) => {
             console.error(`Error loading interior model ${this.modelPath}:`, error);
             // Fallback to procedural on error
+            if (this.ground) this.ground.material.visible = true;
             this.createWalls();
         });
     }
