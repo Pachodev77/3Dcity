@@ -21,8 +21,8 @@ export class InputManager {
                 zone: moveZone,
                 mode: 'static',
                 position: { left: '50%', top: '50%' },
-                color: 'orange',
-                restOpacity: 1
+                color: '#00f3ff',
+                restOpacity: 0.8
             });
 
             moveJoystick.on('move', (evt, data) => {
@@ -40,8 +40,8 @@ export class InputManager {
                 zone: cameraZone,
                 mode: 'static',
                 position: { left: '50%', top: '50%' },
-                color: 'orange',
-                restOpacity: 1
+                color: '#00f3ff',
+                restOpacity: 0.8
             });
 
             cameraJoystick.on('move', (evt, data) => {
