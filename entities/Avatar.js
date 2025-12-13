@@ -452,12 +452,9 @@ export class Avatar {
 
     updateHealthUI() {
         const fill = document.getElementById('health-bar-fill');
-        const text = document.getElementById('health-text');
-
-        if (fill && text) {
+        if (fill) {
             const percentage = (this.health / this.maxHealth) * 100;
             fill.style.width = `${percentage}%`;
-            text.textContent = `${Math.ceil(percentage)}%`;
 
             // Color change based on health
             if (percentage < 30) {
