@@ -21,7 +21,7 @@ export class InputManager {
                 zone: moveZone,
                 mode: 'static',
                 position: { left: '50%', top: '50%' },
-                color: '#00a8ff',
+                color: '#008B8B',
                 restOpacity: 1
             });
 
@@ -40,7 +40,7 @@ export class InputManager {
                 zone: cameraZone,
                 mode: 'static',
                 position: { left: '50%', top: '50%' },
-                color: '#00a8ff',
+                color: '#008B8B',
                 restOpacity: 1
             });
 

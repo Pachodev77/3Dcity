@@ -7,18 +7,9 @@
     <meta name='admaven-placement' content='BqjwGrjU9'>
     <title>3D City Plan with Avatars</title>
     <style>
-        :root {
-            --neon-blue: #00a8ff;
-            --glass-bg: rgba(0, 20, 40, 0.6);
-            --glass-border: rgba(0, 168, 255, 0.3);
-            --neon-glow: 0 0 10px rgba(0, 168, 255, 0.5);
-            --text-glow: 0 0 5px rgba(0, 168, 255, 0.8);
-        }
-
         body {
             margin: 0;
             overflow: hidden;
-            font-family: 'Segoe UI', Arial, sans-serif;
         }
 
         canvas {
@@ -48,12 +39,11 @@
 
         /* Avatar Panel Container */
         #avatar-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.95));
             border-radius: 16px;
             padding: 30px;
-            box-shadow: 0 0 30px rgba(0, 168, 255, 0.2);
-            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(52, 152, 219, 0.3);
             max-width: 500px;
             width: 90%;
             position: relative;
@@ -64,9 +54,7 @@
             color: #fff;
             text-align: center;
             font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: var(--text-glow);
+            font-family: Arial, sans-serif;
         }
 
         /* Preview Container */
@@ -145,29 +133,41 @@
 
         .avatar-panel-buttons button {
             padding: 12px 30px;
-            border: 1px solid var(--glass-border);
-            background: rgba(0, 168, 255, 0.1);
-            color: white;
+            border: none;
             border-radius: 8px;
             font-size: 16px;
+            font-family: Arial, sans-serif;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        #avatar-accept-btn:hover,
-        #avatar-cancel-btn:hover {
-            background: var(--neon-blue);
-            box-shadow: 0 0 20px var(--neon-blue);
+        #avatar-accept-btn {
+            background-color: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        #avatar-accept-btn:hover {
+            background-color: rgba(39, 174, 96, 1);
             transform: translateY(-2px);
-            border-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
+        #avatar-cancel-btn {
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
 
+        #avatar-cancel-btn:hover {
+            background-color: rgba(192, 57, 43, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
 
+        .avatar-panel-buttons button:active {
+            transform: translateY(0);
+        }
 
         #joystick-container-move {
             position: absolute;
@@ -185,19 +185,19 @@
             height: 100px;
         }
 
-        /* Base button styles - CYBER GLASS */
+        /* Base button styles */
         .btn {
             padding: 6px 12px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(5px);
-            color: var(--neon-blue);
-            border-radius: 8px;
+            background-color: rgba(52, 152, 219, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
             font-size: 12px;
-            font-weight: 700;
+            font-family: Arial, sans-serif;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             text-align: center;
             min-width: 80px;
             height: 30px;
@@ -205,52 +205,37 @@
             align-items: center;
             justify-content: center;
             margin: 2px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .btn:hover {
-            background: rgba(0, 168, 255, 0.2);
-            box-shadow: var(--neon-glow);
-            text-shadow: var(--text-glow);
-            border-color: #fff;
+            background-color: rgba(41, 128, 185, 0.9);
             transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .btn:active {
             transform: translateY(1px);
-            background: rgba(0, 168, 255, 0.4);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         /* Specific button styles */
         #spawn-vehicle-button {
             /* Position is now set inline to be above the left joystick */
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            min-height: 45px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--neon-blue);
+            border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             z-index: 100;
             padding: 0;
             margin: 0;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-        }
-
-        #spawn-vehicle-button:hover {
-            background: rgba(0, 168, 255, 0.2);
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
-            transform: scale(1.05);
         }
 
         #enter-exit-button {
@@ -258,72 +243,62 @@
             bottom: 45px;
             left: 140px;
             /* transform: translateX(-50%); Removed to position manually */
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 20, 40, 0.8);
-            border: 2px solid var(--neon-blue);
+            width: 50px;
+            height: 50px;
+            background-color: rgba(76, 175, 80, 0.8);
+            border: none;
             border-radius: 50%;
             display: none;
             /* Initially hidden */
             justify-content: center;
             align-items: center;
-            color: var(--neon-blue);
-            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             z-index: 101;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 0 15px rgba(0, 168, 255, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
-            text-transform: uppercase;
         }
 
         #enter-exit-button:hover {
-            background: rgba(0, 168, 255, 0.2);
-            box-shadow: 0 0 25px var(--neon-blue);
-            text-shadow: var(--text-glow);
-            transform: translate(-50%, -2px) scale(1.05);
-            color: white;
-            border-color: white;
+            background-color: rgba(68, 157, 72, 0.9);
+            transform: translate(-50%, -1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         #enter-exit-button:active {
             transform: translate(-50%, 1px);
-            background: rgba(0, 168, 255, 0.4);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         #camera-position-button {
             position: absolute;
             bottom: 120px;
             right: 15px;
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            min-height: 45px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
             border-radius: 50%;
-            color: var(--neon-blue);
-            font-size: 18px;
-            font-weight: bold;
+            color: white;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+            border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
             padding: 0;
             margin: 0;
-            backdrop-filter: blur(5px);
         }
 
         #camera-position-button:hover {
-            background: rgba(0, 168, 255, 0.2) !important;
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
+            background-color: rgba(41, 128, 185, 0.9) !important;
             transform: scale(1.1);
-            color: white;
         }
 
         #camera-position-button:active {
@@ -331,54 +306,67 @@
         }
 
         /* Vehicle Control Buttons */
-        /* Vehicle Control Buttons */
-        #accelerate-button,
-        #brake-button {
-
-            width: 60px;
-            height: 60px;
+        #accelerate-button {
+            position: absolute;
+            bottom: 85px;
+            right: 120px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(5px);
-            color: var(--neon-blue);
-            font-size: 24px;
+            background-color: rgba(46, 204, 113, 0.8);
+            color: white;
+            font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
             z-index: 100;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        #accelerate-button {
-            position: absolute;
-            bottom: 85px;
-            right: 120px;
+        #accelerate-button:hover {
+            background-color: rgba(39, 174, 96, 0.9);
+            transform: scale(1.1);
+        }
+
+        #accelerate-button:active {
+            background-color: rgba(39, 174, 96, 1);
+            transform: scale(0.95);
         }
 
         #brake-button {
             position: absolute;
             bottom: 15px;
             right: 120px;
-        }
-
-        #accelerate-button:hover,
-        #brake-button:hover {
-            background: rgba(0, 168, 255, 0.2);
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
-            transform: scale(1.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(231, 76, 60, 0.8);
             color: white;
-            text-shadow: var(--text-glow);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            z-index: 100;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        #accelerate-button:active,
+        #brake-button:hover {
+            background-color: rgba(192, 57, 43, 0.9);
+            transform: scale(1.1);
+        }
+
         #brake-button:active {
-            background: rgba(0, 168, 255, 0.4);
+            background-color: rgba(192, 57, 43, 1);
             transform: scale(0.95);
         }
 
@@ -417,10 +405,8 @@
             position: absolute;
             top: 50px;
             right: 10px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(5px);
-            color: var(--neon-blue);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #0f0;
             padding: 8px 12px;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
@@ -428,8 +414,6 @@
             font-weight: bold;
             z-index: 100;
             user-select: none;
-            text-shadow: var(--text-glow);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         /* FPS Shooter UI */
@@ -472,31 +456,26 @@
             bottom: 200px;
             /* Above camera button */
             right: 15px;
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(5px);
-            color: var(--neon-blue);
+            background-color: rgba(255, 140, 0, 0.8);
+            color: white;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
             z-index: 100;
         }
 
         #fps-toggle-button:hover {
             transform: scale(1.1);
-            background: rgba(0, 168, 255, 0.2);
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
-            color: white;
-            text-shadow: var(--text-glow);
+            background-color: rgba(255, 165, 0, 0.9);
         }
 
         /* Loading Screen Styles */
@@ -573,9 +552,9 @@
             top: 80px;
             left: 20px;
             width: 300px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid #333;
+            border-radius: 10px;
             padding: 15px;
             color: white;
             z-index: 1000;
@@ -583,7 +562,7 @@
             /* Hidden by default */
             flex-direction: column;
             gap: 15px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
         }
 
@@ -591,15 +570,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #333;
             padding-bottom: 10px;
         }
 
         .music-header h3 {
             margin: 0;
             font-size: 18px;
-            color: var(--neon-blue);
-            text-shadow: var(--text-glow);
+            color: #00ff88;
         }
 
         #close-music-panel {
@@ -638,12 +616,12 @@
         }
 
         .control-buttons button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
+            background: none;
+            border: 1px solid #444;
             border-radius: 50%;
             width: 40px;
             height: 40px;
-            color: var(--neon-blue);
+            color: white;
             font-size: 18px;
             cursor: pointer;
             transition: all 0.2s;
@@ -653,10 +631,9 @@
         }
 
         .control-buttons button:hover {
-            background: var(--neon-blue);
-            border-color: #fff;
-            color: white;
-            box-shadow: var(--neon-glow);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00ff88;
+            color: #00ff88;
         }
 
         .volume-control {
@@ -733,20 +710,18 @@
             left: 20px;
             width: 350px;
             height: 400px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+            background-color: rgba(0, 0, 0, 0.85);
             border-radius: 12px;
             display: none;
             flex-direction: column;
             z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             backdrop-filter: blur(10px);
         }
 
         #chat-header {
-            background: rgba(0, 168, 255, 0.1);
-            border-bottom: 1px solid var(--glass-border);
+            background-color: rgba(46, 204, 113, 0.9);
             color: white;
             padding: 12px 16px;
             font-family: Arial, sans-serif;
@@ -756,7 +731,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            text-shadow: var(--text-glow);
         }
 
         #chat-messages {
@@ -852,19 +826,15 @@
 
         #chat-send-button {
             padding: 10px 16px;
-            background: rgba(0, 168, 255, 0.2);
-            border: 1px solid var(--glass-border);
+            background-color: rgba(46, 204, 113, 0.8);
             color: white;
+            border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-family: Arial, sans-serif;
             font-weight: bold;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-
-        #chat-send-button:hover {
-            background: var(--neon-blue);
-            box-shadow: var(--neon-glow);
         }
 
         #chat-send-button:hover {
@@ -898,12 +868,11 @@
         }
 
         #map-panel {
-            background: var(--glass-bg);
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.95));
             border-radius: 16px;
             padding: 30px;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(243, 156, 18, 0.3);
             max-width: 800px;
             width: 90%;
         }
@@ -941,9 +910,8 @@
         }
 
         .map-card.current-map {
-            border-color: var(--neon-blue);
-            background: rgba(0, 168, 255, 0.15);
-            box-shadow: inset 0 0 15px rgba(0, 168, 255, 0.2);
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
         }
 
         .map-thumbnail {
@@ -982,9 +950,9 @@
         #map-panel-close {
             width: 100%;
             padding: 12px;
-            background: rgba(255, 50, 50, 0.2);
-            border: 1px solid rgba(255, 50, 50, 0.4);
+            background-color: rgba(231, 76, 60, 0.8);
             color: white;
+            border: none;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -994,8 +962,7 @@
         }
 
         #map-panel-close:hover {
-            background: rgba(255, 50, 50, 0.4);
-            box-shadow: 0 0 15px rgba(255, 50, 50, 0.3);
+            background-color: rgba(192, 57, 43, 0.9);
             transform: translateY(-1px);
         }
 
@@ -1011,11 +978,11 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            background: var(--glass-bg);
+            background: rgba(20, 20, 30, 0.6);
             padding: 8px 15px;
             border-radius: 25px;
             backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             z-index: 1000;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             pointer-events: auto;
@@ -1024,7 +991,6 @@
         .health-icon {
             font-size: 20px;
             animation: pulse 2s infinite;
-            filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.8));
         }
 
         .health-bar-bg {
@@ -1040,9 +1006,9 @@
         #health-bar-fill {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #ff3030, #ff0000);
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
         }
 
         @keyframes pulse {
@@ -1077,10 +1043,10 @@
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background: var(--glass-bg);
+            background: rgba(20, 20, 30, 0.6);
             backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
-            color: var(--neon-blue);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
             font-size: 22px;
             cursor: pointer;
             display: flex;
@@ -1106,27 +1072,36 @@
 
         .control-btn-unified:hover {
             transform: translateY(-3px) scale(1.05);
-            background: rgba(0, 168, 255, 0.2);
-            border-color: #fff;
-            box-shadow: var(--neon-glow);
-            color: white;
-            text-shadow: var(--text-glow);
+            background: rgba(30, 30, 40, 0.85);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
         .control-btn-unified:active {
             transform: translateY(1px) scale(0.95);
-            background: rgba(0, 168, 255, 0.4);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Specific Glows REMOVED to enforce consistency, they all use the Unified Hover now */
-        #chat-toggle-button:hover,
-        #music-toggle-btn:hover,
-        #avatar-button:hover,
+        /* Specific Glows for each button type on hover */
+        #chat-toggle-button:hover {
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+            border-color: #2ecc71;
+        }
+
+        #music-toggle-btn:hover {
+            box-shadow: 0 0 20px rgba(155, 89, 182, 0.4);
+            border-color: #9b59b6;
+        }
+
+        #avatar-button:hover {
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+            border-color: #3498db;
+        }
+
         #map-selector-button:hover {
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+            border-color: #f39c12;
         }
-
 
         /* Death Overlay */
         #death-overlay {
@@ -1290,11 +1265,13 @@
 
 
 
-    <button id="spawn-vehicle-button" class="btn" style="position: absolute; bottom: 120px; right: 75px; z-index: 100;"
+    <button id="spawn-vehicle-button" class="btn"
+        style="position: absolute; bottom: 120px; right: 75px; z-index: 100; background-color: rgba(155, 89, 182, 0.8);"
         title="Spawn Vehicle">🚗</button>
     <div id="joystick-container-move"></div>
     <button id="camera-position-button" class="btn"
-        style="position: absolute; bottom: 120px; right: 20px; z-index: 100;" title="Change Camera View">1</button>
+        style="position: absolute; bottom: 120px; right: 20px; z-index: 100; background-color: rgba(52, 152, 219, 0.8);"
+        title="Change Camera View">1</button>
     <button id="accelerate-button" title="Accelerate">⬆️</button>
     <button id="brake-button" title="Brake / Reverse">⬇️</button>
     <div id="joystick-container-camera"></div>
