@@ -550,28 +550,45 @@ function startSurvivalMode() {
     window.survivalModeActive = true;
     window.survivalWave = 0;
 
-    // Clear existing if any
-    window.localZombies.forEach(z => {
-        if (z.model) scene.remove(z.model);
-        if (z.healthBarGroup) z.model.remove(z.healthBarGroup);
-    });
-    window.localZombies = [];
+    // Clear existing (cleanup)
+    cleanupZombies();
 
     console.log("Starting Survival Mode!");
     showAnnouncement("PREPARE TO SURVIVE", 2000);
 
     setTimeout(() => {
-        spawnNextWave();
+        if (window.survivalModeActive) spawnNextWave();
     }, 2500);
 }
 
+function stopSurvivalMode() {
+    window.survivalModeActive = false;
+    window.survivalWave = 0;
+    window.wavePending = false;
+
+    cleanupZombies();
+
+    showAnnouncement("SURVIVAL STOPPED", 2000);
+    console.log("Survival Mode Stopped.");
+}
+
+function cleanupZombies() {
+    if (window.localZombies) {
+        window.localZombies.forEach(z => {
+            if (z.model) scene.remove(z.model);
+            if (z.healthBarGroup) z.model.remove(z.healthBarGroup);
+        });
+    }
+    window.localZombies = [];
+}
+
 function spawnNextWave() {
+    if (!window.survivalModeActive) return;
+
     window.survivalWave++;
     showAnnouncement(`WAVE ${window.survivalWave}`, 2000);
 
-    const count = window.survivalWave; // "Kill 1, get 2" -> implies +1 each wave? User said "matar 1 aparezcan dos y asi sucesivamente". 
-    // If wave 1 has 1. Wave 2 has 2. Wave 3 has 3...
-
+    const count = window.survivalWave;
     console.log(`Spawning Wave ${window.survivalWave} with ${count} zombies`);
 
     for (let i = 0; i < count; i++) {
@@ -583,23 +600,6 @@ function spawnNextWave() {
         const dist = 20 + Math.random() * 20; // 20-40m away
         const spawnX = avatar.model.position.x + Math.sin(angle) * dist;
         const spawnZ = avatar.model.position.z + Math.cos(angle) * dist;
-
-        // Wait for model load then position
-        // We can't set position immediately because model loads async
-        // We could modify Zombie to take position in constructor or we check in loop
-
-        // Monkey-patch loadModel callback or check isLoaded
-        const originalLoad = z.loadModel;
-        z.loadModel = function () {
-            // Call original but we need to ensure we set position after it loads
-            // Actually Zombie.js sets position to 0,0,50 in loadModel.
-            // We should override it.
-            // Let's rely on the update loop or wait for model to exist.
-            // Re-implementing loadModel logic here is messy.
-            // Best way: The Zombie class loads async. We can just set a targetSpawn property.
-        };
-        // Better: We see Zombie.js sets position hardcoded.
-        // Let's just create them and moved them once model is valid in update loop
         z.targetSpawn = new THREE.Vector3(spawnX, 0, spawnZ);
 
         window.localZombies.push(z);
@@ -607,9 +607,14 @@ function spawnNextWave() {
 }
 
 survivalButton.addEventListener('click', () => {
-    startSurvivalMode();
-    survivalButton.style.display = 'none'; // Hide button after start? or keep to restart?
-    // User said "boton que al presionarlo aparezca el zombie"
+    if (window.survivalModeActive) {
+        stopSurvivalMode();
+        // survivalButton.style.backgroundColor = '#e74c3c'; // Reset color if needed
+    } else {
+        startSurvivalMode();
+        // survivalButton.style.backgroundColor = '#c0392b'; // Darker/Active color
+    }
+    // Button stays visible
 });
 
 spawnVehicleButton.addEventListener('click', () => {
