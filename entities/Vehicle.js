@@ -163,7 +163,7 @@ export class Vehicle {
         const fadeSpeed = 3.0 * delta;
 
         // Idle Volume
-        let targetIdleVol = (targetState === 'idle') ? 0.4 : 0.0;
+        let targetIdleVol = (targetState === 'idle') ? 0.3 : 0.0;
         if (this.idleSound) {
             const current = this.idleSound.getVolume();
             this.idleSound.setVolume(THREE.MathUtils.lerp(current, targetIdleVol, fadeSpeed));
@@ -175,7 +175,7 @@ export class Vehicle {
             const current = this.accelSound.getVolume();
             this.accelSound.setVolume(THREE.MathUtils.lerp(current, targetAccelVol, fadeSpeed));
 
-            const pitch = 0.8 + (speed / maxSpeed) * 0.8;
+            const pitch = (0.8 + (speed / maxSpeed) * 0.8) * 0.5;
             this.accelSound.setPlaybackRate(pitch);
         }
 
