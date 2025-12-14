@@ -38,8 +38,8 @@ export class InteriorManager {
             position: absolute;
             bottom: 80px;
             left: 120px;
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background-color: rgba(231, 76, 60, 0.8);
             border: none;
             border-radius: 50%;
