@@ -293,62 +293,62 @@ export class ShooterSystem {
             this.ammoCounterUI.style.color = this.currentAmmo <= 5 ? "red" : "yellow";
         }
     }
-}
 
-showFloatingText(position, amount) {
-    const textGeo = document.createElement('div');
-    textGeo.textContent = `-${amount}`;
-    textGeo.style.position = 'absolute';
-    textGeo.style.color = '#ff0000';
-    textGeo.style.fontWeight = 'bold';
-    textGeo.style.fontSize = '20px';
-    textGeo.style.textShadow = '1px 1px 0 #000';
-    textGeo.style.pointerEvents = 'none';
-    textGeo.style.userSelect = 'none';
 
-    document.body.appendChild(textGeo);
+    showFloatingText(position, amount) {
+        const textGeo = document.createElement('div');
+        textGeo.textContent = `-${amount}`;
+        textGeo.style.position = 'absolute';
+        textGeo.style.color = '#ff0000';
+        textGeo.style.fontWeight = 'bold';
+        textGeo.style.fontSize = '20px';
+        textGeo.style.textShadow = '1px 1px 0 #000';
+        textGeo.style.pointerEvents = 'none';
+        textGeo.style.userSelect = 'none';
 
-    const textObj = {
-        element: textGeo,
-        worldPos: position.clone(),
-        life: 1.0, // seconds
-        velocity: new THREE.Vector3(0, 1, 0)
-    };
+        document.body.appendChild(textGeo);
 
-    this.floatingTexts.push(textObj);
-}
+        const textObj = {
+            element: textGeo,
+            worldPos: position.clone(),
+            life: 1.0, // seconds
+            velocity: new THREE.Vector3(0, 1, 0)
+        };
 
-updateFloatingTexts(delta) {
-    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
-        const item = this.floatingTexts[i];
-        item.life -= delta;
-
-        if (item.life <= 0) {
-            item.element.remove();
-            this.floatingTexts.splice(i, 1);
-            continue;
-        }
-
-        // Move up
-        item.worldPos.add(item.velocity.clone().multiplyScalar(delta * 2)); // Speed up
-
-        // Project to screen
-        const screenPos = item.worldPos.clone().project(this.camera);
-
-        // Check if behind camera
-        if (screenPos.z > 1) {
-            item.element.style.display = 'none';
-            continue;
-        } else {
-            item.element.style.display = 'block';
-        }
-
-        const x = (screenPos.x * .5 + .5) * window.innerWidth;
-        const y = (-(screenPos.y * .5) + .5) * window.innerHeight;
-
-        item.element.style.left = `${x}px`;
-        item.element.style.top = `${y}px`;
-        item.element.style.opacity = item.life;
+        this.floatingTexts.push(textObj);
     }
-}
+
+    updateFloatingTexts(delta) {
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const item = this.floatingTexts[i];
+            item.life -= delta;
+
+            if (item.life <= 0) {
+                item.element.remove();
+                this.floatingTexts.splice(i, 1);
+                continue;
+            }
+
+            // Move up
+            item.worldPos.add(item.velocity.clone().multiplyScalar(delta * 2)); // Speed up
+
+            // Project to screen
+            const screenPos = item.worldPos.clone().project(this.camera);
+
+            // Check if behind camera
+            if (screenPos.z > 1) {
+                item.element.style.display = 'none';
+                continue;
+            } else {
+                item.element.style.display = 'block';
+            }
+
+            const x = (screenPos.x * .5 + .5) * window.innerWidth;
+            const y = (-(screenPos.y * .5) + .5) * window.innerHeight;
+
+            item.element.style.left = `${x}px`;
+            item.element.style.top = `${y}px`;
+            item.element.style.opacity = item.life;
+        }
+    }
 }
