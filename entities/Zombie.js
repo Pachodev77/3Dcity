@@ -1,7 +1,6 @@
-import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-
-// Static cache outside the class (or could be static property)
-let cachedZombieModel = null;
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { CONFIG } from '../config.js';
 
 export class Zombie {
     constructor(scene, collidableObjects, groundCollidableObjects, id = 'local') {
@@ -43,52 +42,35 @@ export class Zombie {
     }
 
     loadModel() {
-        if (cachedZombieModel) {
-            this.setupModel(SkeletonUtils.clone(cachedZombieModel));
-            return;
-        }
-
+        // Reuse a global loader if available, otherwise create one (but ideally we should pass it in)
+        // For now, we'll keep creating it here but it's less critical than the update loop
         const fbxLoader = new FBXLoader();
+
         // Assuming loadWithCache is available globally as in main.js
         loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
-            cachedZombieModel = zombie; // Cache the original
-            // Clone for the first instance too to be safe/consistent
-            this.setupModel(SkeletonUtils.clone(zombie));
+            this.model = zombie;
+            this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
+            this.model.position.set(0, 0, 50);
+            this.model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                }
+                if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
+                    this.hips = child;
+                }
+            });
+            // Tag for ShooterSystem
+            this.model.userData.isEntityRoot = true;
+            this.model.userData.zombieId = this.id;
+
+            this.scene.add(this.model);
+            this.collidableObjects.push(this.model);
+            this.collidableObjects.push(this.model);
+            this.mixer = new THREE.AnimationMixer(this.model);
+            this.createHealthBar();
+            this.loadAnimations();
         });
-    }
-
-    setupModel(model) {
-        this.model = model;
-        this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
-        this.model.position.set(0, 0, 50);
-
-        this.model.traverse((child) => {
-            if (child.isMesh) {
-                child.castShadow = false;
-                child.receiveShadow = false;
-            }
-            if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
-                this.hips = child;
-            }
-        });
-
-        // Tag for ShooterSystem
-        this.model.userData.isEntityRoot = true;
-        this.model.userData.zombieId = this.id;
-
-        this.scene.add(this.model);
-        this.collidableObjects.push(this.model);
-        this.collidableObjects.push(this.model);
-
-        this.mixer = new THREE.AnimationMixer(this.model);
-        this.createHealthBar();
-
-        // If we cached the model, we likely need to handle animations carefully.
-        // The original loadModel called loadAnimations() which probably loads fresh FBX files too.
-        // We should likely cache animations as well or just call loadAnimations() 
-        // NOTE: loadAnimations likely uses loaders too. Let's optimize that next if strictly needed,
-        // but the model geometry is the biggest bottleneck.
-        this.loadAnimations();
     }
 
     createHealthBar() {

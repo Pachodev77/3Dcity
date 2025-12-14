@@ -28,7 +28,7 @@ export const CONFIG = {
         TRACK_WIDTH: 0.7              // Distance left-right
     },
     ZOMBIE: {
-        SPEED: 2.5,
+        SPEED: 1.5,
         DETECTION_RADIUS: 10,
         ATTACK_RADIUS: 0.6,
         SCALE: 0.005,
