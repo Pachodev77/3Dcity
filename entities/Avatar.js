@@ -316,7 +316,20 @@ export class Avatar {
 
         this.isJumpPending = true;
         this.jumpTimer = 0.5; // 0.5s windup delay
-        this.playAnimation('jump', true, false);
+
+        // Manual animation control for proper sync
+        if (this.mixer && this.animations['jump']) {
+            this.mixer.stopAllAction(); // FORCE RESET per user request
+
+            const action = this.mixer.clipAction(this.animations['jump']);
+            action.reset();
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            action.timeScale = 0.5; // Slow down to fill the 0.5s delay
+            action.play();
+
+            this.currentAction = 'jump';
+        }
     }
 
     // Attack method
