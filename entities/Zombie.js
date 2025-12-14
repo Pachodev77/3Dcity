@@ -163,8 +163,18 @@ export class Zombie {
         this.currentState = name;
     }
 
-    updateAnimation(delta) {
+    updateAnimation(delta, camera) {
         if (this.mixer) {
+            // Animation Throttling
+            if (camera && this.model) {
+                const dist = this.model.position.distanceTo(camera.position);
+                if (dist > CONFIG.ZOMBIE.ANIMATION_CULLING_DISTANCE) {
+                    // Update only every 3rd frame if far away
+                    if (this.frameCounter % 3 !== 0) return;
+                    delta *= 3; // Compensate delta for skipped frames
+                }
+            }
+
             this.mixer.update(delta);
             if (this.hips) {
                 this.hips.position.x = 0;
@@ -179,7 +189,15 @@ export class Zombie {
         this.frameCounter++;
 
         // --- Ground Collision (Throttled) ---
-        if (this.frameCounter % CONFIG.PERFORMANCE.RAYCAST_INTERVAL === 0) {
+        // Dynamically adjust interval based on distance
+        let raycastInterval = CONFIG.PERFORMANCE.RAYCAST_INTERVAL;
+        const distToPlayer = this.model.position.distanceTo(playerPosition);
+
+        if (distToPlayer > CONFIG.ZOMBIE.PHYSICS_CULLING_DISTANCE) {
+            raycastInterval *= 4; // Check 4x less often if far
+        }
+
+        if (this.frameCounter % raycastInterval === 0) {
             this.tempVector.copy(this.model.position).add(this.upVector);
             this.raycaster.set(this.tempVector, this.downVector);
             const intersections = this.raycaster.intersectObjects(this.groundCollidableObjects, true);

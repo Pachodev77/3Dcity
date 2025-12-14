@@ -1054,7 +1054,7 @@ function animate() {
                 z.targetSpawn = null; // Done
             }
 
-            z.updateAnimation(delta);
+            z.updateAnimation(delta, camera);
             z.updateAI(delta, avatar.position, avatar.model, camera);
 
             // Check death cleanup

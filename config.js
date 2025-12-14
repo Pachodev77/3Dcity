@@ -31,7 +31,9 @@ export const CONFIG = {
         SPEED: 2.5,
         DETECTION_RADIUS: 10,
         ATTACK_RADIUS: 0.6,
-        SCALE: 0.005
+        SCALE: 0.005,
+        ANIMATION_CULLING_DISTANCE: 25, // Stop or reduce animation updates beyond 25m
+        PHYSICS_CULLING_DISTANCE: 40    // Stop or reduce physics checks beyond 40m
     },
     CAMERA: {
         MAX_DISTANCE: 5,
