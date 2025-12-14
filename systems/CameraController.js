@@ -117,7 +117,9 @@ export class CameraController {
         if (input.y !== 0) {
             // Invert pitch for FPS mode
             if (this.mode === 'FPS') {
-                this.angleVOffset += input.y * cameraRotationSpeed * delta;
+                // Reduced vertical sensitivity in FPS mode (0.5x)
+                const verticalSensitivity = 0.5;
+                this.angleVOffset += input.y * cameraRotationSpeed * delta * verticalSensitivity;
             } else {
                 this.angleVOffset -= input.y * cameraRotationSpeed * delta;
             }
