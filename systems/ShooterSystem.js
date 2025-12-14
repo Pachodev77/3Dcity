@@ -18,6 +18,13 @@ export class ShooterSystem {
         this.damage = 10;
         this.range = 50;
 
+        // Ammo
+        this.maxAmmo = 30;
+        this.currentAmmo = 30;
+        this.isReloading = false;
+        this.reloadTime = 2000;
+        this.ammoCounterUI = document.getElementById('ammo-counter');
+
         // Visuals
         this.muzzleFlash = null;
         this.floatingTexts = [];
@@ -87,9 +94,13 @@ export class ShooterSystem {
         }
 
         // Show/Hide Crosshair
+        // Show/Hide Crosshair & Ammo
         const crosshair = document.getElementById('crosshair');
-        if (crosshair) {
-            crosshair.style.display = this.isEnabled ? 'block' : 'none';
+        if (crosshair) crosshair.style.display = this.isEnabled ? 'block' : 'none';
+
+        if (this.ammoCounterUI) {
+            this.ammoCounterUI.style.display = this.isEnabled ? 'block' : 'none';
+            if (this.isEnabled) this.updateAmmoUI();
         }
 
         return this.isEnabled;
@@ -146,6 +157,13 @@ export class ShooterSystem {
         const now = Date.now();
         if (now - this.lastFireTime < this.fireRate) return;
 
+        // Ammo & Reload Check
+        if (this.isReloading) return;
+        if (this.currentAmmo <= 0) {
+            this.reload();
+            return;
+        }
+
         // Find the root entity
         let entity = intersection.object;
         let targetId = null;
@@ -174,6 +192,11 @@ export class ShooterSystem {
 
         // If we found a target, fire!
         if (targetId) {
+            // Decrement Ammo
+            this.currentAmmo--;
+            this.updateAmmoUI();
+            if (this.currentAmmo <= 0) this.reload();
+
             this.fire(targetId, isZombie, intersection.point);
             this.lastFireTime = now;
         }
@@ -248,60 +271,84 @@ export class ShooterSystem {
         }
     }
 
-    showFloatingText(position, amount) {
-        const textGeo = document.createElement('div');
-        textGeo.textContent = `-${amount}`;
-        textGeo.style.position = 'absolute';
-        textGeo.style.color = '#ff0000';
-        textGeo.style.fontWeight = 'bold';
-        textGeo.style.fontSize = '20px';
-        textGeo.style.textShadow = '1px 1px 0 #000';
-        textGeo.style.pointerEvents = 'none';
-        textGeo.style.userSelect = 'none';
+    reload() {
+        if (this.isReloading) return;
+        this.isReloading = true;
 
-        document.body.appendChild(textGeo);
+        if (this.ammoCounterUI) {
+            this.ammoCounterUI.innerText = "RELOADING...";
+            this.ammoCounterUI.style.color = "red";
+        }
 
-        const textObj = {
-            element: textGeo,
-            worldPos: position.clone(),
-            life: 1.0, // seconds
-            velocity: new THREE.Vector3(0, 1, 0)
-        };
-
-        this.floatingTexts.push(textObj);
+        setTimeout(() => {
+            this.currentAmmo = this.maxAmmo;
+            this.isReloading = false;
+            this.updateAmmoUI();
+        }, this.reloadTime);
     }
 
-    updateFloatingTexts(delta) {
-        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
-            const item = this.floatingTexts[i];
-            item.life -= delta;
-
-            if (item.life <= 0) {
-                item.element.remove();
-                this.floatingTexts.splice(i, 1);
-                continue;
-            }
-
-            // Move up
-            item.worldPos.add(item.velocity.clone().multiplyScalar(delta * 2)); // Speed up
-
-            // Project to screen
-            const screenPos = item.worldPos.clone().project(this.camera);
-
-            // Check if behind camera
-            if (screenPos.z > 1) {
-                item.element.style.display = 'none';
-                continue;
-            } else {
-                item.element.style.display = 'block';
-            }
-
-            const x = (screenPos.x * .5 + .5) * window.innerWidth;
-            const y = (-(screenPos.y * .5) + .5) * window.innerHeight;
-
-            item.element.style.left = `${x}px`;
-            item.element.style.top = `${y}px`;
-            item.element.style.opacity = item.life;
+    updateAmmoUI() {
+        if (this.ammoCounterUI) {
+            this.ammoCounterUI.innerText = `${this.currentAmmo} / ${this.maxAmmo}`;
+            this.ammoCounterUI.style.color = this.currentAmmo <= 5 ? "red" : "yellow";
         }
     }
+}
+
+showFloatingText(position, amount) {
+    const textGeo = document.createElement('div');
+    textGeo.textContent = `-${amount}`;
+    textGeo.style.position = 'absolute';
+    textGeo.style.color = '#ff0000';
+    textGeo.style.fontWeight = 'bold';
+    textGeo.style.fontSize = '20px';
+    textGeo.style.textShadow = '1px 1px 0 #000';
+    textGeo.style.pointerEvents = 'none';
+    textGeo.style.userSelect = 'none';
+
+    document.body.appendChild(textGeo);
+
+    const textObj = {
+        element: textGeo,
+        worldPos: position.clone(),
+        life: 1.0, // seconds
+        velocity: new THREE.Vector3(0, 1, 0)
+    };
+
+    this.floatingTexts.push(textObj);
+}
+
+updateFloatingTexts(delta) {
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+        const item = this.floatingTexts[i];
+        item.life -= delta;
+
+        if (item.life <= 0) {
+            item.element.remove();
+            this.floatingTexts.splice(i, 1);
+            continue;
+        }
+
+        // Move up
+        item.worldPos.add(item.velocity.clone().multiplyScalar(delta * 2)); // Speed up
+
+        // Project to screen
+        const screenPos = item.worldPos.clone().project(this.camera);
+
+        // Check if behind camera
+        if (screenPos.z > 1) {
+            item.element.style.display = 'none';
+            continue;
+        } else {
+            item.element.style.display = 'block';
+        }
+
+        const x = (screenPos.x * .5 + .5) * window.innerWidth;
+        const y = (-(screenPos.y * .5) + .5) * window.innerHeight;
+
+        item.element.style.left = `${x}px`;
+        item.element.style.top = `${y}px`;
+        item.element.style.opacity = item.life;
+    }
+}
 }
