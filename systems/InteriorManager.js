@@ -38,8 +38,8 @@ export class InteriorManager {
             position: absolute;
             bottom: 80px;
             left: 120px;
-            width: 45px;
-            height: 45px;
+            width: 49px;
+            height: 49px;
             background-color: rgba(231, 76, 60, 0.8);
             border: none;
             border-radius: 50%;
@@ -56,7 +56,7 @@ export class InteriorManager {
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
         `;
-        this.buttonElement.innerHTML = 'ENTER';
+        this.buttonElement.innerHTML = 'Enter';
 
 
         // Add hover/active effects to match vehicle button
@@ -96,7 +96,8 @@ export class InteriorManager {
     }
 
     updateButtonText(isInside) {
-        this.buttonElement.innerHTML = isInside ? 'EXIT' : 'ENTER';
+        // Show 'Enter' or 'Exit' with only first letter capitalized
+        this.buttonElement.innerHTML = isInside ? 'Exit' : 'Enter';
         // Keep red color scheme for both states, slightly darker when inside
         this.buttonElement.style.backgroundColor = isInside ? 'rgba(192, 57, 43, 0.8)' : 'rgba(231, 76, 60, 0.8)';
     }
