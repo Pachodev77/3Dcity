@@ -531,6 +531,17 @@ const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
 
 // Setup spawn vehicle// Event Listeners
 const survivalButton = document.getElementById('survival-mode-button');
+const waveAnnouncement = document.getElementById('wave-announcement');
+
+function showAnnouncement(text, duration = 2000) {
+    if (!waveAnnouncement) return;
+    waveAnnouncement.innerText = text;
+    waveAnnouncement.style.opacity = '1';
+
+    setTimeout(() => {
+        waveAnnouncement.style.opacity = '0';
+    }, duration);
+}
 
 // Survival Mode Logic
 function startSurvivalMode() {
@@ -539,7 +550,7 @@ function startSurvivalMode() {
     window.survivalModeActive = true;
     window.survivalWave = 0;
 
-    // Clear existing if any ( though there shouldn't be any initially)
+    // Clear existing if any
     window.localZombies.forEach(z => {
         if (z.model) scene.remove(z.model);
         if (z.healthBarGroup) z.model.remove(z.healthBarGroup);
@@ -547,11 +558,17 @@ function startSurvivalMode() {
     window.localZombies = [];
 
     console.log("Starting Survival Mode!");
-    spawnNextWave();
+    showAnnouncement("PREPARE TO SURVIVE", 2000);
+
+    setTimeout(() => {
+        spawnNextWave();
+    }, 2500);
 }
 
 function spawnNextWave() {
     window.survivalWave++;
+    showAnnouncement(`WAVE ${window.survivalWave}`, 2000);
+
     const count = window.survivalWave; // "Kill 1, get 2" -> implies +1 each wave? User said "matar 1 aparezcan dos y asi sucesivamente". 
     // If wave 1 has 1. Wave 2 has 2. Wave 3 has 3...
 
