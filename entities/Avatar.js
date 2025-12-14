@@ -301,6 +301,9 @@ export class Avatar {
         if (!this.model || !this.isGrounded || this.isJumping || this.isAttacking || this.isDead || this.isJumpPending) return;
 
         this.isJumpPending = true;
+
+        // Build a robust reset
+        if (this.mixer) this.mixer.stopAllAction();
         this.playAnimation('jump', true, false); // No loop
 
         setTimeout(() => {
