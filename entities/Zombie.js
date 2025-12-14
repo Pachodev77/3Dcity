@@ -227,16 +227,26 @@ export class Zombie {
             }
 
         } else if (distanceToPlayer < detectionThreshold) {
-            this.setState('zombie running');
+            // Determine state based on distance
+            const runThreshold = 15; // Run if closer than 15m
+
             this.tempDirection.subVectors(playerPosition, this.model.position);
             this.tempDirection.y = 0;
             this.tempDirection.normalize();
 
-            this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 2 * delta));
-
-            // Look at player but keep upright
+            // Look at player
             this.tempVector.set(playerPosition.x, this.model.position.y, playerPosition.z);
             this.model.lookAt(this.tempVector);
+
+            if (distanceToPlayer < runThreshold) {
+                // RUN
+                this.setState('zombie running');
+                this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 2 * delta));
+            } else {
+                // WALK (Half speed)
+                this.setState('walking');
+                this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 0.5 * delta));
+            }
         } else {
             this.setState('walking');
             const target = this.patrolPath[this.currentPatrolIndex];
