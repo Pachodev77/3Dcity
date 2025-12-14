@@ -37,11 +37,36 @@ export class ChatUI {
         // Prevent game input when typing in chat
         this.chatInput.addEventListener('focus', () => {
             window.chatInputFocused = true;
+
+            // Prevent scroll when keyboard appears
+            document.body.style.position = 'fixed';
+            document.body.style.top = '0';
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.bottom = '0';
+
+            // Prevent input from scrolling into view
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
         });
 
         this.chatInput.addEventListener('blur', () => {
             window.chatInputFocused = false;
+
+            // Restore scroll when keyboard closes
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
         });
+
+        // Handle visual viewport changes (keyboard appearance)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                // Keep the page at the top when keyboard appears
+                window.scrollTo(0, 0);
+            });
+        }
     }
 
     toggle() {

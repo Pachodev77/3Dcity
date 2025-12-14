@@ -3,13 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name='admaven-placement' content='BqjwGrjU9'>
     <title>3D City Plan with Avatars</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overscroll-behavior: none;
         }
 
         canvas {
@@ -712,11 +717,12 @@
 
 
         #chat-container {
-            position: absolute;
+            position: fixed;
             top: 80px;
             left: 20px;
             width: 350px;
             height: 400px;
+            max-height: calc(100vh - 100px);
             background-color: rgba(0, 0, 0, 0.85);
             border-radius: 12px;
             display: none;
@@ -725,6 +731,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             backdrop-filter: blur(10px);
+            touch-action: none;
         }
 
         #chat-header {
@@ -820,6 +827,9 @@
             font-size: 14px;
             outline: none;
             transition: all 0.2s ease;
+            touch-action: manipulation;
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         #chat-input::placeholder {
