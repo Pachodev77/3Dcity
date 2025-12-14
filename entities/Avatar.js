@@ -18,6 +18,7 @@ export class Avatar {
         // Jump mechanics
         this.isJumping = false;
         this.isJumpPending = false;
+        this.jumpTimer = 0;
         this.jumpVelocity = 0;
         this.gravity = -18; // Gravity acceleration
         this.jumpForce = 8; // Initial jump velocity
@@ -195,6 +196,19 @@ export class Avatar {
             this.mixer.update(delta);
         }
 
+        // Handle Jump Delay Sync
+        if (this.isJumpPending) {
+            this.jumpTimer -= delta;
+            if (this.jumpTimer <= 0) {
+                this.isJumpPending = false;
+                if (!this.isDead) {
+                    this.isJumping = true;
+                    this.isGrounded = false;
+                    this.jumpVelocity = this.jumpForce;
+                }
+            }
+        }
+
         // Update chat bubble
         if (this.chatBubble) {
             this.chatBubble.update(delta, this.position, camera);
@@ -301,21 +315,8 @@ export class Avatar {
         if (!this.model || !this.isGrounded || this.isJumping || this.isAttacking || this.isDead || this.isJumpPending) return;
 
         this.isJumpPending = true;
-
-        // Build a robust reset
-        if (this.mixer) this.mixer.stopAllAction();
-        this.playAnimation('jump', true, false); // No loop
-
-        setTimeout(() => {
-            if (this.isDead) {
-                this.isJumpPending = false;
-                return;
-            }
-            this.isJumpPending = false;
-            this.isJumping = true;
-            this.isGrounded = false;
-            this.jumpVelocity = this.jumpForce;
-        }, 500);
+        this.jumpTimer = 0.5; // 0.5s windup delay
+        this.playAnimation('jump', true, false);
     }
 
     // Attack method
