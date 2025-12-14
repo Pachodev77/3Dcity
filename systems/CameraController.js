@@ -125,7 +125,7 @@ export class CameraController {
             if (this.mode === 'FPS') {
                 this.angleVOffset = Math.max(-1.0, Math.min(1.0, this.angleVOffset)); // More freedom in FPS
             } else {
-                this.angleVOffset = Math.max(-0.2, Math.min(0.2, this.angleVOffset));
+                this.angleVOffset = Math.max(-0.8, Math.min(0.0, this.angleVOffset));
             }
             this.lastManualRotationTime = Date.now();
         }
