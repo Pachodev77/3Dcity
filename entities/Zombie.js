@@ -211,7 +211,7 @@ export class Zombie {
 
         // Hysteresis: Keep chasing a bit longer than the initial detection radius
         const isChasing = this.currentState === 'zombie running';
-        const detectionThreshold = isChasing ? this.detectionRadius * 1.2 : this.detectionRadius;
+        const detectionThreshold = Infinity; // START_SURVIVAL_MOD: Always chase player
 
         if (distanceToPlayer < this.attackRadius) {
             this.setState('zombie attack');
