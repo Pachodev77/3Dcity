@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
 // Note: SkeletonUtils import added near usage due to replacing block issues, or we can add here
 import { CameraController } from './systems/CameraController.js';
 import { Vehicle } from './entities/Vehicle.js';
@@ -604,13 +605,13 @@ async function preloadZombies(count) {
     }
 
     console.log(`Preloading ${count} zombies...`);
-    for (let i = 0; i < count; i++) {
-        // Clone model properly for animations
-        const clonedModel = SkeletonUtils.clone(window.sharedZombieModel);
-
-        const z = new Zombie(scene, collidableObjects, groundCollidableObjects, `pool_${i}`, clonedModel);
-        z.hide(); // Start hidden
-        window.zombiePool.push(z);
+    if (window.sharedZombieModel) {
+        for (let i = 0; i < count; i++) {
+            const clonedModel = SkeletonUtils.clone(window.sharedZombieModel);
+            const z = new Zombie(scene, collidableObjects, groundCollidableObjects, `pool_${i}`, clonedModel);
+            z.hide();
+            window.zombiePool.push(z);
+        }
     }
     console.log(`Pool ready: ${window.zombiePool.length} zombies`);
 }
@@ -619,13 +620,13 @@ function getZombieFromPool() {
     let zombie = window.zombiePool.find(z => !z.isActive);
 
     if (!zombie) {
-        // Expand pool if full
         console.log("Expanding zombie pool...");
         if (window.sharedZombieModel) {
             const clonedModel = SkeletonUtils.clone(window.sharedZombieModel);
             zombie = new Zombie(scene, collidableObjects, groundCollidableObjects, `pool_new_${Date.now()}`, clonedModel);
             window.zombiePool.push(zombie);
         } else {
+            console.warn("Shared zombie model not ready yet!");
             return null;
         }
     }
@@ -634,6 +635,13 @@ function getZombieFromPool() {
 
 function spawnNextWave() {
     if (!window.survivalModeActive) return;
+
+    if (!window.sharedZombieModel && window.zombiePool.length === 0) {
+        console.warn("Cannot spawn wave: Models not loaded.");
+        showAnnouncement("LOADING ASSETS...", 1000);
+        setTimeout(spawnNextWave, 1000); // Retry
+        return;
+    }
 
     window.survivalWave++;
     showAnnouncement(`WAVE ${window.survivalWave}`, 2000);
