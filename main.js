@@ -1072,7 +1072,7 @@ function animate() {
         }
 
         // Wave Complete Check
-        if (activeZombiesCount === 0 && window.localZombies.length === 0) {
+        if (activeZombiesCount === 0 && window.localZombies.length === 0 && window.survivalWave > 0) {
             // All dead and removed
             // Small delay
             if (!window.wavePending) {
