@@ -67,6 +67,7 @@ const musicPlayer = new MusicPlayer();
 // Entities
 const avatar = new Avatar(scene);
 const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
+window.zombie = zombie; // Expose for ShooterSystem
 avatar.setTargets([zombie]);
 
 const shooterSystem = new ShooterSystem(scene, camera, avatar);
