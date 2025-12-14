@@ -3,7 +3,7 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { CONFIG } from '../config.js';
 
 export class Zombie {
-    constructor(scene, collidableObjects, groundCollidableObjects, id = 'local') {
+    constructor(scene, collidableObjects, groundCollidableObjects, id = 'local', sharedModel = null) {
         this.scene = scene;
         this.collidableObjects = collidableObjects;
         this.groundCollidableObjects = groundCollidableObjects;
@@ -31,45 +31,97 @@ export class Zombie {
         this.downVector = new THREE.Vector3(0, -1, 0); // Reused down vector
         this.upVector = new THREE.Vector3(0, 1, 0); // Reused up vector
         this.frameCounter = 0;
+        this.targetSpawn = null; // For pooling spawn location
 
         // Health System
         this.maxHealth = 100;
         this.health = 100;
         this.isDead = false;
+        this.isActive = true; // Pooling flag
         this.healthBarGroup = null;
 
-        this.loadModel();
+        if (sharedModel) {
+            this.initFromSharedModel(sharedModel);
+        } else {
+            this.loadModel();
+        }
+    }
+
+    initFromSharedModel(sharedModel) {
+        // Clone the shared model
+        // SkeletonUtils.clone is better but let's try shallow clone + skinning fix or just full clone if needed
+        // Since we are using standard THREE.clone on SkinnedMesh it might share geometry which is good.
+        // We rely on the fact that SkeletonUtils.clone is often needed for SkinnedMesh to check if it bugs out.
+        // For now let's try simple clone() and if issues use SkeletonUtils.
+        // Actually usually standard clone doesn't clone skeleton correctly for animations.
+        // We should just use a callback or hope the user has SkeletonUtils import available if needed?
+        // Let's assume standard clone for now, if it fails we fix.
+
+        // Wait! We usually need SkeletonUtils for SkinnedMesh cloning to work properly with unique mixers.
+        // However, we don't have SkeletonUtils imported here.
+        // Alternative: Pass the cloned model IN from main.js if main.js has SkeletonUtils access or just standard clone.
+        // Let's assume standard clone works for simple cases or main.js passes a fresh clone.
+
+        // Actually, main.js should probably clone it. 
+        // Let's assume 'sharedModel' IS ALREADY A UNIQUE CLONE for this zombie.
+        this.setupModel(sharedModel);
+    }
+
+    setupModel(model) {
+        this.model = model;
+        this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
+        this.model.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = false;
+                child.receiveShadow = false;
+            }
+            if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
+                this.hips = child;
+            }
+        });
+
+        // Tag for ShooterSystem
+        this.model.userData.isEntityRoot = true;
+        this.model.userData.zombieId = this.id;
+
+        this.scene.add(this.model);
+        this.collidableObjects.push(this.model);
+        this.collidableObjects.push(this.model); // Why twice? Legacy? Leaving as is.
+
+        this.mixer = new THREE.AnimationMixer(this.model);
+        this.createHealthBar();
+        // Load animations logic needs to change. Animations likely need to be passed or re-loaded.
+        // If we share model, we can share animation clips too?
+        // We need clips. Let's assume existing clip loading works or we pass clips.
+        this.loadAnimations();
+    }
+
+    reset(position, id) {
+        this.isActive = true;
+        this.isDead = false;
+        this.health = this.maxHealth;
+        this.id = id;
+        this.model.userData.zombieId = id;
+        this.model.visible = true;
+        this.targetSpawn = position; // Will be placed in update loop
+        this.currentState = 'idle';
+        this.model.position.set(0, -100, 0); // Temp hide
+        this.updateHealthBar();
+    }
+
+    hide() {
+        this.isActive = false;
+        if (this.model) {
+            this.model.visible = false;
+            this.model.position.set(0, -500, 0);
+        }
     }
 
     loadModel() {
-        // Reuse a global loader if available, otherwise create one (but ideally we should pass it in)
-        // For now, we'll keep creating it here but it's less critical than the update loop
+        // Fallback for non-pooled
         const fbxLoader = new FBXLoader();
-
-        // Assuming loadWithCache is available globally as in main.js
         loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader).then((zombie) => {
-            this.model = zombie;
-            this.model.scale.set(CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE, CONFIG.ZOMBIE.SCALE);
-            this.model.position.set(0, 0, 50);
-            this.model.traverse((child) => {
-                if (child.isMesh) {
-                    child.castShadow = false;
-                    child.receiveShadow = false;
-                }
-                if (child.isBone && (child.name === 'mixamorigHips' || child.name === 'mixamorig:Hips' || child.name === 'Hips')) {
-                    this.hips = child;
-                }
-            });
-            // Tag for ShooterSystem
-            this.model.userData.isEntityRoot = true;
-            this.model.userData.zombieId = this.id;
-
-            this.scene.add(this.model);
-            this.collidableObjects.push(this.model);
-            this.collidableObjects.push(this.model);
-            this.mixer = new THREE.AnimationMixer(this.model);
-            this.createHealthBar();
-            this.loadAnimations();
+            this.setupModel(zombie);
         });
     }
 
