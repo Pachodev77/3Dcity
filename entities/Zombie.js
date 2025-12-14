@@ -228,7 +228,7 @@ export class Zombie {
 
         } else if (distanceToPlayer < detectionThreshold) {
             // Determine state based on distance
-            const runThreshold = 15; // Run if closer than 15m
+            const runThreshold = 8; // Run if closer than 8m
 
             this.tempDirection.subVectors(playerPosition, this.model.position);
             this.tempDirection.y = 0;
