@@ -36,7 +36,7 @@ export class InteriorManager {
         this.buttonElement.id = 'interior-button';
         this.buttonElement.style.cssText = `
             position: fixed !important;
-            bottom: 75px !important;
+            bottom: 95px !important;
             left: 120px !important;
             width: 50px;
             height: 50px;
