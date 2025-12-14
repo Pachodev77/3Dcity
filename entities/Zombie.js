@@ -241,7 +241,7 @@ export class Zombie {
             if (distanceToPlayer < runThreshold) {
                 // RUN
                 this.setState('zombie running');
-                this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 2 * delta));
+                this.model.position.add(this.tempDirection.multiplyScalar(this.speed * 1 * delta));
             } else {
                 // WALK (Half speed)
                 this.setState('walking');
