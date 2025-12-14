@@ -112,11 +112,17 @@ export class ShooterSystem {
             });
         }
 
-        // Add Local Zombie
-        // We receive 'localZombie' as the 4th argument (which is the Zombie instance, not just the model)
-        const localZombie = arguments[3];
-        if (localZombie && localZombie.model && localZombie.model.visible && !localZombie.isDead) {
-            targets.push(localZombie.model);
+        // Add Local Zombies (Array)
+        const localZombies = arguments[3];
+        if (Array.isArray(localZombies)) {
+            localZombies.forEach(z => {
+                if (z && z.model && z.model.visible && !z.isDead) {
+                    targets.push(z.model);
+                }
+            });
+        } else if (localZombies && localZombies.model) {
+            // Fallback for single instance if passed
+            if (localZombies.model.visible && !localZombies.isDead) targets.push(localZombies.model);
         }
         // Add Remote Players
         if (remotePlayers && typeof remotePlayers === 'object') {
@@ -182,9 +188,17 @@ export class ShooterSystem {
                 const zombieInstance = window.networkManager.remoteZombies[targetId];
                 if (zombieInstance && zombieInstance.takeDamage) {
                     zombieInstance.takeDamage(this.damage);
-                } else if (!zombieInstance && window.zombie && window.zombie.model && window.zombie.model.userData.zombieId === targetId) {
-                    // Local zombie check (though usually local zombie has different logic)
-                    window.zombie.takeDamage(this.damage);
+                } else {
+                    // Check local zombies array
+                    if (window.localZombies) {
+                        const localZ = window.localZombies.find(z => z.id === targetId || (z.model && z.model.userData.zombieId === targetId));
+                        if (localZ) {
+                            localZ.takeDamage(this.damage);
+                        }
+                    } else if (window.zombie && window.zombie.model && window.zombie.model.userData.zombieId === targetId) {
+                        // Fallback for single local zombie
+                        window.zombie.takeDamage(this.damage);
+                    }
                 }
             } else {
                 // It is a remote player

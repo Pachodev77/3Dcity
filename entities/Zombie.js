@@ -3,10 +3,11 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { CONFIG } from '../config.js';
 
 export class Zombie {
-    constructor(scene, collidableObjects, groundCollidableObjects) {
+    constructor(scene, collidableObjects, groundCollidableObjects, id = 'local') {
         this.scene = scene;
         this.collidableObjects = collidableObjects;
         this.groundCollidableObjects = groundCollidableObjects;
+        this.id = id; // Store ID
         this.model = null;
         this.mixer = null;
         this.animations = {};
@@ -61,7 +62,7 @@ export class Zombie {
             });
             // Tag for ShooterSystem
             this.model.userData.isEntityRoot = true;
-            this.model.userData.zombieId = 'local';
+            this.model.userData.zombieId = this.id;
 
             this.scene.add(this.model);
             this.collidableObjects.push(this.model);

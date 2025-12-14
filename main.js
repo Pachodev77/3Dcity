@@ -66,9 +66,13 @@ const musicPlayer = new MusicPlayer();
 
 // Entities
 const avatar = new Avatar(scene);
-const zombie = new Zombie(scene, collidableObjects, groundCollidableObjects);
-window.zombie = zombie; // Expose for ShooterSystem
-avatar.setTargets([zombie]);
+// Entities
+const avatar = new Avatar(scene);
+// Survival Mode State
+window.localZombies = [];
+window.survivalWave = 0;
+window.survivalModeActive = false;
+avatar.setTargets(window.localZombies);
 
 const shooterSystem = new ShooterSystem(scene, camera, avatar);
 
@@ -527,6 +531,71 @@ const cameraPositionButton = document.getElementById('camera-position-button');
 const spawnVehicleButton = document.getElementById('spawn-vehicle-button');
 
 // Setup spawn vehicle// Event Listeners
+const survivalButton = document.getElementById('survival-mode-button');
+
+// Survival Mode Logic
+function startSurvivalMode() {
+    if (window.survivalModeActive) return;
+
+    window.survivalModeActive = true;
+    window.survivalWave = 0;
+
+    // Clear existing if any ( though there shouldn't be any initially)
+    window.localZombies.forEach(z => {
+        if (z.model) scene.remove(z.model);
+        if (z.healthBarGroup) z.model.remove(z.healthBarGroup);
+    });
+    window.localZombies = [];
+
+    console.log("Starting Survival Mode!");
+    spawnNextWave();
+}
+
+function spawnNextWave() {
+    window.survivalWave++;
+    const count = window.survivalWave; // "Kill 1, get 2" -> implies +1 each wave? User said "matar 1 aparezcan dos y asi sucesivamente". 
+    // If wave 1 has 1. Wave 2 has 2. Wave 3 has 3...
+
+    console.log(`Spawning Wave ${window.survivalWave} with ${count} zombies`);
+
+    for (let i = 0; i < count; i++) {
+        const id = `local_wave${window.survivalWave}_${i}_${Date.now()}`;
+        const z = new Zombie(scene, collidableObjects, groundCollidableObjects, id);
+
+        // Random position around avatar
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 20 + Math.random() * 20; // 20-40m away
+        const spawnX = avatar.model.position.x + Math.sin(angle) * dist;
+        const spawnZ = avatar.model.position.z + Math.cos(angle) * dist;
+
+        // Wait for model load then position
+        // We can't set position immediately because model loads async
+        // We could modify Zombie to take position in constructor or we check in loop
+
+        // Monkey-patch loadModel callback or check isLoaded
+        const originalLoad = z.loadModel;
+        z.loadModel = function () {
+            // Call original but we need to ensure we set position after it loads
+            // Actually Zombie.js sets position to 0,0,50 in loadModel.
+            // We should override it.
+            // Let's rely on the update loop or wait for model to exist.
+            // Re-implementing loadModel logic here is messy.
+            // Best way: The Zombie class loads async. We can just set a targetSpawn property.
+        };
+        // Better: We see Zombie.js sets position hardcoded.
+        // Let's just create them and moved them once model is valid in update loop
+        z.targetSpawn = new THREE.Vector3(spawnX, 0, spawnZ);
+
+        window.localZombies.push(z);
+    }
+}
+
+survivalButton.addEventListener('click', () => {
+    startSurvivalMode();
+    survivalButton.style.display = 'none'; // Hide button after start? or keep to restart?
+    // User said "boton que al presionarlo aparezca el zombie"
+});
+
 spawnVehicleButton.addEventListener('click', () => {
     spawnRandomVehicle();
     // Disable button briefly to prevent spam
@@ -949,10 +1018,55 @@ function animate() {
 
     // Update Entities
     avatar.update(delta, camera);
-    zombie.updateAnimation(delta);
+
+    // Update Local Zombies & Check Wave Status
+    if (window.survivalModeActive) {
+        let activeZombiesCount = 0;
+        for (let i = window.localZombies.length - 1; i >= 0; i--) {
+            const z = window.localZombies[i];
+
+            // Initial positioning helper
+            if (z.model && z.targetSpawn) {
+                z.model.position.copy(z.targetSpawn);
+                // Raycast to ground
+                const raycaster = new THREE.Raycaster();
+                raycaster.set(new THREE.Vector3(z.targetSpawn.x, 100, z.targetSpawn.z), new THREE.Vector3(0, -1, 0));
+                const hits = raycaster.intersectObjects(groundCollidableObjects, true);
+                if (hits.length > 0) {
+                    z.model.position.y = hits[0].point.y;
+                }
+                z.targetSpawn = null; // Done
+            }
+
+            z.updateAnimation(delta);
+            z.updateAI(delta, avatar.position, avatar.model, camera);
+
+            // Check death cleanup
+            if (z.isDead && !z.model) {
+                // Model removed (cleanup finished)
+                window.localZombies.splice(i, 1);
+            } else if (!z.isDead) {
+                activeZombiesCount++;
+            }
+        }
+
+        // Wave Complete Check
+        if (activeZombiesCount === 0 && window.localZombies.length === 0) {
+            // All dead and removed
+            // Small delay
+            if (!window.wavePending) {
+                window.wavePending = true;
+                setTimeout(() => {
+                    spawnNextWave();
+                    window.wavePending = false;
+                }, 3000);
+            }
+        }
+    }
+
     networkManager.update(delta, camera);
     businessSystem.update(delta);
-    shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies, zombie);
+    shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies, window.localZombies);
 
     // Network Update
     if (avatar.model) {
@@ -965,13 +1079,9 @@ function animate() {
     }
 
     // Zombie Network Update
-    if (zombie.model) {
-        networkManager.sendZombieUpdate(
-            zombie.model.position,
-            zombie.model.rotation.y,
-            zombie.currentState
-        );
-    }
+    // Optimization: Don't send updates for local zombies to avoid network spam? 
+    // Or do we want others to see them? The current requirement is just local survival mode.
+    // Let's Skip network updates for local zombies for now as they are local-only gamemode.
 
     // Vehicle Network Update
     if (isInVehicle && currentVehicle && currentVehicle.networkId) {
@@ -984,9 +1094,12 @@ function animate() {
 
     // Throttled AI & Checks
     if (frameCount % CONFIG.PERFORMANCE.CHECK_INTERVAL === 0) {
+        // AI Update moved to main loop for zombies array
+        /*
         if (avatar.model) {
             zombie.updateAI(delta, avatar.position, avatar.model, camera);
         }
+        */
 
         // Proximity Check
         if (!isInVehicle && avatar.model) {
