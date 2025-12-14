@@ -105,11 +105,18 @@ export class ShooterSystem {
         this.raycaster.setFromCamera(this.center, this.camera);
 
         const targets = [];
-        // Add Zombies
+        // Add Zombies (Remote)
         if (zombies && typeof zombies === 'object') { // Handle both array and map
             Object.values(zombies).forEach(z => {
                 if (z.model && z.model.visible && !z.isDead) targets.push(z.model);
             });
+        }
+
+        // Add Local Zombie
+        // We receive 'localZombie' as the 4th argument (which is the Zombie instance, not just the model)
+        const localZombie = arguments[3];
+        if (localZombie && localZombie.model && localZombie.model.visible && !localZombie.isDead) {
+            targets.push(localZombie.model);
         }
         // Add Remote Players
         if (remotePlayers && typeof remotePlayers === 'object') {

@@ -59,6 +59,10 @@ export class Zombie {
                     this.hips = child;
                 }
             });
+            // Tag for ShooterSystem
+            this.model.userData.isEntityRoot = true;
+            this.model.userData.zombieId = 'local';
+
             this.scene.add(this.model);
             this.collidableObjects.push(this.model);
             this.collidableObjects.push(this.model);

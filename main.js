@@ -951,7 +951,7 @@ function animate() {
     zombie.updateAnimation(delta);
     networkManager.update(delta, camera);
     businessSystem.update(delta);
-    shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies);
+    shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies, zombie);
 
     // Network Update
     if (avatar.model) {
