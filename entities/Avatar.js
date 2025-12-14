@@ -17,8 +17,9 @@ export class Avatar {
 
         // Jump mechanics
         this.isJumping = false;
+        this.isJumpPending = false;
         this.jumpVelocity = 0;
-        this.gravity = -5; // Gravity acceleration
+        this.gravity = -18; // Gravity acceleration
         this.jumpForce = 8; // Initial jump velocity
         this.isGrounded = true;
 
@@ -249,8 +250,8 @@ export class Avatar {
     updateMovement(delta, moveData, camera, collidableObjects) {
         if (!this.model) return;
 
-        // Prevent movement inputs during attack or death
-        if (this.isAttacking || this.isDead) return;
+        // Prevent movement inputs during attack or death or jump windup
+        if (this.isAttacking || this.isDead || this.isJumpPending) return;
 
         const moveSpeed = CONFIG.AVATAR.MOVE_SPEED;
         camera.getWorldDirection(this.tempDirection);
@@ -297,12 +298,21 @@ export class Avatar {
 
     // Jump method
     jump() {
-        if (!this.model || !this.isGrounded || this.isJumping || this.isAttacking || this.isDead) return;
+        if (!this.model || !this.isGrounded || this.isJumping || this.isAttacking || this.isDead || this.isJumpPending) return;
 
-        this.isJumping = true;
-        this.isGrounded = false;
-        this.jumpVelocity = this.jumpForce;
+        this.isJumpPending = true;
         this.playAnimation('jump', true, false); // No loop
+
+        setTimeout(() => {
+            if (this.isDead) {
+                this.isJumpPending = false;
+                return;
+            }
+            this.isJumpPending = false;
+            this.isJumping = true;
+            this.isGrounded = false;
+            this.jumpVelocity = this.jumpForce;
+        }, 500);
     }
 
     // Attack method
