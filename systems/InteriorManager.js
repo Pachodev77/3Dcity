@@ -35,32 +35,48 @@ export class InteriorManager {
         this.buttonElement = document.createElement('button');
         this.buttonElement.id = 'interior-button';
         this.buttonElement.style.cssText = `
-            position: fixed !important;
-            bottom: 95px !important;
-            left: 120px !important;
+            position: absolute;
+            bottom: 80px;
+            left: 120px;
             width: 50px;
             height: 50px;
-            background: rgba(0, 200, 255, 0.8);
-            border: 3px solid white;
+            background-color: rgba(231, 76, 60, 0.8);
+            border: none;
             border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
             color: white;
             font-family: Arial, sans-serif;
-            font-size: 11px;
             font-weight: bold;
-            display: none;
-            z-index: 2000 !important;
+            font-size: 12px;
+            z-index: 101;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
         `;
         this.buttonElement.innerHTML = 'ENTER';
 
-        // Add hover/active effects
+
+        // Add hover/active effects to match vehicle button
+        this.buttonElement.addEventListener('mouseenter', () => {
+            this.buttonElement.style.backgroundColor = 'rgba(192, 57, 43, 0.9)';
+            this.buttonElement.style.transform = 'scale(1.1)';
+            this.buttonElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+        });
+        this.buttonElement.addEventListener('mouseleave', () => {
+            this.buttonElement.style.backgroundColor = 'rgba(231, 76, 60, 0.8)';
+            this.buttonElement.style.transform = 'scale(1)';
+            this.buttonElement.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
+        });
         this.buttonElement.addEventListener('mousedown', () => {
             this.buttonElement.style.transform = 'scale(0.95)';
+            this.buttonElement.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.2)';
         });
         this.buttonElement.addEventListener('mouseup', () => {
-            this.buttonElement.style.transform = 'scale(1)';
+            this.buttonElement.style.transform = 'scale(1.1)';
+            this.buttonElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
         });
 
         // Handle click
@@ -81,7 +97,8 @@ export class InteriorManager {
 
     updateButtonText(isInside) {
         this.buttonElement.innerHTML = isInside ? 'EXIT' : 'ENTER';
-        this.buttonElement.style.background = isInside ? 'rgba(255, 100, 100, 0.8)' : 'rgba(0, 200, 255, 0.8)';
+        // Keep red color scheme for both states, slightly darker when inside
+        this.buttonElement.style.backgroundColor = isInside ? 'rgba(192, 57, 43, 0.8)' : 'rgba(231, 76, 60, 0.8)';
     }
 
     enterInterior(interiorId) {
