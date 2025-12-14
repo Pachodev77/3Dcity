@@ -1055,11 +1055,29 @@ function animate() {
     renderer.render(activeScene, camera);
 }
 
-// Handle Resize
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+// Handle Resize and Orientation Changes
+function handleResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // Update camera
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Update renderer
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.PERFORMANCE.MAX_PIXEL_RATIO));
+
+    console.log(`Resized to: ${width}x${height}, aspect: ${camera.aspect}`);
+}
+
+// Listen to both resize and orientationchange events
+window.addEventListener('resize', handleResize);
+
+// Handle orientation changes specifically for mobile devices
+window.addEventListener('orientationchange', () => {
+    // Delay the resize to ensure the browser has updated the viewport
+    setTimeout(handleResize, 100);
 });
 
 // Damage Effect
