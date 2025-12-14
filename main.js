@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
-// Note: SkeletonUtils import added near usage due to replacing block issues, or we can add here
-import { CameraController } from './systems/CameraController.js';
+import { CONFIG } from './config.js';
+import { Avatar } from './entities/Avatar.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Zombie } from './entities/Zombie.js';
 import { CameraController } from './systems/CameraController.js';
@@ -70,8 +69,6 @@ const avatar = new Avatar(scene);
 
 // Survival Mode State
 window.localZombies = [];
-window.zombiePool = []; // Pool for inactive zombies
-window.sharedZombieModel = null; // Store loaded model
 window.survivalWave = 0;
 window.survivalModeActive = false;
 avatar.setTargets(window.localZombies);
@@ -98,15 +95,7 @@ businessSystem.setTarget(avatar);
 
 // Interior Manager - Create independent interior spaces for each marker
 const interiorManager = new InteriorManager(renderer, camera, avatar);
-// Interior Manager - Create independent interior spaces for each marker
-const interiorManager = new InteriorManager(renderer, camera, avatar);
 interiorManager.setMainScene(scene);
-
-// Preload Zombie Pool
-// Check if function exists to avoid startup error if defined later (hoisting works for function declarations)
-setTimeout(() => {
-    if (typeof preloadZombies === 'function') preloadZombies(30);
-}, 1000);
 
 // Create 10 interior spaces (one for each business marker)
 // Create 10 interior spaces (one for each business marker)
@@ -584,64 +573,17 @@ function stopSurvivalMode() {
 }
 
 function cleanupZombies() {
-    // Return all to pool instead of destroying
     if (window.localZombies) {
         window.localZombies.forEach(z => {
-            z.hide();
+            if (z.model) scene.remove(z.model);
+            if (z.healthBarGroup) z.model.remove(z.healthBarGroup);
         });
     }
     window.localZombies = [];
 }
 
-// Preload Zombies for Pool
-// Ensure SkeletonUtils is imported at the top of the file
-async function preloadZombies(count) {
-    if (!window.sharedZombieModel) {
-        // Load model once
-        const fbxLoader = new FBXLoader();
-        // Assume loadWithCache is available. If not, use standard loader or ensure global.
-        window.sharedZombieModel = await loadWithCache('/avatars/zombi/Yaku J Ignite.fbx', fbxLoader);
-        console.log("Shared Zombie Model Loaded");
-    }
-
-    console.log(`Preloading ${count} zombies...`);
-    if (window.sharedZombieModel) {
-        for (let i = 0; i < count; i++) {
-            const clonedModel = SkeletonUtils.clone(window.sharedZombieModel);
-            const z = new Zombie(scene, collidableObjects, groundCollidableObjects, `pool_${i}`, clonedModel);
-            z.hide();
-            window.zombiePool.push(z);
-        }
-    }
-    console.log(`Pool ready: ${window.zombiePool.length} zombies`);
-}
-
-function getZombieFromPool() {
-    let zombie = window.zombiePool.find(z => !z.isActive);
-
-    if (!zombie) {
-        console.log("Expanding zombie pool...");
-        if (window.sharedZombieModel) {
-            const clonedModel = SkeletonUtils.clone(window.sharedZombieModel);
-            zombie = new Zombie(scene, collidableObjects, groundCollidableObjects, `pool_new_${Date.now()}`, clonedModel);
-            window.zombiePool.push(zombie);
-        } else {
-            console.warn("Shared zombie model not ready yet!");
-            return null;
-        }
-    }
-    return zombie;
-}
-
 function spawnNextWave() {
     if (!window.survivalModeActive) return;
-
-    if (!window.sharedZombieModel && window.zombiePool.length === 0) {
-        console.warn("Cannot spawn wave: Models not loaded.");
-        showAnnouncement("LOADING ASSETS...", 1000);
-        setTimeout(spawnNextWave, 1000); // Retry
-        return;
-    }
 
     window.survivalWave++;
     showAnnouncement(`WAVE ${window.survivalWave}`, 2000);
@@ -651,20 +593,16 @@ function spawnNextWave() {
 
     for (let i = 0; i < count; i++) {
         const id = `local_wave${window.survivalWave}_${i}_${Date.now()}`;
+        const z = new Zombie(scene, collidableObjects, groundCollidableObjects, id);
 
-        // Get from pool
-        const z = getZombieFromPool();
-        if (z) {
-            // Random position around avatar
-            const angle = Math.random() * Math.PI * 2;
-            const dist = 20 + Math.random() * 20; // 20-40m away
-            const spawnX = avatar.model.position.x + Math.sin(angle) * dist;
-            const spawnZ = avatar.model.position.z + Math.cos(angle) * dist;
-            const spawnPos = new THREE.Vector3(spawnX, 0, spawnZ);
+        // Random position around avatar
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 20 + Math.random() * 20; // 20-40m away
+        const spawnX = avatar.model.position.x + Math.sin(angle) * dist;
+        const spawnZ = avatar.model.position.z + Math.cos(angle) * dist;
+        z.targetSpawn = new THREE.Vector3(spawnX, 0, spawnZ);
 
-            z.reset(spawnPos, id);
-            window.localZombies.push(z);
-        }
+        window.localZombies.push(z);
     }
 }
 
