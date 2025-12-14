@@ -8,6 +8,15 @@
     <meta name='admaven-placement' content='BqjwGrjU9'>
     <title>3D City Plan with Avatars</title>
     <style>
+        html {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
@@ -15,6 +24,11 @@
             width: 100%;
             height: 100%;
             overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
         canvas {
@@ -1301,10 +1315,53 @@
         </div>
         <div id="chat-messages"></div>
         <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="150">
+            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="150" inputmode="text">
             <button id="chat-send-button">Send</button>
         </div>
     </div>
+
+    <!-- Aggressive scroll prevention -->
+    <script>
+        // Prevent all scrolling immediately
+        (function () {
+            // Lock scroll position
+            const preventScroll = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                return false;
+            };
+
+            // Prevent scroll on all possible events
+            window.addEventListener('scroll', preventScroll, { passive: false, capture: true });
+            window.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
+            window.addEventListener('wheel', preventScroll, { passive: false, capture: true });
+
+            // Force scroll to 0,0 constantly
+            setInterval(() => {
+                if (window.scrollY !== 0 || window.scrollX !== 0) {
+                    window.scrollTo(0, 0);
+                }
+                if (document.documentElement.scrollTop !== 0) {
+                    document.documentElement.scrollTop = 0;
+                }
+                if (document.body.scrollTop !== 0) {
+                    document.body.scrollTop = 0;
+                }
+            }, 50);
+
+            // Prevent iOS Safari bounce
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('#chat-input') || e.target.closest('#chat-messages')) {
+                    // Allow scrolling only inside chat
+                    return;
+                }
+                e.preventDefault();
+            }, { passive: false });
+        })();
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
