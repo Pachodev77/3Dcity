@@ -320,7 +320,7 @@ export class Avatar {
 
         if (this.mixer && this.animations['jump']) {
             const action = this.mixer.clipAction(this.animations['jump']);
-            action.timeScale = 0.5;
+            action.timeScale = 0.9;
         }
     }
 
