@@ -66,8 +66,7 @@ const musicPlayer = new MusicPlayer();
 
 // Entities
 const avatar = new Avatar(scene);
-// Entities
-const avatar = new Avatar(scene);
+
 // Survival Mode State
 window.localZombies = [];
 window.survivalWave = 0;
