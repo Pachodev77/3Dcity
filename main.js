@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { CONFIG } from './config.js';
-import { Avatar } from './entities/Avatar.js';
+// Note: SkeletonUtils import added near usage due to replacing block issues, or we can add here
+import { CameraController } from './systems/CameraController.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Zombie } from './entities/Zombie.js';
 import { CameraController } from './systems/CameraController.js';
@@ -97,10 +97,15 @@ businessSystem.setTarget(avatar);
 
 // Interior Manager - Create independent interior spaces for each marker
 const interiorManager = new InteriorManager(renderer, camera, avatar);
+// Interior Manager - Create independent interior spaces for each marker
+const interiorManager = new InteriorManager(renderer, camera, avatar);
 interiorManager.setMainScene(scene);
 
 // Preload Zombie Pool
-preloadZombies(30); // Preload 30 zombies for smooth waves
+// Check if function exists to avoid startup error if defined later (hoisting works for function declarations)
+setTimeout(() => {
+    if (typeof preloadZombies === 'function') preloadZombies(30);
+}, 1000);
 
 // Create 10 interior spaces (one for each business marker)
 // Create 10 interior spaces (one for each business marker)
