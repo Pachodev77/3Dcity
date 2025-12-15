@@ -21,6 +21,7 @@ export class ShooterSystem {
         // Ammo
         this.maxAmmo = 30;
         this.currentAmmo = 30;
+        this.reserveAmmo = 60; // Limited supply
         this.isReloading = false;
         this.reloadTime = 2000;
         this.ammoCounterUI = document.getElementById('ammo-counter');
@@ -271,8 +272,22 @@ export class ShooterSystem {
         }
     }
 
+    addAmmo(amount) {
+        this.reserveAmmo += amount;
+        this.updateAmmoUI();
+    }
+
     reload() {
         if (this.isReloading) return;
+
+        if (this.reserveAmmo <= 0) {
+            if (this.ammoCounterUI) {
+                this.ammoCounterUI.innerText = "NO AMMO";
+                this.ammoCounterUI.style.color = "red";
+            }
+            return;
+        }
+
         this.isReloading = true;
 
         if (this.ammoCounterUI) {
@@ -281,7 +296,12 @@ export class ShooterSystem {
         }
 
         setTimeout(() => {
-            this.currentAmmo = this.maxAmmo;
+            const needed = this.maxAmmo - this.currentAmmo;
+            const amount = Math.min(needed, this.reserveAmmo);
+
+            this.currentAmmo += amount;
+            this.reserveAmmo -= amount;
+
             this.isReloading = false;
             this.updateAmmoUI();
         }, this.reloadTime);
@@ -289,7 +309,7 @@ export class ShooterSystem {
 
     updateAmmoUI() {
         if (this.ammoCounterUI) {
-            this.ammoCounterUI.innerText = `${this.currentAmmo} / ${this.maxAmmo}`;
+            this.ammoCounterUI.innerText = `${this.currentAmmo} / ${this.reserveAmmo}`;
             this.ammoCounterUI.style.color = this.currentAmmo <= 5 ? "red" : "yellow";
         }
     }

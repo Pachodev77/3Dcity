@@ -449,6 +449,12 @@ export class Avatar {
         }
     }
 
+    heal(amount) {
+        if (this.isDead) return;
+        this.health = Math.min(this.maxHealth, this.health + amount);
+        this.updateHealthUI();
+    }
+
     takeDamage(amount) {
         if (this.isDead) return;
 

@@ -289,6 +289,11 @@ export class Zombie {
         }
 
         if (this.health <= 0) {
+            // Drop Loot
+            if (window.itemSystem) {
+                window.itemSystem.spawnLoot(this.model.position);
+            }
+
             this.die();
         }
     }

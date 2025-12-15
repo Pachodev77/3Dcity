@@ -14,6 +14,7 @@ import { ChatBubble } from './systems/ChatBubble.js';
 import { ChatUI } from './systems/ChatUI.js';
 import { MusicPlayer } from './systems/MusicPlayer.js';
 import { ShooterSystem } from './systems/ShooterSystem.js';
+import { ItemSystem } from './systems/ItemSystem.js';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -73,7 +74,12 @@ window.survivalWave = 0;
 window.survivalModeActive = false;
 avatar.setTargets(window.localZombies);
 
+// Initialize Systems
 const shooterSystem = new ShooterSystem(scene, camera, avatar);
+const itemSystem = new ItemSystem(scene, avatar, shooterSystem);
+
+// Set global reference for Zombies to access
+window.itemSystem = itemSystem;
 
 const fpsToggleButton = document.getElementById('fps-toggle-button');
 if (fpsToggleButton) {
@@ -1087,9 +1093,13 @@ function animate() {
 
     networkManager.update(delta, camera);
     businessSystem.update(delta);
+    // Update Shooter System
     shooterSystem.update(delta, networkManager.remotePlayers, networkManager.remoteZombies, window.localZombies);
 
-    // Network Update
+    // Update Item System
+    if (window.itemSystem) window.itemSystem.update(delta);
+
+    // Update Network Manager
     if (avatar.model) {
         networkManager.sendUpdate(
             avatar.model.position,
